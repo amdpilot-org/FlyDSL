@@ -1,0 +1,6 @@
+rank,shape,dtype,world_size,mode,max_error,avg_time_us,min_avg_time_us,max_avg_time_us,device_time_sum_us,kernel_name,num_iters,num_warmup,acc_res,error
+aggregate,"(64, 8192)",bf16,4,cudagraph,,0.0,0.0,0.0,0.0,skip,10,2,failed,
+0,"(64, 8192)",bf16,4,cudagraph,,0.0,,,0.0,skip,10,2,,No module named 'flydsl._mlir'
+1,"(64, 8192)",bf16,4,cudagraph,,0.0,,,0.0,skip,10,2,,No module named 'flydsl._mlir'
+2,"(64, 8192)",bf16,4,cudagraph,,0.0,,,0.0,skip,10,2,,No module named 'flydsl._mlir'
+3,"(64, 8192)",bf16,4,cudagraph,,0.0,,,0.0,skip,10,2,,No module named 'flydsl._mlir'
