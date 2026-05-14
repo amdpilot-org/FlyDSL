@@ -129,9 +129,10 @@ def _get_launch_fn(
     apply_scale: bool,
     reuse_freqs_front_part: bool,
     pos_dtype: str,
+    no_kv_cache: bool = False,
 ):
     key = (head_dim, num_q_heads, num_kv_heads, block_size,
-           flash_layout, dtype_str, apply_scale, reuse_freqs_front_part, pos_dtype)
+           flash_layout, dtype_str, apply_scale, reuse_freqs_front_part, pos_dtype, no_kv_cache)
     if key not in _kernel_cache:
         _kernel_cache[key] = build_fused_rope_cache_module(
             head_dim=head_dim,
@@ -144,6 +145,7 @@ def _get_launch_fn(
             apply_scale=apply_scale,
             reuse_freqs_front_part=reuse_freqs_front_part,
             pos_dtype=pos_dtype,
+            no_kv_cache=no_kv_cache,
         )
     return _kernel_cache[key]
 
