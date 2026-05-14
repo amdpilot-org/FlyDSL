@@ -129,9 +129,10 @@ def _get_launch_fn(
     apply_scale: bool,
     reuse_freqs_front_part: bool,
     pos_dtype: str,
+    no_kv_cache: bool = False,
 ):
     key = (head_dim, num_q_heads, num_kv_heads, block_size,
-           flash_layout, dtype_str, apply_scale, reuse_freqs_front_part, pos_dtype)
+           flash_layout, dtype_str, apply_scale, reuse_freqs_front_part, pos_dtype, no_kv_cache)
     if key not in _kernel_cache:
         _kernel_cache[key] = build_fused_rope_cache_module(
             head_dim=head_dim,
@@ -144,6 +145,7 @@ def _get_launch_fn(
             apply_scale=apply_scale,
             reuse_freqs_front_part=reuse_freqs_front_part,
             pos_dtype=pos_dtype,
+            no_kv_cache=no_kv_cache,
         )
     return _kernel_cache[key]
 
@@ -222,6 +224,7 @@ def run_test(
     block_size: int = BLOCK_SIZE,
     max_pos: int = MAX_POS,
     bench: bool = False,
+    no_kv_cache: bool = False,
 ):
     """Build kernel, run it, and compare against reference (and AITER if available).
 
@@ -244,6 +247,7 @@ def run_test(
         apply_scale=apply_scale,
         reuse_freqs_front_part=reuse_freqs_front_part,
         pos_dtype=pos_dtype,
+        no_kv_cache=no_kv_cache,
     )
 
     torch.manual_seed(42)
@@ -329,27 +333,29 @@ def run_test(
     k_err = (k_out.float() - k_ref.float()).abs().max().item()
 
     if not apply_scale:
-        kc_err = (kc_fp8.float() - kc_ref.float()).abs().max().item()
-        vc_err = (vc_fp8.float() - vc_ref.float()).abs().max().item()
+        if no_kv_cache:
+            kc_err = 0.0
+            vc_err = 0.0
+        else:
+            kc_err = (kc_fp8.float() - kc_ref.float()).abs().max().item()
+            vc_err = (vc_fp8.float() - vc_ref.float()).abs().max().item()
         passed = q_err < atol and k_err < atol and kc_err < atol and vc_err < atol
         errs = {"q": q_err, "k": k_err, "kc": kc_err, "vc": vc_err}
     else:
-        # fp8: dequantize the written cache with per-tensor scales and compare
-        # against the bf16 reference. This catches packing/indexing/scaling bugs
-        # and validates that negative-slot entries are left unchanged (the reference
-        # preserves zeros for skipped slots, so kc_ref/vc_ref already encodes that).
-        kc_deq = kc_fp8.to(torch.float32) * k_scale.float()
-        vc_deq = vc_fp8.to(torch.float32) * v_scale.float()
-        kc_err = (kc_deq - kc_ref.float()).abs().max().item()
-        vc_err = (vc_deq - vc_ref.float()).abs().max().item()
-        # fp8 e4m3 quantization error bound: 0.5 * (binade step at the max stored value).
-        # For a value v stored with scale s, the fp8 input is v/s. The binade step at
-        # x is x * 2^(1-mbits) = x/4 for e4m3 (3 mantissa bits). Dequant error ≤
-        # 0.5 * (v/s)/4 * s = v/8. So max error ≤ max(|kc_ref|) / 8.
-        kc_max = kc_ref.float().abs().max().item()
-        vc_max = vc_ref.float().abs().max().item()
-        kc_atol = max(1e-3, kc_max / 8.0)
-        vc_atol = max(1e-3, vc_max / 8.0)
+        if no_kv_cache:
+            kc_err = 0.0
+            vc_err = 0.0
+            kc_atol = 1e-3
+            vc_atol = 1e-3
+        else:
+            kc_deq = kc_fp8.to(torch.float32) * k_scale.float()
+            vc_deq = vc_fp8.to(torch.float32) * v_scale.float()
+            kc_err = (kc_deq - kc_ref.float()).abs().max().item()
+            vc_err = (vc_deq - vc_ref.float()).abs().max().item()
+            kc_max = kc_ref.float().abs().max().item()
+            vc_max = vc_ref.float().abs().max().item()
+            kc_atol = max(1e-3, kc_max / 8.0)
+            vc_atol = max(1e-3, vc_max / 8.0)
         passed = q_err < atol and k_err < atol and kc_err < kc_atol and vc_err < vc_atol
         errs = {"q": q_err, "k": k_err, "kc": kc_err, "vc": vc_err,
                 "kc_atol": kc_atol, "vc_atol": vc_atol}
@@ -357,7 +363,7 @@ def run_test(
     do_bench = bench or os.environ.get("FLYDSL_BENCH", "0") == "1"
 
     # AITER cross-check (and optional benchmark)
-    if HAS_AITER and not negative_slots and not apply_scale:
+    if HAS_AITER and not negative_slots and not apply_scale and not no_kv_cache:
         # AITER Triton wrapper expects int64 slots/positions and 4D cos/sin
         slots_i64 = slot_mapping.to(torch.int64)
         pos_i64 = positions_i32.to(torch.int64)
@@ -636,6 +642,100 @@ def test_full_sweep(model, num_q_heads, num_kv_heads, head_dim,
 # ===========================================================================
 # CLI entry point
 # ===========================================================================
+
+if __name__ == "__main__":
+    all_models = "--all-models" in sys.argv
+    do_bench = os.environ.get("FLYDSL_BENCH", "0") == "1"
+
+    print(f"GPU: {torch.cuda.get_device_name(0)}")
+    print(f"AITER cross-check: {'enabled' if HAS_AITER else 'disabled (set AITER_REPO or install aiter)'}")
+    print(f"Benchmark: {'enabled' if do_bench else 'disabled (set FLYDSL_BENCH=1)'}")
+    failures = 0
+
+    def _run(label, **kwargs):
+        global failures
+        passed, errs = run_test(**kwargs, bench=do_bench)
+        status = "PASS" if passed else "FAIL"
+        bench_str = ""
+        if "fly_us" in errs:
+            bench_str = (f"  FlyDSL={errs['fly_us']:.1f}us "
+                         f"AITER={errs['aiter_us']:.1f}us "
+                         f"speedup={errs['speedup']:.2f}x")
+        kc_str = f" kc={errs['kc']:.4f}" if "kc" in errs else ""
+        vc_str = f" vc={errs['vc']:.4f}" if "vc" in errs else ""
+        print(f"  [{status}] {label}: q={errs['q']:.4f} k={errs['k']:.4f}{kc_str}{vc_str}{bench_str}")
+        if not passed:
+            failures += 1
+
+    configs = _ALL_CONFIGS if all_models else [
+        ("GPTOSS-TP8", 8, 1, 64),
+    ]
+
+    print("\n=== Category 1: decode (T=1) flash bf16 ===")
+    for name, qh, kh, hd in configs:
+        _run(f"{name} T=1", num_tokens=1, head_dim=hd,
+             num_q_heads=qh, num_kv_heads=kh, flash_layout=True)
+
+    print("\n=== Category 2: prefill (T=32, T=128) flash bf16 ===")
+    for name, qh, kh, hd in configs:
+        for T in [32, 128]:
+            _run(f"{name} T={T}", num_tokens=T, head_dim=hd,
+                 num_q_heads=qh, num_kv_heads=kh, flash_layout=True)
+
+    print("\n=== Category 3: non-flash bf16 ===")
+    nonflash = _ALL_CONFIGS if all_models else [("Llama8B-TP8", 4, 1, 128), ("GPTOSS-TP8", 8, 1, 64)]
+    for name, qh, kh, hd in nonflash:
+        for T in [1, 32]:
+            _run(f"{name} T={T}", num_tokens=T, head_dim=hd,
+                 num_q_heads=qh, num_kv_heads=kh, flash_layout=False)
+
+    print("\n=== Category 5: pos_dtype i32 vs i64 ===")
+    for pos_dtype in ["i32", "i64"]:
+        for T in [1, 32, 128]:
+            _run(f"pos_dtype={pos_dtype} T={T}", num_tokens=T, head_dim=128,
+                 num_q_heads=8, num_kv_heads=1, flash_layout=True, pos_dtype=pos_dtype)
+
+    print("\n=== Category 6: reuse_freqs_front_part ===")
+    for reuse in [True, False]:
+        for flash in [True, False]:
+            _run(f"reuse={reuse} flash={flash}", num_tokens=32, head_dim=128,
+                 num_q_heads=8, num_kv_heads=1, flash_layout=flash,
+                 reuse_freqs_front_part=reuse)
+
+    print("\n=== Category 8: fp8 cache ===")
+    for flash in [True, False]:
+        for T in [1, 32]:
+            _run(f"fp8 flash={flash} T={T}", num_tokens=T, head_dim=128,
+                 num_q_heads=8, num_kv_heads=1, flash_layout=flash, apply_scale=True)
+
+# ===========================================================================
+# Category 10: head_dim=256 (pi0/Gemma shape)
+# ===========================================================================
+
+def test_head_dim_256():
+    """Head dimension 256 as used in pi0/Gemma models."""
+    passed, errs = run_test(
+        num_tokens=32, head_dim=256,
+        num_q_heads=8, num_kv_heads=8,
+        flash_layout=True, dtype_str="bf16",
+    )
+    assert passed, f"FAILED: {errs}"
+
+
+# ===========================================================================
+# Category 11: no_kv_cache mode (pi0 non-AR diffusion)
+# ===========================================================================
+
+def test_no_kv_cache():
+    """Plain fused RoPE without KV cache writes (no KV cache scenario)."""
+    passed, errs = run_test(
+        num_tokens=32, head_dim=256,
+        num_q_heads=8, num_kv_heads=8,
+        flash_layout=True, dtype_str="bf16",
+        no_kv_cache=True,
+    )
+    assert passed, f"FAILED: {errs}"
+
 
 if __name__ == "__main__":
     all_models = "--all-models" in sys.argv
