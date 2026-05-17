@@ -61,6 +61,7 @@ def build_fused_rope_cache_module(
     apply_scale: bool = False,
     reuse_freqs_front_part: bool = True,
     pos_dtype: str = "i32",
+    cache_op: str = "write",
 ):
     if rotary_dim == -1:
         rotary_dim = head_dim
@@ -250,183 +251,184 @@ def build_fused_rope_cache_module(
                 # K_buf, K_out_buf now dead — 8 SGPRs freed
 
                 # --- KV Cache write ---
-                slot_rsrc = buffer_ops.create_buffer_resource(SlotMapping, max_size=True)
-                if const_expr(pos_dtype == "i64"):
-                    slot_elem_off = pid_t * 2
-                else:
-                    slot_elem_off = pid_t
-                slot_val = buffer_ops.buffer_load(slot_rsrc, slot_elem_off, vec_width=1, dtype=T.i32)
+                if const_expr(cache_op != "none"):
+                    slot_rsrc = buffer_ops.create_buffer_resource(SlotMapping, max_size=True)
+                    if const_expr(pos_dtype == "i64"):
+                        slot_elem_off = pid_t * 2
+                    else:
+                        slot_elem_off = pid_t
+                    slot_val = buffer_ops.buffer_load(slot_rsrc, slot_elem_off, vec_width=1, dtype=T.i32)
 
-                if slot_val >= 0:
-                    pid_t_slot = slot_val // block_size
-                    pid_b = slot_val % block_size
+                    if slot_val >= 0:
+                        pid_t_slot = slot_val // block_size
+                        pid_b = slot_val % block_size
 
-                    # Load V via layout API (deferred here to minimize SGPR liveness)
-                    V_buf = fx.rocdl.make_buffer_tensor(V)
-                    v_row = fx.slice(V_buf, (pid_t, head_idx, None))
-                    v_div = fx.logical_divide(v_row, vec_div_lay)
-                    v_e = load_vec(v_div, tid)
+                        # Load V via layout API (deferred here to minimize SGPR liveness)
+                        V_buf = fx.rocdl.make_buffer_tensor(V)
+                        v_row = fx.slice(V_buf, (pid_t, head_idx, None))
+                        v_div = fx.logical_divide(v_row, vec_div_lay)
+                        v_e = load_vec(v_div, tid)
 
-                    if const_expr(apply_scale):
-                        # --- fp8 KV cache path (raw buffer_ops for fp8 intrinsics) ---
-                        ks_buf = fx.rocdl.make_buffer_tensor(KScale)
-                        vs_buf = fx.rocdl.make_buffer_tensor(VScale)
-                        ks_div = fx.logical_divide(ks_buf, f32_lay)
-                        vs_div = fx.logical_divide(vs_buf, f32_lay)
-                        r_ks = fx.make_rmem_tensor(f32_lay, fx.Float32)
-                        r_vs = fx.make_rmem_tensor(f32_lay, fx.Float32)
-                        fx.copy_atom_call(f32_copy_atom, fx.slice(ks_div, (None, 0)), r_ks)
-                        fx.copy_atom_call(f32_copy_atom, fx.slice(vs_div, (None, 0)), r_vs)
-                        k_scale_val = fx.memref_load_vec(r_ks)[0]
-                        v_scale_val = fx.memref_load_vec(r_vs)[0]
-                        k_rcp = fx.rocdl.rcp(T.f32, k_scale_val)
-                        v_rcp = fx.rocdl.rcp(T.f32, v_scale_val)
+                        if const_expr(apply_scale):
+                            # --- fp8 KV cache path (raw buffer_ops for fp8 intrinsics) ---
+                            ks_buf = fx.rocdl.make_buffer_tensor(KScale)
+                            vs_buf = fx.rocdl.make_buffer_tensor(VScale)
+                            ks_div = fx.logical_divide(ks_buf, f32_lay)
+                            vs_div = fx.logical_divide(vs_buf, f32_lay)
+                            r_ks = fx.make_rmem_tensor(f32_lay, fx.Float32)
+                            r_vs = fx.make_rmem_tensor(f32_lay, fx.Float32)
+                            fx.copy_atom_call(f32_copy_atom, fx.slice(ks_div, (None, 0)), r_ks)
+                            fx.copy_atom_call(f32_copy_atom, fx.slice(vs_div, (None, 0)), r_vs)
+                            k_scale_val = fx.memref_load_vec(r_ks)[0]
+                            v_scale_val = fx.memref_load_vec(r_vs)[0]
+                            k_rcp = fx.rocdl.rcp(T.f32, k_scale_val)
+                            v_rcp = fx.rocdl.rcp(T.f32, v_scale_val)
 
-                        k_scaled = []
-                        v_scaled = []
-                        k_rot_vec = Vec(k_rot_e.ir_value())
-                        v_vec = Vec(v_e)
-                        for i in range_constexpr(VEC_WIDTH):
-                            # Always use vector.extract; works for VEC_WIDTH=1 (vector<1xbf16>)
-                            # and VEC_WIDTH>1 equally.
-                            ke = k_rot_vec[i].to(fx.Float32) * k_rcp
-                            ve = v_vec[i].to(fx.Float32) * v_rcp
-                            k_scaled.append(ke)
-                            v_scaled.append(ve)
+                            k_scaled = []
+                            v_scaled = []
+                            k_rot_vec = Vec(k_rot_e.ir_value())
+                            v_vec = Vec(v_e)
+                            for i in range_constexpr(VEC_WIDTH):
+                                # Always use vector.extract; works for VEC_WIDTH=1 (vector<1xbf16>)
+                                # and VEC_WIDTH>1 equally.
+                                ke = k_rot_vec[i].to(fx.Float32) * k_rcp
+                                ve = v_vec[i].to(fx.Float32) * v_rcp
+                                k_scaled.append(ke)
+                                v_scaled.append(ve)
 
-                        # fp8 packing and store
-                        kc_fp8_rsrc = buffer_ops.create_buffer_resource(KeyCache, max_size=True)
-                        vc_fp8_rsrc = buffer_ops.create_buffer_resource(ValueCache, max_size=True)
+                            # fp8 packing and store
+                            kc_fp8_rsrc = buffer_ops.create_buffer_resource(KeyCache, max_size=True)
+                            vc_fp8_rsrc = buffer_ops.create_buffer_resource(ValueCache, max_size=True)
 
-                        if const_expr(VEC_WIDTH >= 4):
+                            if const_expr(VEC_WIDTH >= 4):
 
-                            def pack_fp8(vals):
-                                i32s = []
-                                for i in range_constexpr(VEC_WIDTH // 4):
-                                    lo = fx.rocdl.cvt_pk_fp8_f32(T.i32, vals[i * 4], vals[i * 4 + 1], 0, False)
-                                    wd = fx.rocdl.cvt_pk_fp8_f32(T.i32, vals[i * 4 + 2], vals[i * 4 + 3], lo, True)
-                                    i32s.append(wd)
-                                return i32s
+                                def pack_fp8(vals):
+                                    i32s = []
+                                    for i in range_constexpr(VEC_WIDTH // 4):
+                                        lo = fx.rocdl.cvt_pk_fp8_f32(T.i32, vals[i * 4], vals[i * 4 + 1], 0, False)
+                                        wd = fx.rocdl.cvt_pk_fp8_f32(T.i32, vals[i * 4 + 2], vals[i * 4 + 3], lo, True)
+                                        i32s.append(wd)
+                                    return i32s
 
-                            k_fp8 = pack_fp8(k_scaled)
-                            v_fp8 = pack_fp8(v_scaled)
-
-                            if const_expr(flash_layout):
-                                kc_byte_off = (
-                                    pid_t_slot * (block_size * num_kv_heads * head_dim)
-                                    + pid_b * (num_kv_heads * head_dim)
-                                    + head_idx * head_dim
-                                    + tid * VEC_WIDTH
-                                )
-                                kc_dw = kc_byte_off // 4
-                                for wi in range_constexpr(VEC_WIDTH // 4):
-                                    buffer_ops.buffer_store(k_fp8[wi], kc_fp8_rsrc, kc_dw + wi)
-                                    buffer_ops.buffer_store(v_fp8[wi], vc_fp8_rsrc, kc_dw + wi)
-                            else:
-                                dim_group = tid * VEC_WIDTH // x_size
-                                sub_off = tid * VEC_WIDTH % x_size
-                                kc_byte_off = (
-                                    pid_t_slot * (num_kv_heads * (head_dim // x_size) * block_size * x_size)
-                                    + head_idx * ((head_dim // x_size) * block_size * x_size)
-                                    + dim_group * (block_size * x_size)
-                                    + pid_b * x_size
-                                    + sub_off
-                                )
-                                kc_dw = kc_byte_off // 4
-                                for wi in range_constexpr(VEC_WIDTH // 4):
-                                    buffer_ops.buffer_store(k_fp8[wi], kc_fp8_rsrc, kc_dw + wi)
-
-                                for vi in range_constexpr(VEC_WIDTH):
-                                    d_idx = tid * VEC_WIDTH + vi
-                                    vc_byte_off = (
-                                        pid_t_slot * (num_kv_heads * head_dim * block_size)
-                                        + head_idx * (head_dim * block_size)
-                                        + d_idx * block_size
-                                        + pid_b
-                                    )
-                                    i32_idx = vi // 4
-                                    byte_in_i32 = vi % 4
-                                    shifted = v_fp8[i32_idx] >> (byte_in_i32 * 8)
-                                    fp8_byte = arith.trunci(T.i8, shifted)
-                                    buffer_ops.buffer_store(fp8_byte, vc_fp8_rsrc, vc_byte_off)
-                        else:
-                            # VEC_WIDTH < 4: store individual fp8 bytes
-                            for vi in range_constexpr(VEC_WIDTH):
-                                k_pk = fx.rocdl.cvt_pk_fp8_f32(T.i32, k_scaled[vi], 0.0, 0, False)
-                                v_pk = fx.rocdl.cvt_pk_fp8_f32(T.i32, v_scaled[vi], 0.0, 0, False)
-                                k_byte = arith.trunci(T.i8, k_pk)
-                                v_byte = arith.trunci(T.i8, v_pk)
-
-                                d_idx = tid * VEC_WIDTH + vi
+                                k_fp8 = pack_fp8(k_scaled)
+                                v_fp8 = pack_fp8(v_scaled)
 
                                 if const_expr(flash_layout):
-                                    byte_off = (
+                                    kc_byte_off = (
                                         pid_t_slot * (block_size * num_kv_heads * head_dim)
                                         + pid_b * (num_kv_heads * head_dim)
                                         + head_idx * head_dim
-                                        + d_idx
+                                        + tid * VEC_WIDTH
                                     )
-                                    buffer_ops.buffer_store(k_byte, kc_fp8_rsrc, byte_off)
-                                    buffer_ops.buffer_store(v_byte, vc_fp8_rsrc, byte_off)
+                                    kc_dw = kc_byte_off // 4
+                                    for wi in range_constexpr(VEC_WIDTH // 4):
+                                        buffer_ops.buffer_store(k_fp8[wi], kc_fp8_rsrc, kc_dw + wi)
+                                        buffer_ops.buffer_store(v_fp8[wi], vc_fp8_rsrc, kc_dw + wi)
                                 else:
+                                    dim_group = tid * VEC_WIDTH // x_size
+                                    sub_off = tid * VEC_WIDTH % x_size
+                                    kc_byte_off = (
+                                        pid_t_slot * (num_kv_heads * (head_dim // x_size) * block_size * x_size)
+                                        + head_idx * ((head_dim // x_size) * block_size * x_size)
+                                        + dim_group * (block_size * x_size)
+                                        + pid_b * x_size
+                                        + sub_off
+                                    )
+                                    kc_dw = kc_byte_off // 4
+                                    for wi in range_constexpr(VEC_WIDTH // 4):
+                                        buffer_ops.buffer_store(k_fp8[wi], kc_fp8_rsrc, kc_dw + wi)
+
+                                    for vi in range_constexpr(VEC_WIDTH):
+                                        d_idx = tid * VEC_WIDTH + vi
+                                        vc_byte_off = (
+                                            pid_t_slot * (num_kv_heads * head_dim * block_size)
+                                            + head_idx * (head_dim * block_size)
+                                            + d_idx * block_size
+                                            + pid_b
+                                        )
+                                        i32_idx = vi // 4
+                                        byte_in_i32 = vi % 4
+                                        shifted = v_fp8[i32_idx] >> (byte_in_i32 * 8)
+                                        fp8_byte = arith.trunci(T.i8, shifted)
+                                        buffer_ops.buffer_store(fp8_byte, vc_fp8_rsrc, vc_byte_off)
+                            else:
+                                # VEC_WIDTH < 4: store individual fp8 bytes
+                                for vi in range_constexpr(VEC_WIDTH):
+                                    k_pk = fx.rocdl.cvt_pk_fp8_f32(T.i32, k_scaled[vi], 0.0, 0, False)
+                                    v_pk = fx.rocdl.cvt_pk_fp8_f32(T.i32, v_scaled[vi], 0.0, 0, False)
+                                    k_byte = arith.trunci(T.i8, k_pk)
+                                    v_byte = arith.trunci(T.i8, v_pk)
+
+                                    d_idx = tid * VEC_WIDTH + vi
+
+                                    if const_expr(flash_layout):
+                                        byte_off = (
+                                            pid_t_slot * (block_size * num_kv_heads * head_dim)
+                                            + pid_b * (num_kv_heads * head_dim)
+                                            + head_idx * head_dim
+                                            + d_idx
+                                        )
+                                        buffer_ops.buffer_store(k_byte, kc_fp8_rsrc, byte_off)
+                                        buffer_ops.buffer_store(v_byte, vc_fp8_rsrc, byte_off)
+                                    else:
+                                        dim_grp = d_idx // x_size
+                                        sub_o = d_idx % x_size
+                                        kc_byte_off = (
+                                            pid_t_slot * (num_kv_heads * (head_dim // x_size) * block_size * x_size)
+                                            + head_idx * ((head_dim // x_size) * block_size * x_size)
+                                            + dim_grp * (block_size * x_size)
+                                            + pid_b * x_size
+                                            + sub_o
+                                        )
+                                        buffer_ops.buffer_store(k_byte, kc_fp8_rsrc, kc_byte_off)
+
+                                        vc_byte_off = (
+                                            pid_t_slot * (num_kv_heads * head_dim * block_size)
+                                            + head_idx * (head_dim * block_size)
+                                            + d_idx * block_size
+                                            + pid_b
+                                        )
+                                        buffer_ops.buffer_store(v_byte, vc_fp8_rsrc, vc_byte_off)
+                        else:
+                            # --- bf16/f16 KV cache path ---
+                            if const_expr(flash_layout):
+                                # Flash layout: contiguous [num_blocks, block_size, KH, D]
+                                KC_buf = fx.rocdl.make_buffer_tensor(KeyCache)
+                                VC_buf = fx.rocdl.make_buffer_tensor(ValueCache)
+                                kc_row = fx.slice(KC_buf, (pid_t_slot, pid_b, head_idx, None))
+                                vc_row = fx.slice(VC_buf, (pid_t_slot, pid_b, head_idx, None))
+                                kc_div = fx.logical_divide(kc_row, vec_div_lay)
+                                vc_div = fx.logical_divide(vc_row, vec_div_lay)
+                                store_vec(k_rot_e.ir_value(), kc_div, tid)
+                                store_vec(v_e, vc_div, tid)
+                            else:
+                                # Non-flash layout: scattered stores, keep raw buffer_ops
+                                kc_rsrc = buffer_ops.create_buffer_resource(KeyCache, max_size=True)
+                                vc_rsrc = buffer_ops.create_buffer_resource(ValueCache, max_size=True)
+                                for vi in range_constexpr(VEC_WIDTH):
+                                    d_idx = tid * VEC_WIDTH + vi
                                     dim_grp = d_idx // x_size
                                     sub_o = d_idx % x_size
-                                    kc_byte_off = (
+                                    kc_nf_off = (
                                         pid_t_slot * (num_kv_heads * (head_dim // x_size) * block_size * x_size)
                                         + head_idx * ((head_dim // x_size) * block_size * x_size)
                                         + dim_grp * (block_size * x_size)
                                         + pid_b * x_size
                                         + sub_o
                                     )
-                                    buffer_ops.buffer_store(k_byte, kc_fp8_rsrc, kc_byte_off)
+                                    k_elem = Vec(k_rot_e.ir_value())[vi]
+                                    buffer_ops.buffer_store(k_elem, kc_rsrc, kc_nf_off)
 
-                                    vc_byte_off = (
+                                for vi in range_constexpr(VEC_WIDTH):
+                                    d_idx = tid * VEC_WIDTH + vi
+                                    vc_nf_off = (
                                         pid_t_slot * (num_kv_heads * head_dim * block_size)
                                         + head_idx * (head_dim * block_size)
                                         + d_idx * block_size
                                         + pid_b
                                     )
-                                    buffer_ops.buffer_store(v_byte, vc_fp8_rsrc, vc_byte_off)
-                    else:
-                        # --- bf16/f16 KV cache path ---
-                        if const_expr(flash_layout):
-                            # Flash layout: contiguous [num_blocks, block_size, KH, D]
-                            KC_buf = fx.rocdl.make_buffer_tensor(KeyCache)
-                            VC_buf = fx.rocdl.make_buffer_tensor(ValueCache)
-                            kc_row = fx.slice(KC_buf, (pid_t_slot, pid_b, head_idx, None))
-                            vc_row = fx.slice(VC_buf, (pid_t_slot, pid_b, head_idx, None))
-                            kc_div = fx.logical_divide(kc_row, vec_div_lay)
-                            vc_div = fx.logical_divide(vc_row, vec_div_lay)
-                            store_vec(k_rot_e.ir_value(), kc_div, tid)
-                            store_vec(v_e, vc_div, tid)
-                        else:
-                            # Non-flash layout: scattered stores, keep raw buffer_ops
-                            kc_rsrc = buffer_ops.create_buffer_resource(KeyCache, max_size=True)
-                            vc_rsrc = buffer_ops.create_buffer_resource(ValueCache, max_size=True)
-                            for vi in range_constexpr(VEC_WIDTH):
-                                d_idx = tid * VEC_WIDTH + vi
-                                dim_grp = d_idx // x_size
-                                sub_o = d_idx % x_size
-                                kc_nf_off = (
-                                    pid_t_slot * (num_kv_heads * (head_dim // x_size) * block_size * x_size)
-                                    + head_idx * ((head_dim // x_size) * block_size * x_size)
-                                    + dim_grp * (block_size * x_size)
-                                    + pid_b * x_size
-                                    + sub_o
-                                )
-                                k_elem = Vec(k_rot_e.ir_value())[vi]
-                                buffer_ops.buffer_store(k_elem, kc_rsrc, kc_nf_off)
-
-                            for vi in range_constexpr(VEC_WIDTH):
-                                d_idx = tid * VEC_WIDTH + vi
-                                vc_nf_off = (
-                                    pid_t_slot * (num_kv_heads * head_dim * block_size)
-                                    + head_idx * (head_dim * block_size)
-                                    + d_idx * block_size
-                                    + pid_b
-                                )
-                                v_elem = Vec(v_e)[vi]
-                                buffer_ops.buffer_store(v_elem, vc_rsrc, vc_nf_off)
+                                    v_elem = Vec(v_e)[vi]
+                                    buffer_ops.buffer_store(v_elem, vc_rsrc, vc_nf_off)
 
     def _mark_token_layout_dynamic(tensor):
         if hasattr(tensor, "mark_layout_dynamic"):
@@ -510,3 +512,78 @@ def build_fused_rope_cache_module(
         )
 
     return launch_fused_rope_cache
+
+
+def build_fused_rope_module(
+    head_dim: int = 64,
+    rotary_dim: int = -1,
+    num_q_heads: int = 8,
+    num_kv_heads: int = 1,
+    is_neox: bool = True,
+    dtype_str: str = "bf16",
+    reuse_freqs_front_part: bool = True,
+    pos_dtype: str = "i32",
+):
+    """Build a plain fused-RoPE module (no KV cache writes).
+
+    Convenience wrapper around :func:`build_fused_rope_cache_module` with
+    ``cache_op="none"``.  Accepts only the tensors needed for RoPE rotation
+    and returns ``q_out`` / ``k_out``.
+
+    Shorthand for pi0-style non-AR diffusion attention where there is no
+    persistent KV cache.
+    """
+    launch_with_cache = build_fused_rope_cache_module(
+        head_dim=head_dim,
+        rotary_dim=rotary_dim,
+        num_q_heads=num_q_heads,
+        num_kv_heads=num_kv_heads,
+        block_size=1,  # irrelevant without cache, but must be >0
+        is_neox=is_neox,
+        flash_layout=True,
+        dtype_str=dtype_str,
+        apply_scale=False,
+        reuse_freqs_front_part=reuse_freqs_front_part,
+        pos_dtype=pos_dtype,
+        cache_op="none",
+    )
+
+    def launch_fused_rope(
+        Q,
+        K,
+        Positions,
+        CosCache,
+        SinCache,
+        Q_out,
+        K_out,
+        num_tokens,
+        stream=fx.Stream(None),
+    ):
+        import torch
+        device = Q.device
+        torch_dtype = Q.dtype
+        # Dummy tensors required by the shared kernel signature; compiled-out when cache_op="none"
+        dummy = torch.empty(0, device=device, dtype=torch_dtype)
+        dummy_v = torch.empty(0, device=device, dtype=torch_dtype)
+        slot_mapping = torch.arange(0, device=device, dtype=torch.int32)
+        k_scale = torch.ones(1, dtype=torch.float32, device=device)
+        v_scale = torch.ones(1, dtype=torch.float32, device=device)
+        return launch_with_cache(
+            Q,
+            K,
+            dummy_v,
+            Positions,
+            CosCache,
+            SinCache,
+            slot_mapping,
+            dummy,
+            dummy,
+            Q_out,
+            K_out,
+            num_tokens,
+            k_scale,
+            v_scale,
+            stream=stream,
+        )
+
+    return launch_fused_rope
