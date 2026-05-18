@@ -1,0 +1,7 @@
+Validator,PT_VERSION,2.7.1
+Validator,ROCM_VERSION,7.2.2.0-86-671d39a71e
+Validator,HIPBLASLT_VERSION,100202-dabb6df2b9
+Validator,GCN_ARCH_NAME,gfx942:sramecc+:xnack-
+Validator,ROCBLAS_VERSION,5.2.0.dabb6df2b9
+GemmTunableOp_float_NN,nn_64_64_1536_ld_64_1536_64,Gemm_Hipblaslt_410392,0.00850541
+GemmTunableOp_BFloat16_NN,nn_3072_3072_1536_ld_3072_1536_3072,Gemm_Rocblas_-621296644,0.0393985
