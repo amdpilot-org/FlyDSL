@@ -176,89 +176,34 @@ def build_fused_rope_cache_module(
     _cos_shape = (None, vecs_per_half)
     _cos_stride = (half_dim, VEC_WIDTH)
 
-    # ----- Kernel 1: Q RoPE -----
-    # Grid: (T * QH, 1, 1), one program per (token, q_head)
-    # Each program: vecs_per_head threads process head_dim elements
+    # ----- Fused Kernel: Q RoPE + K RoPE + KV cache write -----
+    # Grid: (max(QH, KH), T, 1), one program per (head, token)
+    # Each program: vecs_per_head threads process head_dim elements.
+    # Threads conditionally do Q work, K work, or both (when head_idx < QH/KH).
     @flyc.kernel
-    def q_rope_kernel(
+    def fused_rope_cache_kernel(
         Q: fx.Tensor,            # [T, QH, D]
-        Positions: fx.Tensor,    # [T] int32
-        CosCache: fx.Tensor,     # [max_pos, half_dim]
-        SinCache: fx.Tensor,     # [max_pos, half_dim]
-        Q_out: fx.Tensor,        # [T, QH, D]
-    ):
-        pid = fx.block_idx.x    # program id: 0..T*QH-1
-        tid = fx.thread_idx.x   # 0..63
-
-        elem_type = dtype_to_elem_type(dtype_str)
-        vec_type_e = T.vec(VEC_WIDTH, elem_type)
-        i32_vec_ty = T.vec(vec_dwords, T.i32)
-
-        # Buffer resources at top level (not inside scf.if)
-        q_rsrc = buffer_ops.create_buffer_resource(Q, max_size=True)
-        pos_rsrc = buffer_ops.create_buffer_resource(Positions, max_size=True)
-        cos_rsrc = buffer_ops.create_buffer_resource(CosCache, max_size=True)
-        sin_rsrc = buffer_ops.create_buffer_resource(SinCache, max_size=True)
-        qo_rsrc = buffer_ops.create_buffer_resource(Q_out, max_size=True)
-
-        # Layouts (materialized inside kernel where MLIR context is active)
-        q_layout = fx.make_layout(_q_shape, _q_stride)
-        cos_sin_layout = fx.make_layout(_cos_shape, _cos_stride)
-
-        if arith.cmpi(arith.CmpIPredicate.ult, tid, fx.Int32(vecs_per_head)):
-            pid_t = pid // num_q_heads
-            pid_hq = pid % num_q_heads
-
-            # Load position
-            pos_val = buffer_ops.buffer_load(pos_rsrc, pid_t, vec_width=1, dtype=T.i32)
-
-            # -- Q address via crd2idx --
-            q_coord = (pid_t, fx.Int32(pid_hq), tid)
-            q_dw = _layout_to_dword_off(q_coord, q_layout, elem_bytes)
-
-            # -- cos/sin address via crd2idx --
-            # tid % vecs_per_half wraps second-half threads [vecs_per_half, vecs_per_head)
-            # back to [0, vecs_per_half): NeoX uses the same cos/sin for both halves;
-            # only the sign of the sin term differs (handled by is_first_half select below).
-            cos_vec_idx = tid % vecs_per_half
-            cos_coord = (pos_val, fx.Int32(cos_vec_idx))
-            cos_dw = _layout_to_dword_off(cos_coord, cos_sin_layout, elem_bytes)
-
-            # -- Paired-half load + NeoX rotation --
-            is_first_half = arith.cmpi(arith.CmpIPredicate.ult, tid, fx.Int32(vecs_per_half))
-            pair_tid = arith.select(is_first_half, tid + vecs_per_half, tid - vecs_per_half)
-            pair_coord = (pid_t, fx.Int32(pid_hq), pair_tid)
-            pair_dw = _layout_to_dword_off(pair_coord, q_layout, elem_bytes)
-            rot_i32 = _apply_neox_rope(
-                q_rsrc, q_dw, cos_rsrc, sin_rsrc, cos_dw,
-                q_rsrc, pair_dw, is_first_half,
-                vec_dwords, vec_type_e, i32_vec_ty,
-            )
-            buffer_ops.buffer_store(rot_i32, qo_rsrc, q_dw)
-
-    # ----- Kernel 2: K RoPE + KV cache write -----
-    # Grid: (T * KH, 1, 1), one program per (token, kv_head)
-    # Each program: vecs_per_head threads process head_dim elements
-    @flyc.kernel
-    def k_cache_kernel(
         K: fx.Tensor,            # [T, KH, D]
         V: fx.Tensor,            # [T, KH, D]
         Positions: fx.Tensor,    # [T] int32
         CosCache: fx.Tensor,     # [max_pos, half_dim]
         SinCache: fx.Tensor,     # [max_pos, half_dim]
         SlotMapping: fx.Tensor,  # [T] int32
-        KeyCache: fx.Tensor,     # flash: [T_cache, BS, KH, D]
-        ValueCache: fx.Tensor,   # flash: [T_cache, BS, KH, D]
+        KeyCache: fx.Tensor,     # flash: [num_blocks, BS, KH, D]
+        ValueCache: fx.Tensor,   # flash: [num_blocks, BS, KH, D]
+        Q_out: fx.Tensor,        # [T, QH, D]
         K_out: fx.Tensor,        # [T, KH, D]
     ):
-        pid = fx.block_idx.x    # program id: 0..T*KH-1
-        tid = fx.thread_idx.x   # 0..63
+        pid_h = fx.block_idx.x   # head index 0..max(QH,KH)-1
+        pid_t = fx.block_idx.y   # token index 0..T-1
+        tid = fx.thread_idx.x    # 0..63
 
         elem_type = dtype_to_elem_type(dtype_str)
         vec_type_e = T.vec(VEC_WIDTH, elem_type)
         i32_vec_ty = T.vec(vec_dwords, T.i32)
 
         # Buffer resources at top level
+        q_rsrc = buffer_ops.create_buffer_resource(Q, max_size=True)
         k_rsrc = buffer_ops.create_buffer_resource(K, max_size=True)
         v_rsrc = buffer_ops.create_buffer_resource(V, max_size=True)
         pos_rsrc = buffer_ops.create_buffer_resource(Positions, max_size=True)
@@ -267,106 +212,112 @@ def build_fused_rope_cache_module(
         slot_rsrc = buffer_ops.create_buffer_resource(SlotMapping, max_size=True)
         kc_rsrc = buffer_ops.create_buffer_resource(KeyCache, max_size=True)
         vc_rsrc = buffer_ops.create_buffer_resource(ValueCache, max_size=True)
+        qo_rsrc = buffer_ops.create_buffer_resource(Q_out, max_size=True)
         ko_rsrc = buffer_ops.create_buffer_resource(K_out, max_size=True)
 
         # Layouts (materialized inside kernel where MLIR context is active)
+        q_layout = fx.make_layout(_q_shape, _q_stride)
         kv_layout = fx.make_layout(_kv_shape, _kv_stride)
         cos_sin_layout = fx.make_layout(_cos_shape, _cos_stride)
 
         if arith.cmpi(arith.CmpIPredicate.ult, tid, fx.Int32(vecs_per_head)):
-            pid_t = pid // num_kv_heads
-            pid_hk = pid % num_kv_heads
-
-            # Load position
+            # Load position once per (token, head) block
             pos_val = buffer_ops.buffer_load(pos_rsrc, pid_t, vec_width=1, dtype=T.i32)
 
-            # -- K/V address via crd2idx --
-            kv_coord = (pid_t, fx.Int32(pid_hk), tid)
-            k_dw = _layout_to_dword_off(kv_coord, kv_layout, elem_bytes)
-
-            # -- cos/sin address via crd2idx --
-            # tid % vecs_per_half wraps second-half threads [vecs_per_half, vecs_per_head)
-            # back to [0, vecs_per_half): NeoX uses the same cos/sin for both halves;
-            # only the sign of the sin term differs (handled by is_first_half select below).
+            # -- Shared cos/sin address via crd2idx (same for both Q and K) --
             cos_vec_idx = tid % vecs_per_half
             cos_coord = (pos_val, fx.Int32(cos_vec_idx))
             cos_dw = _layout_to_dword_off(cos_coord, cos_sin_layout, elem_bytes)
 
-            # -- Paired-half load + NeoX rotation --
             is_first_half = arith.cmpi(arith.CmpIPredicate.ult, tid, fx.Int32(vecs_per_half))
             pair_tid = arith.select(is_first_half, tid + vecs_per_half, tid - vecs_per_half)
-            pair_coord = (pid_t, fx.Int32(pid_hk), pair_tid)
-            pair_dw = _layout_to_dword_off(pair_coord, kv_layout, elem_bytes)
-            k_rot_i32 = _apply_neox_rope(
-                k_rsrc, k_dw, cos_rsrc, sin_rsrc, cos_dw,
-                k_rsrc, pair_dw, is_first_half,
-                vec_dwords, vec_type_e, i32_vec_ty,
+
+            # --- Q RoPE (conditional on pid_h < num_q_heads) ---
+            is_q_head = arith.cmpi(
+                arith.CmpIPredicate.ult, pid_h, fx.Int32(num_q_heads)
             )
-            buffer_ops.buffer_store(k_rot_i32, ko_rsrc, k_dw)
+            if is_q_head:
+                q_coord = (pid_t, pid_h, tid)
+                q_dw = _layout_to_dword_off(q_coord, q_layout, elem_bytes)
+                pair_coord_q = (pid_t, pid_h, pair_tid)
+                pair_dw_q = _layout_to_dword_off(pair_coord_q, q_layout, elem_bytes)
+                rot_i32 = _apply_neox_rope(
+                    q_rsrc, q_dw, cos_rsrc, sin_rsrc, cos_dw,
+                    q_rsrc, pair_dw_q, is_first_half,
+                    vec_dwords, vec_type_e, i32_vec_ty,
+                )
+                buffer_ops.buffer_store(rot_i32, qo_rsrc, q_dw)
 
-            # --- KV Cache write ---
-            slot_val = buffer_ops.buffer_load(slot_rsrc, pid_t, vec_width=1, dtype=T.i32)
+            # --- K RoPE + KV cache write (conditional on pid_h < num_kv_heads) ---
+            is_kv_head = arith.cmpi(
+                arith.CmpIPredicate.ult, pid_h, fx.Int32(num_kv_heads)
+            )
+            if is_kv_head:
+                kv_coord = (pid_t, pid_h, tid)
+                k_dw = _layout_to_dword_off(kv_coord, kv_layout, elem_bytes)
+                pair_coord_k = (pid_t, pid_h, pair_tid)
+                pair_dw_k = _layout_to_dword_off(pair_coord_k, kv_layout, elem_bytes)
+                k_rot_i32 = _apply_neox_rope(
+                    k_rsrc, k_dw, cos_rsrc, sin_rsrc, cos_dw,
+                    k_rsrc, pair_dw_k, is_first_half,
+                    vec_dwords, vec_type_e, i32_vec_ty,
+                )
+                buffer_ops.buffer_store(k_rot_i32, ko_rsrc, k_dw)
 
-            if arith.cmpi(arith.CmpIPredicate.sge, slot_val, fx.Int32(0)):
-                pid_t_slot = ArithValue(slot_val) // block_size
-                pid_b = ArithValue(slot_val) % block_size
+                # KV Cache write
+                slot_val = buffer_ops.buffer_load(slot_rsrc, pid_t, vec_width=1, dtype=T.i32)
 
-                # Load V for cache write (same offset as K)
-                v_raw = buffer_ops.buffer_load(v_rsrc, k_dw, vec_width=vec_dwords, dtype=T.i32)
+                if arith.cmpi(arith.CmpIPredicate.sge, slot_val, fx.Int32(0)):
+                    pid_t_slot = ArithValue(slot_val) // block_size
+                    pid_b = ArithValue(slot_val) % block_size
 
-                if flash_layout:
-                    # -- Flash KV cache: [num_blocks, BS, KH, D] via crd2idx --
-                    kc_flash_layout = fx.make_layout(
-                        (None, block_size, num_kv_heads, vecs_per_head),
-                        (block_size * num_kv_heads * head_dim,
-                         num_kv_heads * head_dim,
-                         head_dim,
-                         VEC_WIDTH),
-                    )
-                    kc_coord = (pid_t_slot, pid_b, pid_hk, tid)
-                    kc_dw = _layout_to_dword_off(kc_coord, kc_flash_layout, elem_bytes)
+                    v_raw = buffer_ops.buffer_load(v_rsrc, k_dw, vec_width=vec_dwords, dtype=T.i32)
 
-                    buffer_ops.buffer_store(k_rot_i32, kc_rsrc, kc_dw)
-                    # value_cache: same layout
-                    buffer_ops.buffer_store(v_raw, vc_rsrc, kc_dw)
-                else:
-                    # -- Non-flash key_cache: [num_blocks, KH, D//x, BS, x] via crd2idx --
-                    d_start = ArithValue(tid) * VEC_WIDTH
-                    dim_group = d_start // x_size
-                    dim_within = d_start % x_size
+                    if flash_layout:
+                        kc_flash_layout = fx.make_layout(
+                            (None, block_size, num_kv_heads, vecs_per_head),
+                            (block_size * num_kv_heads * head_dim,
+                             num_kv_heads * head_dim,
+                             head_dim,
+                             VEC_WIDTH),
+                        )
+                        kc_coord = (pid_t_slot, pid_b, pid_h, tid)
+                        kc_dw = _layout_to_dword_off(kc_coord, kc_flash_layout, elem_bytes)
 
-                    kc_nf_layout = fx.make_layout(
-                        (None, num_kv_heads, head_dim // x_size, block_size, x_size),
-                        (num_kv_heads * (head_dim // x_size) * block_size * x_size,
-                         (head_dim // x_size) * block_size * x_size,
-                         block_size * x_size,
-                         x_size,
-                         1),
-                    )
-                    kc_coord_nf = (pid_t_slot, pid_hk, dim_group, pid_b, dim_within)
-                    kc_dw_nf = _layout_to_dword_off(kc_coord_nf, kc_nf_layout, elem_bytes)
+                        buffer_ops.buffer_store(k_rot_i32, kc_rsrc, kc_dw)
+                        buffer_ops.buffer_store(v_raw, vc_rsrc, kc_dw)
+                    else:
+                        d_start = ArithValue(tid) * VEC_WIDTH
+                        dim_group = d_start // x_size
+                        dim_within = d_start % x_size
 
-                    buffer_ops.buffer_store(k_rot_i32, kc_rsrc, kc_dw_nf)
+                        kc_nf_layout = fx.make_layout(
+                            (None, num_kv_heads, head_dim // x_size, block_size, x_size),
+                            (num_kv_heads * (head_dim // x_size) * block_size * x_size,
+                             (head_dim // x_size) * block_size * x_size,
+                             block_size * x_size,
+                             x_size,
+                             1),
+                        )
+                        kc_coord_nf = (pid_t_slot, pid_h, dim_group, pid_b, dim_within)
+                        kc_dw_nf = _layout_to_dword_off(kc_coord_nf, kc_nf_layout, elem_bytes)
 
-                    # -- Non-flash value_cache: [num_blocks, KH, D, BS] scalar stores --
-                    # Scalar stores required: stride-1 dim is block_size (not D), so
-                    # consecutive elements along D are block_size apart in memory —
-                    # a vector store would scatter across non-contiguous addresses.
-                    v_e = vector.bitcast(vec_type_e, v_raw)
+                        buffer_ops.buffer_store(k_rot_i32, kc_rsrc, kc_dw_nf)
 
-                    vc_nf_layout = fx.make_layout(
-                        (None, num_kv_heads, head_dim, block_size),
-                        (num_kv_heads * head_dim * block_size,
-                         head_dim * block_size,
-                         block_size,
-                         1),
-                    )
-                    for vi in range_constexpr(VEC_WIDTH):
-                        v_scalar = vector.extract(v_e, static_position=[vi])
-                        d_idx = ArithValue(tid) * VEC_WIDTH + vi
-                        vc_coord = (pid_t_slot, pid_hk, d_idx, pid_b)
-                        vc_elem_off = arith.index_cast(T.i32, crd2idx(vc_coord, vc_nf_layout))
-                        buffer_ops.buffer_store(v_scalar, vc_rsrc, vc_elem_off)
+                        v_e = vector.bitcast(vec_type_e, v_raw)
+                        vc_nf_layout = fx.make_layout(
+                            (None, num_kv_heads, head_dim, block_size),
+                            (num_kv_heads * head_dim * block_size,
+                             head_dim * block_size,
+                             block_size,
+                             1),
+                        )
+                        for vi in range_constexpr(VEC_WIDTH):
+                            v_scalar = vector.extract(v_e, static_position=[vi])
+                            d_idx = ArithValue(tid) * VEC_WIDTH + vi
+                            vc_coord = (pid_t_slot, pid_h, d_idx, pid_b)
+                            vc_elem_off = arith.index_cast(T.i32, crd2idx(vc_coord, vc_nf_layout))
+                            buffer_ops.buffer_store(v_scalar, vc_rsrc, vc_elem_off)
 
     @flyc.jit
     def launch_fused_rope_cache(
@@ -384,25 +335,55 @@ def build_fused_rope_cache_module(
         num_tokens: fx.Int32,
         stream: fx.Stream = fx.Stream(None),
     ):
-        # Kernel 1: Q RoPE
-        n_q = ArithValue(num_tokens) * num_q_heads
-        q_launcher = q_rope_kernel(Q, Positions, CosCache, SinCache, Q_out)
-        q_launcher.launch(
-            grid=(n_q, 1, 1),
+        n_h = max(num_q_heads, num_kv_heads)
+        fused_launcher = fused_rope_cache_kernel(
+            Q, K, V,
+            Positions, CosCache, SinCache,
+            SlotMapping, KeyCache, ValueCache,
+            Q_out, K_out,
+        )
+        fused_launcher.launch(
+            grid=(n_h, num_tokens, 1),
             block=(BLOCK_THREADS, 1, 1),
             stream=stream,
         )
 
-        # Kernel 2: K RoPE + KV cache write
-        n_k = ArithValue(num_tokens) * num_kv_heads
-        k_launcher = k_cache_kernel(
-            K, V, Positions, CosCache, SinCache, SlotMapping,
-            KeyCache, ValueCache, K_out,
-        )
-        k_launcher.launch(
-            grid=(n_k, 1, 1),
-            block=(BLOCK_THREADS, 1, 1),
-            stream=stream,
-        )
+    # Pre-compile with dummy tensors inside the builder to eliminate JIT
+    # dispatch overhead from the timed path (~100 us -> ~20 us).
+    import torch as _torch
+    _dummy_tok = 50
+    _dummy_pos = 8192
+    _dummy_dtype = _torch.bfloat16 if dtype_str == "bf16" else _torch.float16
+    _dummy_Q = _torch.empty(_dummy_tok, num_q_heads, head_dim, device="cuda", dtype=_dummy_dtype)
+    _dummy_K = _torch.empty(_dummy_tok, num_kv_heads, head_dim, device="cuda", dtype=_dummy_dtype)
+    _dummy_V = _torch.empty(_dummy_tok, num_kv_heads, head_dim, device="cuda", dtype=_dummy_dtype)
+    _dummy_Pos = _torch.empty(_dummy_tok, device="cuda", dtype=_torch.int32)
+    _dummy_Cos = _torch.empty(_dummy_pos, half_dim, device="cuda", dtype=_dummy_dtype)
+    _dummy_Sin = _torch.empty(_dummy_pos, half_dim, device="cuda", dtype=_dummy_dtype)
+    _dummy_Slot = _torch.empty(_dummy_tok, device="cuda", dtype=_torch.int32)
+    _dummy_nb = max(32, (_dummy_tok + block_size - 1) // block_size + 4)
+    _dummy_KC = _torch.empty(_dummy_nb, block_size, num_kv_heads, head_dim, device="cuda", dtype=_dummy_dtype)
+    _dummy_VC = _torch.empty(_dummy_nb, block_size, num_kv_heads, head_dim, device="cuda", dtype=_dummy_dtype)
+    _dummy_Qo = _torch.empty_like(_dummy_Q)
+    _dummy_Ko = _torch.empty_like(_dummy_K)
 
-    return launch_fused_rope_cache
+    _compiled = flyc.compile(
+        launch_fused_rope_cache,
+        _dummy_Q, _dummy_K, _dummy_V,
+        _dummy_Pos, _dummy_Cos, _dummy_Sin,
+        _dummy_Slot, _dummy_KC, _dummy_VC,
+        _dummy_Qo, _dummy_Ko, _dummy_tok,
+        _torch.cuda.current_stream(),
+    )
+
+    def launch_fused_rope_cache_fast(
+        Q, K, V, Positions, CosCache, SinCache,
+        SlotMapping, KeyCache, ValueCache,
+        Q_out, K_out, num_tokens, stream=None,
+    ):
+        s = stream if stream is not None else _torch.cuda.current_stream()
+        return _compiled(Q, K, V, Positions, CosCache, SinCache,
+                         SlotMapping, KeyCache, ValueCache,
+                         Q_out, K_out, num_tokens, s)
+
+    return launch_fused_rope_cache_fast
