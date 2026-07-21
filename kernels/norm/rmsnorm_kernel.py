@@ -704,6 +704,236 @@ def build_fused_add_rmsnorm_module(N: int, dtype_str: str, store_rstd: bool = Fa
     return launch_fused_add_rmsnorm
 
 
+def build_fused_postnorm_rmsnorm_module(N: int, dtype_str: str, eps: float = EPS):
+    """Post-norm fused RMSNorm: output = residual + RMSNorm(sublayer_output).
+
+    This is the OLMo-3 post-norm residual variant.  Unlike the pre-norm
+    ``build_fused_add_rmsnorm_module`` (which normalizes ``residual + x``), here
+    the reduction (pass 1) loads only ``sublayer_output`` and the residual add is
+    a separate elementwise step fused into pass 2.
+
+    Critical correctness subtlety (matches the SOL-ExecBench PyTorch reference and
+    Triton baseline): the normalized output is rounded to the input dtype (bf16)
+    *before* the residual is added, then both are upcast to f32, added, and
+    rounded back to bf16::
+
+        normed_bf16 = (x * inv_rms * w).to(bf16)
+        out = (normed_bf16.to(f32) + res.to(f32)).to(bf16)
+
+    The residual occupies the 3rd kernel slot (the ``_Unused``/``Rstd`` slot of
+    the plain RMSNorm kernel), so callers pass it as the 3rd tensor argument.
+    """
+    arch = get_rocm_arch()
+    USE_HW_CVT_PK_BF16_F32 = (arch == "gfx950") or str(arch).startswith("gfx95")
+
+    tile_cols = BLOCK_THREADS * VEC_WIDTH
+    RED_SLOTS = max(1, (BLOCK_THREADS + WARP_SIZE - 1) // WARP_SIZE)
+    elem_bits = 32 if dtype_str == "f32" else 16
+
+    SharedStorage = _make_reduction_storage(RED_SLOTS)
+
+    @flyc.kernel
+    def fused_postnorm_rmsnorm_kernel(
+        Input: fx.Tensor,
+        Gamma: fx.Tensor,
+        Residual: fx.Tensor,
+        Output: fx.Tensor,
+    ):
+        bid = fx.block_idx.x
+        tid = fx.thread_idx.x
+
+        elem_dtype = dtype_to_elem_type(dtype_str)
+        fm_fast = arith.FastMathFlags.fast
+        eps_c = eps
+        n_float = float(N)
+
+        lds = fx.SharedAllocator().allocate(SharedStorage).peek()
+        s_red = lds.s_red.view(fx.make_layout(RED_SLOTS, 1))
+        s_red2 = lds.s_red2.view(fx.make_layout(RED_SLOTS, 1))
+
+        def wave_reduce_add(x):
+            w = x
+            for _sh_exp in range_constexpr(int(math.log2(WARP_SIZE))):
+                off = WARP_SIZE // (2 << _sh_exp)
+                peer = w.shuffle_xor(off, WARP_SIZE)
+                w = w.addf(peer, fastmath=fm_fast)
+            return w
+
+        def block_reduce_add(val):
+            dummy = fx.Float32(0.0)
+            r0, _ = block_reduce_add2(val, dummy)
+            return r0
+
+        def block_reduce_add2(val0, val1):
+            if const_expr(RED_SLOTS == 1):
+                return wave_reduce_add(val0), wave_reduce_add(val1)
+
+            lane = tid % WARP_SIZE
+            wave = tid // WARP_SIZE
+
+            w0 = wave_reduce_add(val0)
+            w1 = wave_reduce_add(val1)
+
+            if lane == 0:
+                fx.memref_store(w0, s_red, wave)
+                fx.memref_store(w1, s_red2, wave)
+            gpu.barrier()
+
+            if wave == 0:
+                in_range = lane < RED_SLOTS
+                lane_safe = in_range.select(lane, 0)
+                v0 = fx.memref_load(s_red, lane_safe)
+                v1 = fx.memref_load(s_red2, lane_safe)
+                ww0 = in_range.select(v0, 0.0)
+                ww1 = in_range.select(v1, 0.0)
+                ww0 = wave_reduce_add(ww0)
+                ww1 = wave_reduce_add(ww1)
+
+                if lane == 0:
+                    fx.memref_store(ww0, s_red, 0)
+                    fx.memref_store(ww1, s_red2, 0)
+            gpu.barrier()
+
+            return fx.memref_load(s_red, 0), fx.memref_load(s_red2, 0)
+
+        # ==================================================================
+        # Fast path: N is a multiple of tile_cols
+        # ==================================================================
+        if const_expr(N >= tile_cols and N % tile_cols == 0 and elem_bits <= 16):
+            num_tiles = N // tile_cols
+            # Layout API: buffer-backed tensors + tiled access
+            Input_buf = fx.rocdl.make_buffer_tensor(Input)
+            Output_buf = fx.rocdl.make_buffer_tensor(Output)
+            Gamma_buf = fx.rocdl.make_buffer_tensor(Gamma)
+            Residual_buf = fx.rocdl.make_buffer_tensor(Residual)
+
+            row_in = fx.slice(Input_buf, (bid, None))
+            row_out = fx.slice(Output_buf, (bid, None))
+            row_residual = fx.slice(Residual_buf, (bid, None))
+
+            in_div = fx.logical_divide(row_in, fx.make_layout(VEC_WIDTH, 1))
+            out_div = fx.logical_divide(row_out, fx.make_layout(VEC_WIDTH, 1))
+            residual_div = fx.logical_divide(row_residual, fx.make_layout(VEC_WIDTH, 1))
+            gamma_div = fx.logical_divide(Gamma_buf, fx.make_layout(VEC_WIDTH, 1))
+
+            copy_atom = fx.make_copy_atom(fx.rocdl.BufferCopy128b(), elem_bits)
+
+            c_zero_f = fx.Float32(0.0)
+            thread_sumsq = c_zero_f
+            thread_dummy = c_zero_f
+            in_local = []
+
+            # Pass 1: load + cache + sumsq (reduction over sublayer_output only)
+            for tile_i in range_constexpr(num_tiles):
+                idx = tid + tile_i * BLOCK_THREADS
+                vec = _load_vec(copy_atom, VEC_WIDTH, elem_dtype, in_div, idx)
+                in_local.append(vec)
+                x = vec.to(fx.Float32)
+
+                x2 = x * x
+                red2 = x2.reduce(ReductionOp.ADD, fastmath=fm_fast)
+                thread_sumsq = thread_sumsq + red2
+
+            _, sum_sq = block_reduce_add2(thread_dummy, thread_sumsq)
+            mean_sq = sum_sq / n_float
+            ms_eps = mean_sq + eps_c
+            rrms = fmath.rsqrt(ms_eps, fastmath=fm_fast)
+
+            # Pass 2: normalize + gamma, round to bf16, add residual, round to bf16
+            for tile_i in range_constexpr(num_tiles):
+                idx = tid + tile_i * BLOCK_THREADS
+
+                g = _load_vec(copy_atom, VEC_WIDTH, elem_dtype, gamma_div, idx).to(fx.Float32)
+                x = in_local[tile_i].to(fx.Float32)
+
+                normed = (x * rrms) * g
+                # Round normalized to input dtype (bf16) BEFORE adding residual,
+                # matching the OLMo-3 post-norm reference.
+                normed_e = _to_elem_vec(dtype_str, elem_dtype, USE_HW_CVT_PK_BF16_F32, normed)
+
+                res = _load_vec(copy_atom, VEC_WIDTH, elem_dtype, residual_div, idx).to(fx.Float32)
+                out = normed_e.to(fx.Float32) + res
+                out_e = _to_elem_vec(dtype_str, elem_dtype, USE_HW_CVT_PK_BF16_F32, out)
+
+                out_idx = tid + tile_i * BLOCK_THREADS
+                _store_vec(copy_atom, VEC_WIDTH, elem_dtype, out_e, out_div, out_idx)
+
+        else:
+            # ==============================================================
+            # Generic path: scalar 2-pass for arbitrary N
+            # ==============================================================
+            Input_buf = fx.rocdl.make_buffer_tensor(Input)
+            Output_buf = fx.rocdl.make_buffer_tensor(Output)
+            Gamma_buf = fx.rocdl.make_buffer_tensor(Gamma)
+            Residual_buf = fx.rocdl.make_buffer_tensor(Residual)
+
+            row_in = fx.slice(Input_buf, (bid, None))
+            row_out = fx.slice(Output_buf, (bid, None))
+            row_residual = fx.slice(Residual_buf, (bid, None))
+
+            copy_atom_s = fx.make_copy_atom(
+                fx.rocdl.BufferCopy16b() if elem_bits <= 16 else fx.rocdl.BufferCopy32b(),
+                elem_bits,
+            )
+
+            row_div = fx.logical_divide(row_in, fx.make_layout(1, 1))
+            gamma_div = fx.logical_divide(Gamma_buf, fx.make_layout(1, 1))
+            out_div = fx.logical_divide(row_out, fx.make_layout(1, 1))
+            residual_div = fx.logical_divide(row_residual, fx.make_layout(1, 1))
+
+            c_zero_f = fx.Float32(0.0)
+            thread_sumsq = c_zero_f
+
+            for base_idx_int in range_constexpr(0, N, BLOCK_THREADS):
+                idx = tid + base_idx_int
+                is_valid = idx < N
+                idx_safe = is_valid.select(idx, 0)
+                x_e = _load_scalar(copy_atom_s, elem_dtype, row_div, idx_safe)
+                x = x_e if dtype_str == "f32" else x_e.to(fx.Float32)
+                x2 = x * x
+                x2_safe = is_valid.select(x2, c_zero_f)
+                thread_sumsq = thread_sumsq + x2_safe
+
+            sum_sq = block_reduce_add(thread_sumsq)
+            mean_sq = sum_sq / n_float
+            ms_eps = mean_sq + eps_c
+            rrms = fmath.rsqrt(ms_eps, fastmath=fm_fast)
+
+            for base_idx_int in range_constexpr(0, N, BLOCK_THREADS):
+                idx = tid + base_idx_int
+                if idx < N:
+                    x_e = _load_scalar(copy_atom_s, elem_dtype, row_div, idx)
+                    g_e = _load_scalar(copy_atom_s, elem_dtype, gamma_div, idx)
+                    res_e = _load_scalar(copy_atom_s, elem_dtype, residual_div, idx)
+                    x = x_e if dtype_str == "f32" else x_e.to(fx.Float32)
+                    g = g_e if dtype_str == "f32" else g_e.to(fx.Float32)
+                    res = res_e if dtype_str == "f32" else res_e.to(fx.Float32)
+                    normed = (x * rrms) * g
+                    # Round normalized to input dtype (bf16) BEFORE adding residual.
+                    normed_e = _to_elem_scalar(dtype_str, elem_dtype, normed)
+                    out = normed_e.to(fx.Float32) + res
+                    out_e = _to_elem_scalar(dtype_str, elem_dtype, out)
+                    _store_scalar(copy_atom_s, elem_dtype, elem_dtype, out_div, idx, out_e)
+
+    @flyc.jit
+    def launch_fused_postnorm_rmsnorm(
+        Input: fx.Tensor,
+        Gamma: fx.Tensor,
+        Residual: fx.Tensor,
+        Output: fx.Tensor,
+        m_in: fx.Int32,
+        stream: fx.Stream = fx.Stream(None),
+    ):
+        launcher = fused_postnorm_rmsnorm_kernel(Input, Gamma, Residual, Output)
+        launcher.launch(
+            grid=(m_in, 1, 1),
+            block=(BLOCK_THREADS, 1, 1),
+            stream=stream,
+        )
+
+    return launch_fused_postnorm_rmsnorm
+
+
 def _build_rmsnorm_quant_module(
     N: int,
     dtype_str: str,
