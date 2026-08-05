@@ -413,13 +413,14 @@ def _score_pair_sum(v_s, zero_f, fm_fast):
 
 def _sub_score_pair(v_s, row_max, fm_fast):
     s_lo, s_hi = v_s
-    lo_sub = []
-    hi_sub = []
-    for r in range_constexpr(16):
-        lo_sub.append(_fsub(s_lo[r], row_max, fm_fast))
-    for r in range_constexpr(16):
-        hi_sub.append(_fsub(s_hi[r], row_max, fm_fast))
-    return Vec.from_elements(lo_sub, fx.Float32).ir_value(), Vec.from_elements(hi_sub, fx.Float32).ir_value()
+    max_vec = Vec.from_elements([as_mlir_value(row_max)], fx.Float32).broadcast_to(16)
+    if isinstance(s_lo, (list, tuple)):
+        lo_vec = Vec.from_elements([as_mlir_value(v) for v in s_lo], fx.Float32)
+        hi_vec = Vec.from_elements([as_mlir_value(v) for v in s_hi], fx.Float32)
+    else:
+        lo_vec = Vec(s_lo)
+        hi_vec = Vec(s_hi)
+    return _fsub(lo_vec, max_vec, fm_fast), _fsub(hi_vec, max_vec, fm_fast)
 
 
 def _exp2_score_slice(v_s, start, length):
@@ -430,7 +431,7 @@ def _exp2_score_slice(v_s, start, length):
             lo_partial.append(rocdl.exp2(T.f32, as_mlir_value(s_lo[r])))
         return Vec.from_elements(lo_partial, fx.Float32).ir_value(), v_s[1]
 
-    lo_partial = [Vec(v_s[0])[r] for r in range_constexpr(16)]
+    lo_partial = Vec(v_s[0])
     hi_full = []
     for r in range_constexpr(16):
         hi_full.append(rocdl.exp2(T.f32, as_mlir_value(Vec(v_s[1])[r])))
@@ -4601,14 +4602,16 @@ class DualwaveFp8KvGmemToLdsLoader(DualwaveFp8KernelContext):
                 [self.v2i32_type], self.v_fp8_load64_atom, fx.slice(self.v_div, (None, fx.Int32(src_elem)))
             )
             v_words = Vec(v_i32x2, (2,), fx.Int32)
-            bf = []
+            scale_one = as_mlir_value(fx.Float32(1.0))
+            v2bf16_ty = Vec.make_type(2, fx.BFloat16)
+            pairs = []
             for w in range_constexpr(2):
                 word = as_mlir_value(fx.Int32(v_words[w]))
-                lo2 = Vec(rocdl.cvt_pk_f32_fp8(Vec.make_type(2, fx.Float32), word, False), (2,), fx.Float32)
-                hi2 = Vec(rocdl.cvt_pk_f32_fp8(Vec.make_type(2, fx.Float32), word, True), (2,), fx.Float32)
-                for e in (lo2[0], lo2[1], hi2[0], hi2[1]):
-                    bf.append(fx.Float32(e) * self.vd_fp8)
-            v8bf = self.bf16_trunc_pack_v8(bf)
+                pairs.append(rocdl.cvt_scalef32_pk_bf16_fp8(v2bf16_ty, word, scale_one, 0))
+                pairs.append(rocdl.cvt_scalef32_pk_bf16_fp8(v2bf16_ty, word, scale_one, 1))
+            v8bf = _concat_vectors(
+                _concat_vectors(pairs[0], pairs[1]), _concat_vectors(pairs[2], pairs[3])
+            ).ir_value()
             byte_off = (
                 vt_buf
                 + self.wave_id_uni * traits.VLS_BF

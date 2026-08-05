@@ -9,7 +9,7 @@ import flydsl.compiler as flyc
 import flydsl.expr as fx
 from flydsl._mlir.dialects import scf as _scf
 from flydsl.compiler.kernel_function import CompilationContext
-from flydsl.expr import const_expr, range_constexpr, rocdl
+from flydsl.expr import arith, const_expr, range_constexpr, rocdl
 from flydsl.expr.typing import T
 from flydsl.expr.utils.arith import ArithValue
 from flydsl.expr.utils.arith import _to_raw as _raw
@@ -312,8 +312,6 @@ def build_flash_attn_dualwave_swp_fp8_module(
                     v_s_1 = softmax_helper.causal_mask_prologue_if_needed(
                         v_s_1, j_idx - 2, (j_idx - 1) * traits.BLOCK_N
                     )
-                else:
-                    v_s_1 = softmax_helper.v_s_vec_to_lists(v_s_1)
                 m_tile_max_a = softmax_helper.reduce_max(v_s_1)
 
                 _sched_barrier_pairs(traits, 4, 6, 2)
@@ -374,8 +372,6 @@ def build_flash_attn_dualwave_swp_fp8_module(
                         j_idx - 1,
                         j_idx * traits.BLOCK_N,
                     )
-                else:
-                    v_s_0 = softmax_helper.v_s_vec_to_lists(v_s_0)
                 rocdl.s_waitcnt(traits.LGKMCNT_0_ONLY)
                 _waitcnt_vm_n(ctx.NUM_DMA_K + ctx.NUM_DMA_V)
                 rocdl.sched_barrier(0)
@@ -619,10 +615,12 @@ def build_flash_attn_dualwave_swp_fp8_module(
             # Normalize by l_row; zero rows become zero instead of NaN.
             # Split-K normalizes before packing so O_partial keeps useful mantissa
             # range; the combine kernel later applies w_s*l_s.
-            # HIPREC already folds v_descale into the bf16 vt scratch, so O only needs
-            # the 1/l normalization here.
+            # The FP8 V descale is deferred from the per-element V->bf16 dequant to a
+            # single scale here: O = softmax(QK) V scales linearly with V, so vd/l_row
+            # folds the descale into the 1/L normalization at no extra cost.
             inv_l_rcp = rocdl.rcp(T.f32, _raw(l_row))
-            inv_l = ArithValue(fx.Float32(l_row) > ctx.c_zero_f).select(inv_l_rcp, ctx.c_zero_f)
+            inv_l_scaled = arith.mulf(_raw(inv_l_rcp), _raw(ctx.vd_fp8), fastmath=ctx.fm_fast)
+            inv_l = ArithValue(fx.Float32(l_row) > ctx.c_zero_f).select(inv_l_scaled, ctx.c_zero_f)
             softmax_helper.scale_o(v_o, inv_l)
 
             # CLOSE the phase shift: one extra s_barrier on group A (complement of
