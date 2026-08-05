@@ -397,7 +397,7 @@ def build_flash_attn_dualwave_swp_fp8_module(
         "fast_fp_math": True,
         "unsafe_fp_math": True,
         "llvm_options": {
-            "enable-post-misched": False,
+            "enable-post-misched": True,
             "lsr-drop-solution": True,
         },
     }
