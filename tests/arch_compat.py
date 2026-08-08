@@ -1,0 +1,32 @@
+"""Architecture compatibility configuration for GPU tests and examples.
+
+Single source of truth for what runs on CDNA vs RDNA GPUs.
+Referenced by:
+  - tests/kernels/conftest.py  (pytest collection filter)
+  - scripts/run_tests.sh       (example script filter)
+"""
+
+# Test files that ONLY work on CDNA (gfx9xx) GPUs.
+# Reasons: MFMA instructions, hardcoded wave64, or imports from CDNA-only kernels.
+CDNA_ONLY_TESTS = frozenset(
+    {
+        "test_flash_attn_fwd.py",  # MFMA + hardcoded wave64 FMHA kernels
+        "test_preshuffle_gemm.py",
+        "test_moe_gemm.py",
+        "test_moe_reduce.py",
+        "test_pa.py",
+        "test_swa_gfx950.py",
+        "test_quant.py",
+        "test_allreduce.py",  # custom_all_reduce requires CDNA (gfx9xx)
+        "test_mega_moe_v2.py",  # MegaMoEV2 A8W4 requires CDNA4 (gfx95x)
+    }
+)
+
+# Example scripts verified to work on RDNA (non-CDNA) GPUs.
+# On CDNA all examples run; on RDNA only whitelisted ones run.
+RDNA_COMPATIBLE_EXAMPLES = frozenset(
+    {
+        "01-vectorAdd.py",
+        "02-tiledCopy.py",
+    }
+)
