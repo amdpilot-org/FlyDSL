@@ -1,76 +1,57 @@
-cmake_minimum_required(VERSION 3.18)
-project(CuteIR VERSION 0.1.0 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.20)
+project(FLYDSL LANGUAGES C CXX)
 
-# C++ Standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Options
-option(BUILD_RUNTIME "Build C++ runtime library" ON)
-option(BUILD_PYTHON_BINDINGS "Build Python bindings" ON)
-option(BUILD_TESTS "Build tests" OFF)
+option(FLY_UNITTEST "Build Fly Unit Tests" OFF)
 
-# Find MLIR (optional)
-find_package(MLIR CONFIG)
-if(MLIR_FOUND)
-    message(STATUS "Found MLIR: ${MLIR_DIR}")
-    include_directories(${MLIR_INCLUDE_DIRS})
-    add_definitions(${MLIR_DEFINITIONS})
-    
-    # TableGen targets
-    set(LLVM_TARGET_DEFINITIONS include/cute/CuteDialect.td)
-    tablegen(MLIR CuteDialect.h.inc -gen-dialect-decls)
-    tablegen(MLIR CuteDialect.cpp.inc -gen-dialect-defs)
-    add_public_tablegen_target(CuteDialectIncGen)
-    
-    set(LLVM_TARGET_DEFINITIONS include/cute/CuteOps.td)
-    tablegen(MLIR CuteOps.h.inc -gen-op-decls)
-    tablegen(MLIR CuteOps.cpp.inc -gen-op-defs)
-    add_public_tablegen_target(CuteOpsIncGen)
-    
-    set(LLVM_TARGET_DEFINITIONS include/cute/CuteNvgpuDialect.td)
-    tablegen(MLIR CuteNvgpuDialect.h.inc -gen-dialect-decls)
-    tablegen(MLIR CuteNvgpuDialect.cpp.inc -gen-dialect-defs)
-    add_public_tablegen_target(CuteNvgpuDialectIncGen)
-    
-    set(LLVM_TARGET_DEFINITIONS include/cute/CuteNvgpuOps.td)
-    tablegen(MLIR CuteNvgpuOps.h.inc -gen-op-decls)
-    tablegen(MLIR CuteNvgpuOps.cpp.inc -gen-op-defs)
-    add_public_tablegen_target(CuteNvgpuOpsIncGen)
-    
-    set(LLVM_TARGET_DEFINITIONS include/cute/CutePasses.td)
-    tablegen(MLIR CutePasses.h.inc -gen-pass-decls -name Cute)
-    add_public_tablegen_target(CutePassesIncGen)
-    
-    message(STATUS "TableGen targets configured")
-else()
-    message(WARNING "MLIR not found. TableGen targets will not be built.")
-    message(STATUS "Set MLIR_DIR to enable MLIR features.")
+find_package(MLIR REQUIRED CONFIG)
+
+message(STATUS "Found MLIR: ${MLIR_DIR}")
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Build type (Debug, Release, RelWithDebInfo, MinSizeRel)" FORCE)
+  message(STATUS "CMAKE_BUILD_TYPE not set; defaulting to ${CMAKE_BUILD_TYPE}")
 endif()
 
-# Build runtime library
-if(BUILD_RUNTIME)
-    add_subdirectory(runtime)
-endif()
+set(LLVM_RUNTIME_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/bin)
+set(LLVM_LIBRARY_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/lib)
+set(LLVM_BUILD_TOOLS ON)
+set(MLIR_BINARY_DIR ${CMAKE_BINARY_DIR})
 
-# Installation
-install(DIRECTORY include/cute
-    DESTINATION include
-    FILES_MATCHING PATTERN "*.td"
-)
+list(APPEND CMAKE_MODULE_PATH "${MLIR_CMAKE_DIR}")
+list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
 
-install(DIRECTORY docs
-    DESTINATION share/cute_ir
-)
+include(TableGen)
+include(AddLLVM)
+include(AddMLIR)
+include(HandleLLVMOptions)
+string(REPLACE "-Wl,-z,defs" "" CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}")
+include(MLIRDetectPythonEnv)
+mlir_configure_python_dev_packages()
 
-# Summary
-message(STATUS "")
-message(STATUS "CuTe IR Configuration Summary")
-message(STATUS "==============================")
-message(STATUS "  Version:           ${PROJECT_VERSION}")
-message(STATUS "  Build Runtime:     ${BUILD_RUNTIME}")
-message(STATUS "  Build Python:      ${BUILD_PYTHON_BINDINGS}")
-message(STATUS "  Build Tests:       ${BUILD_TESTS}")
-message(STATUS "  MLIR Found:        ${MLIR_FOUND}")
-message(STATUS "")
+include_directories(SYSTEM ${LLVM_INCLUDE_DIRS})
+include_directories(SYSTEM ${MLIR_INCLUDE_DIRS})
+include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_BINARY_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/lib/CAPI)
+
+include_directories(${PROJECT_SOURCE_DIR}/thirdparty/dlpack/include)
+include_directories(${PROJECT_SOURCE_DIR}/thirdparty/tvm-ffi/include)
+
+link_directories(${LLVM_BUILD_LIBRARY_DIR})
+add_definitions(${LLVM_DEFINITIONS})
+
+
+set(MLIR_PYTHON_PACKAGE_PREFIX "_mlir" CACHE STRING "" FORCE)
+set(MLIR_BINDINGS_PYTHON_INSTALL_PREFIX "python_packages/flydsl/${MLIR_PYTHON_PACKAGE_PREFIX}" CACHE STRING "" FORCE)
+
+include(cmake/FlyDSLBackends.cmake)
+
+add_subdirectory(include/flydsl)
+add_subdirectory(lib)
+add_subdirectory(tools)
+
+add_subdirectory(python/mlir_flydsl)
