@@ -1,0 +1,60 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2025 FlyDSL Project Contributors
+
+#ifndef FLYDSL_DIALECT_FLY_IR_DIALECT_H
+#define FLYDSL_DIALECT_FLY_IR_DIALECT_H
+
+#include "mlir/Bytecode/BytecodeOpInterface.h"
+#include "mlir/Dialect/GPU/IR/CompilationInterfaces.h"
+#include "mlir/Dialect/LLVMIR/LLVMDialect.h"
+#include "mlir/IR/Attributes.h"
+#include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/BuiltinOps.h"
+#include "mlir/IR/BuiltinTypes.h"
+#include "mlir/IR/Dialect.h"
+#include "mlir/IR/OpImplementation.h"
+#include "mlir/IR/Types.h"
+#include "mlir/Interfaces/FunctionInterfaces.h"
+#include "mlir/Interfaces/InferTypeOpInterface.h"
+#include "mlir/Interfaces/SideEffectInterfaces.h"
+
+#include "flydsl/Dialect/Fly/IR/FlyDialect.h.inc"
+#include "flydsl/Dialect/Fly/IR/FlyEnums.h.inc"
+
+#include "flydsl/Dialect/Fly/IR/FlyAttrInterfaces.h.inc"
+#include "flydsl/Dialect/Fly/IR/FlyTypeInterfaces.h.inc"
+
+#define GET_ATTRDEF_CLASSES
+#include "flydsl/Dialect/Fly/IR/FlyAttrDefs.h.inc"
+#define GET_TYPEDEF_CLASSES
+#include "flydsl/Dialect/Fly/IR/FlyTypeDefs.h.inc"
+#define GET_OP_CLASSES
+#include "flydsl/Dialect/Fly/IR/FlyOps.h.inc"
+
+namespace mlir::fly {
+#include "flydsl/Dialect/Fly/IR/FlyAttrConstraints.h.inc"
+#include "flydsl/Dialect/Fly/IR/FlyTypeConstraints.h.inc"
+
+template <AddressSpace addressSpace> bool isGenericAddressSpace(Attribute attr) {
+  auto addressSpaceAttr = llvm::dyn_cast_if_present<AddressSpaceAttr>(attr);
+  return addressSpaceAttr && addressSpaceAttr.getValue() == addressSpace;
+}
+
+template <class TargetAddressSpace> bool isTargetAddressSpace(Attribute attr) {
+  return llvm::isa_and_nonnull<TargetAddressSpace>(attr);
+}
+
+/// Type trait marking a copy-atom op type that moves a whole N-D tile in a single
+/// copy_atom_call (e.g. the gfx1250 TDM DMA). The expand-copy lowering checks this
+/// to emit one whole-tile call instead of decomposing the tiled memref per
+/// element. Defined here (single shared TypeID) so a target-neutral pass can query
+/// it via `hasTrait` — boundary-safe, unlike a concrete cross-dialect dyn_cast.
+template <typename ConcreteType>
+class WholeTileCopy : public TypeTrait::TraitBase<ConcreteType, WholeTileCopy> {};
+
+ParseResult parseMNKDimensionList(AsmParser &parser, int32_t &m, int32_t &n, int32_t &k);
+void printMNKDimensionList(AsmPrinter &printer, int32_t m, int32_t n, int32_t k);
+
+} // namespace mlir::fly
+
+#endif // FLYDSL_DIALECT_FLY_IR_DIALECT_H
