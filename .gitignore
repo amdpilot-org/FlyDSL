@@ -1,10 +1,23 @@
 # Build directories
 build/
 build_*/
+build-fly/
 cmake-build-*/
+
+# GPU core dumps
+gpucore.*
+
+# IR dumps
+my_ir_dumps*/
+
+# git 
+*.log
+*.diff
 
 # Python
 __pycache__/
+python/flydsl/_version.py
+.ruff_cache/
 *.py[cod]
 *$py.class
 *.so
@@ -14,8 +27,17 @@ dist/
 .eggs/
 lib/python*/site-packages/
 
+# Virtualenvs
+.venv/
+.venv*/
+.venvs/
+
+# C++
+.cache/
+
 # IDE
 .vscode/
+.cursor/
 .idea/
 *.swp
 *.swo
@@ -23,7 +45,11 @@ lib/python*/site-packages/
 
 # Compiled files
 *.o
+*.obj
 *.a
+*.s
+*.asm
+*.hasco
 *.cubin
 *.ptx
 
@@ -31,6 +57,18 @@ lib/python*/site-packages/
 /tmp/
 *.tmp
 
-# OS
+# MACOS
 .DS_Store
 Thumbs.db
+
+# Sphinx documentation build
+docs/_build/
+python/flydsl/_mlir
+
+# Benchmark/accuracy CSVs emitted by tests/kernels harnesses
+fmha_perf_*.csv
+run_pa_decode_ps_test.*.csv
+.humanize/
+
+# rocprofv3 raw counter/trace output
+.rocprofv3/
