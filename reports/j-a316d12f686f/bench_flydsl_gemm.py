@@ -255,6 +255,51 @@ def benchmark_matmul(dtype, m, n, k, warmup, repeats):
     }
 
 
+def self_check():
+    """Correctness sanity: the operation must compute the right thing, not just fast.
+
+    bf16/fp16: compare torch.matmul against a float64 reference, within dtype
+        tolerance. fp8: with unit per-tensor scales the scaled_mm equals the
+        plain matmul of the (dequantized-to-fp32) inputs; check the output is
+        finite and close to a bf16 matmul of the same data.
+    Runs once after all timing; a failure invalidates every number above it.
+    """
+    dev = "cuda"
+    M = N = K = 512
+    ref64 = torch.randn(M, K, dtype=torch.float64, device=dev)
+    b64 = torch.randn(K, N, dtype=torch.float64, device=dev)
+    expect = ref64 @ b64
+
+    out_scale = expect.abs().max().item() + 1e-6
+    for name, dt, tol in [("bf16", torch.bfloat16, 0.05), ("fp16", torch.float16, 0.05)]:
+        a = ref64.to(dt); b = b64.to(dt)
+        got = torch.matmul(a, b).to(torch.float64)
+        rel_err = (got - expect).abs().max().item() / out_scale
+        ok = rel_err < tol
+        print(f"[self-check] {name} matmul rel_err={rel_err:.4e} (tol={tol:.0e}) -> {'PASS' if ok else 'FAIL'}")
+        if not ok:
+            raise RuntimeError(f"{name} matmul correctness check failed (rel_err={rel_err})")
+
+    # fp8 e4m3 via _scaled_mm: with unit per-tensor scales the scaled_mm equals
+    # the plain matmul of the (dequantized-to-fp32) inputs, accumulated to bf16.
+    # Compare _scaled_mm against a reference computed from the SAME quantized
+    # inputs (dequant->fp32 matmul), NOT against the unquantized fp64 result --
+    # that isolates the scaled-MMA path's correctness from quantization loss.
+    a32 = ref64.to(torch.float32); b32 = b64.to(torch.float32)
+    a8 = a32.to(torch.float8_e4m3fn)
+    b8 = b32.to(torch.float8_e4m3fn)  # (N,K); b8.t() is (K,N) col-major
+    one = torch.ones(1, device=dev, dtype=torch.float32)
+    got = torch._scaled_mm(a8, b8.t(), scale_a=one, scale_b=one, out_dtype=torch.bfloat16)
+    ref_quant = (a8.to(torch.float32) @ b8.to(torch.float32).t()).to(torch.bfloat16)
+    fin = torch.isfinite(got).all().item()
+    scale = ref_quant.abs().max().item() + 1e-6
+    rel_err = (got.to(torch.float32) - ref_quant.to(torch.float32)).abs().max().item() / scale
+    ok = fin and rel_err < 0.02
+    print(f"[self-check] fp8 _scaled_mm finite={fin} rel_err_vs_quantized_ref={rel_err:.4e} (tol=2e-2) -> {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        raise RuntimeError("fp8 scaled_mm correctness check failed")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--warmup", type=int, default=20)
@@ -315,6 +360,11 @@ def main():
         with open(args.json, "w") as f:
             json.dump(out, f, indent=2)
         print(f"Wrote JSON results -> {args.json}")
+
+    # Correctness self-check runs AFTER all timing so its allocations cannot
+    # perturb rocBLAS kernel selection for the benchmarked shapes.
+    print()
+    self_check()
 
 
 if __name__ == "__main__":
