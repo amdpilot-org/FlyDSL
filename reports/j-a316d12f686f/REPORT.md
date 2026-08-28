@@ -67,8 +67,10 @@ are SMT threads, not GPU CUs; the GPU agent is the one with 256).
   its own pair of CUDA timing events (real GPU time, not wall-clock/Python overhead).
 - TFLOPS = `2·M·N·K / time`. Reported as **median** (typical) and **best** (from min
   time, least noise). Spread columns: min, max, population std, p90, p99.
-- bf16/fp16 use `torch.matmul(..., out=)`; fp8 e4m3 uses `torch._scaled_mm` with
-  unit per-tensor scales (measures MFMA throughput, not numerics) and bf16 output.
+- bf16/fp16 use `torch.matmul(..., out=)`; fp8 e4m3 uses `torch._scaled_mm(..., out=)`
+  with unit per-tensor scales (measures MFMA throughput, not numerics) and bf16 output.
+  All three paths use a pre-allocated output buffer so timing measures pure kernel
+  execution, not allocation.
 - **Correctness self-check:** after all timing, the script verifies the operation is
   actually correct — bf16/fp16 `matmul` against a float64 reference (relative error
   < 5%), fp8 `_scaled_mm` against a reference computed from the same quantized inputs
@@ -86,37 +88,38 @@ are SMT threads, not GPU CUs; the GPU agent is the one with 256).
 
 | dtype | M | N | K | med ms | min ms | max ms | std ms | p90 ms | p99 ms | TF/s med | TF/s best |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
-| fp16 | 2048 | 2048 | 2048 | 0.0280 | 0.0268 | 0.0446 | 0.0020 | 0.0292 | 0.0339 | 612.7 | 640.1 |
-| bf16 | 32 | 384 | 7168 | 0.0153 | 0.0112 | 0.1122 | 0.0098 | 0.0183 | 0.0278 | 11.5 | 15.8 |
-| bf16 | 8192 | 8192 | 8192 | 0.7798 | 0.7729 | 0.7893 | 0.0029 | 0.7824 | 0.7873 | 1410.0 | 1422.6 |
-| bf16 | 5120 | 5120 | 8320 | 0.3719 | 0.3676 | 0.3879 | 0.0031 | 0.3750 | 0.3840 | 1172.8 | 1186.8 |
+| fp16 | 2048 | 2048 | 2048 | 0.0273 | 0.0266 | 0.0417 | 0.0016 | 0.0282 | 0.0328 | 629.8 | 644.9 |
+| bf16 | 32 | 384 | 7168 | 0.0155 | 0.0115 | 0.0980 | 0.0084 | 0.0184 | 0.0247 | 11.4 | 15.3 |
+| bf16 | 8192 | 8192 | 8192 | 0.7786 | 0.7727 | 0.7849 | 0.0025 | 0.7809 | 0.7840 | 1412.2 | 1422.9 |
+| bf16 | 5120 | 5120 | 8320 | 0.3721 | 0.3683 | 0.3779 | 0.0016 | 0.3735 | 0.3777 | 1172.2 | 1184.3 |
 
 ### B) Square compute-bound sweep (bf16/fp16, `torch.matmul`)
 
 | dtype | M | N | K | med ms | min ms | max ms | std ms | p90 ms | p99 ms | TF/s med | TF/s best |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
-| bf16 | 1024 | 1024 | 1024 | 0.0135 | 0.0106 | 0.0366 | 0.0030 | 0.0148 | 0.0192 | 158.8 | 203.4 |
-| bf16 | 2048 | 2048 | 2048 | 0.0252 | 0.0249 | 0.0348 | 0.0012 | 0.0256 | 0.0305 | 682.8 | 690.5 |
-| bf16 | 4096 | 4096 | 4096 | 0.1046 | 0.1028 | 0.1130 | 0.0012 | 0.1054 | 0.1094 | 1313.4 | 1336.9 |
-| bf16 | 8192 | 8192 | 8192 | 0.7766 | 0.7678 | 0.7841 | 0.0028 | 0.7799 | 0.7834 | 1415.8 | 1432.0 |
-| fp16 | 4096 | 4096 | 4096 | 0.1172 | 0.1160 | 0.1255 | 0.0012 | 0.1181 | 0.1216 | 1173.1 | 1184.4 |
-| fp16 | 8192 | 8192 | 8192 | 0.8762 | 0.8703 | 0.8848 | 0.0027 | 0.8802 | 0.8822 | 1254.9 | 1263.4 |
+| bf16 | 1024 | 1024 | 1024 | 0.0118 | 0.0108 | 0.0322 | 0.0024 | 0.0141 | 0.0188 | 182.3 | 199.6 |
+| bf16 | 2048 | 2048 | 2048 | 0.0251 | 0.0248 | 0.0332 | 0.0010 | 0.0259 | 0.0298 | 683.9 | 691.6 |
+| bf16 | 4096 | 4096 | 4096 | 0.1046 | 0.1029 | 0.1127 | 0.0013 | 0.1058 | 0.1098 | 1313.9 | 1335.9 |
+| bf16 | 8192 | 8192 | 8192 | 0.7766 | 0.7702 | 0.7878 | 0.0027 | 0.7803 | 0.7844 | 1415.8 | 1427.5 |
+| fp16 | 4096 | 4096 | 4096 | 0.1173 | 0.1168 | 0.1248 | 0.0010 | 0.1182 | 0.1227 | 1171.5 | 1176.7 |
+| fp16 | 8192 | 8192 | 8192 | 0.8772 | 0.8700 | 0.8879 | 0.0029 | 0.8813 | 0.8866 | 1253.4 | 1263.8 |
 
 ### C) Repo gfx950 FP8 GEMM shapes (fp8 e4m3, `torch._scaled_mm` / `cdna4.mfma_scale`)
 
 | dtype | M | N | K | med ms | min ms | max ms | std ms | p90 ms | p99 ms | TF/s med | TF/s best |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
-| fp8 | 8192 | 8192 | 8192 | 0.3542 | 0.3493 | 0.3885 | 0.0044 | 0.3566 | 0.3685 | 3104.0 | 3147.9 |
-| fp8 | 5120 | 5120 | 8320 | 0.2052 | 0.1948 | 0.2549 | 0.0106 | 0.2208 | 0.2303 | 2126.0 | 2239.2 |
-| fp8 | 9728 | 8192 | 8320 | 0.4351 | 0.4300 | 0.4545 | 0.0030 | 0.4377 | 0.4439 | 3047.7 | 3083.6 |
-| fp8 | 512 | 2112 | 7168 | 0.0201 | 0.0199 | 0.0356 | 0.0018 | 0.0205 | 0.0252 | 770.5 | 779.8 |
-| fp8 | 256 | 2112 | 7168 | 0.0166 | 0.0164 | 0.0576 | 0.0044 | 0.0174 | 0.0319 | 466.9 | 473.8 |
+| fp8 | 8192 | 8192 | 8192 | 0.3548 | 0.3514 | 0.3802 | 0.0032 | 0.3583 | 0.3618 | 3098.8 | 3128.6 |
+| fp8 | 5120 | 5120 | 8320 | 0.2062 | 0.1935 | 0.2389 | 0.0078 | 0.2160 | 0.2269 | 2115.0 | 2254.5 |
+| fp8 | 9728 | 8192 | 8320 | 0.4353 | 0.4298 | 0.4496 | 0.0026 | 0.4377 | 0.4394 | 3046.6 | 3085.3 |
+| fp8 | 512 | 2112 | 7168 | 0.0201 | 0.0199 | 0.0309 | 0.0012 | 0.0206 | 0.0248 | 772.0 | 779.8 |
+| fp8 | 256 | 2112 | 7168 | 0.0166 | 0.0163 | 0.0493 | 0.0035 | 0.0168 | 0.0290 | 468.1 | 476.1 |
 
-**Headline number:** bf16 8192³ GEMM ≈ **1410 TFLOPS** (median, ±0.37% std); fp8
-8192³ GEMM ≈ **3104 TFLOPS** (median). The fp8/bf16 throughput ratio is ~2.20×,
+
+**Headline number:** bf16 8192³ GEMM ≈ **1412 TFLOPS** (median, ±0.32% std); fp8
+8192³ GEMM ≈ **3099 TFLOPS** (median). The fp8/bf16 throughput ratio is ~2.19×,
 consistent with gfx950 fp8 MFMA having ~2× the bf16 MFMA rate. The large compute-bound
 shapes are extremely tight (relative std ≈ 0.3–0.4%); small/skinny shapes are
-launch/memory-bound and noisy (e.g. bf16 32×384×7168 swings 0.011–0.112 ms).
+launch/memory-bound and noisy (e.g. bf16 32×384×7168 swings 0.012–0.098 ms).
 
 ## How to reproduce
 
@@ -142,7 +145,7 @@ The correctness self-check prints three `PASS` lines at the end of every run.
 - **No peak/utilization asserted.** I report achieved TFLOPS and the machine-readable
   CU count / BW / power, but I did not compute a theoretical MFMA peak; the per-CU
   MFMA throughput-per-cycle for gfx950 is not trivially machine-readable and I will
-  not guess it. (For orientation only, the bf16 best-case ~1432 TF and fp8 ~3148 TF
+  not guess it. (For orientation only, the bf16 best-case ~1423 TF and fp8 ~3129 TF
   are the achievable rocBLAS numbers on this part.)
 - **fp8 via `_scaled_mm`, not FlyDSL's preshuffle fp8 kernel.** `torch.matmul` does
   not support fp8 (`addmm` not implemented for `Float8_e4m3fn`), so fp8 uses

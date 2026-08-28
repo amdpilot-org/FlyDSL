@@ -168,7 +168,7 @@ def benchmark_scaled_mm(dtype, m, n, k, warmup, repeats):
     out = torch.empty(m, n, dtype=torch.bfloat16, device=dev)
 
     def run():
-        return torch._scaled_mm(a, b.t(), scale_a=one, scale_b=one, out_dtype=torch.bfloat16)
+        return torch._scaled_mm(a, b.t(), scale_a=one, scale_b=one, out_dtype=torch.bfloat16, out=out)
 
     with _silence_c_stderr():
         for _ in range(warmup):
