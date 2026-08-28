@@ -121,6 +121,16 @@ consistent with gfx950 fp8 MFMA having ~2× the bf16 MFMA rate. The large comput
 shapes are extremely tight (relative std ≈ 0.3–0.4%); small/skinny shapes are
 launch/memory-bound and noisy (e.g. bf16 32×384×7168 swings 0.012–0.098 ms).
 
+### Cross-run stability (3 independent runs, warmup=20, repeats=50)
+
+| dtype | M | N | K | run1 TF/s | run2 TF/s | run3 TF/s | mean | std | rel std % |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| bf16 | 8192 | 8192 | 8192 | 1416.6 | 1414.9 | 1419.8 | 1417.1 | 2.0 | 0.14 |
+| bf16 | 4096 | 4096 | 4096 | 1318.2 | 1313.2 | 1314.4 | 1315.3 | 2.1 | 0.16 |
+| fp16 | 4096 | 4096 | 4096 | 1170.7 | 1170.7 | 1171.9 | 1171.1 | 0.6 | 0.05 |
+| fp8 | 8192 | 8192 | 8192 | 3075.5 | 3098.1 | 3093.5 | 3089.0 | 9.7 | 0.32 |
+| fp8 | 9728 | 8192 | 8320 | 3039.7 | 3041.0 | 3034.7 | 3038.5 | 2.7 | 0.09 |
+
 ## How to reproduce
 
 Exact command (run from the repo root with a ROCm build of torch on PATH):
