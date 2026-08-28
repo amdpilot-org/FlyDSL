@@ -1,0 +1,55 @@
+==============================================================================
+FlyDSL operation benchmark: tiled GEMM via MFMA atoms (rocBLAS path)
+==============================================================================
+
+## Environment (read from the machine)
+  gpu_name_torch              : AMD Instinct MI355X
+  gcn_arch_name               : gfx950:sramecc+:xnack-
+  device_capability           : 9.5
+  sm_count                    : 256
+  torch_version               : 2.9.1+rocm7.2.0.git7e1940d4
+  hip_version_torch           : 7.2.26015-fc0010cf6a
+  hipcc_version               : HIP version: 7.2.26015-fc0010cf6a
+  rocm_smi_product            : GPU[0]		: Card Series: 		AMD Instinct MI355X
+  gpu_gfx_version_smi         : GPU[0]		: GFX Version: 		gfx950
+  compute_units_gpu_rocminfo  : 256
+  max_memory_bandwidth_amdsmi : MAX_BANDWIDTH: 7782 GB/s
+  max_power_limit_amdsmi      : MAX_POWER_LIMIT: 1400 W
+  amd_smi_top                 : GPU  XCP  POWER   GPU_T   MEM_T   GFX_CLK   GFX%   MEM%   ENC%   DEC%      VRAM_USAGE
+  0    0  245 W   41 °C   30 °C   156 MHz    0 %    0 %    N/A    0 %    0.3/288.0 GB
+
+## Method: warmup=30 iters, repeats=100 iters, per-iter CUDA-event timing. torch.matmul -> rocBLAS -> MFMA.
+   dtype: fp16=torch.float16, bf16=torch.bfloat16 (match kernels/gemm/gemm_a16w16_gfx950.py A16W16 dtypes)
+
+--- A) Repo gfx950 A16W16 / preshuffle GEMM shapes (bf16/fp16 via matmul) ---
+dtype      M      N      K |   med ms   min ms   max ms  std ms  p90 ms  p99 ms |  TF/s med TF/s best
+-----------------------------------------------------------------------------------------------------
+fp16    2048   2048   2048 |   0.0273   0.0266   0.0417  0.0016  0.0282  0.0328 |     629.8     644.9
+bf16      32    384   7168 |   0.0155   0.0115   0.0980  0.0084  0.0184  0.0247 |      11.4      15.3
+bf16    8192   8192   8192 |   0.7786   0.7727   0.7849  0.0025  0.7809  0.7840 |    1412.2    1422.9
+bf16    5120   5120   8320 |   0.3721   0.3683   0.3779  0.0016  0.3735  0.3777 |    1172.2    1184.3
+
+--- B) Square compute-bound sweep (bf16/fp16 via matmul) ---
+dtype      M      N      K |   med ms   min ms   max ms  std ms  p90 ms  p99 ms |  TF/s med TF/s best
+-----------------------------------------------------------------------------------------------------
+bf16    1024   1024   1024 |   0.0118   0.0108   0.0322  0.0024  0.0141  0.0188 |     182.3     199.6
+bf16    2048   2048   2048 |   0.0251   0.0248   0.0332  0.0010  0.0259  0.0298 |     683.9     691.6
+bf16    4096   4096   4096 |   0.1046   0.1029   0.1127  0.0013  0.1058  0.1098 |    1313.9    1335.9
+bf16    8192   8192   8192 |   0.7766   0.7702   0.7878  0.0027  0.7803  0.7844 |    1415.8    1427.5
+fp16    4096   4096   4096 |   0.1173   0.1168   0.1248  0.0010  0.1182  0.1227 |    1171.5    1176.7
+fp16    8192   8192   8192 |   0.8772   0.8700   0.8879  0.0029  0.8813  0.8866 |    1253.4    1263.8
+
+--- C) Repo gfx950 FP8 GEMM shapes (fp8 e4m3 via _scaled_mm / mfma_scale) ---
+dtype      M      N      K |   med ms   min ms   max ms  std ms  p90 ms  p99 ms |  TF/s med TF/s best
+-----------------------------------------------------------------------------------------------------
+fp8     8192   8192   8192 |   0.3548   0.3514   0.3802  0.0032  0.3583  0.3618 |    3098.8    3128.6
+fp8     5120   5120   8320 |   0.2062   0.1935   0.2389  0.0078  0.2160  0.2269 |    2115.0    2254.5
+fp8     9728   8192   8320 |   0.4353   0.4298   0.4496  0.0026  0.4377  0.4394 |    3046.6    3085.3
+fp8      512   2112   7168 |   0.0201   0.0199   0.0309  0.0012  0.0206  0.0248 |     772.0     779.8
+fp8      256   2112   7168 |   0.0166   0.0163   0.0493  0.0035  0.0168  0.0290 |     468.1     476.1
+
+Wrote JSON results -> /tmp/flydsl_bench/results4.json
+
+[self-check] bf16 matmul rel_err=3.1709e-03 (tol=5e-02) -> PASS
+[self-check] fp16 matmul rel_err=4.5750e-04 (tol=5e-02) -> PASS
+[self-check] fp8 _scaled_mm finite=True rel_err_vs_quantized_ref=2.2624e-03 (tol=2e-2) -> PASS
