@@ -43,6 +43,41 @@ shapes** FlyDSL targets. It does **not** measure FlyDSL's layout-IR codegen / ti
 path itself — rocBLAS is the codegen path here. That is the central gap; see
 "Gaps" below.
 
+## Dispatched kernel evidence (rocprof trace)
+
+To verify the substitution is faithful — that `torch.matmul`/`torch._scaled_mm`
+really do lower to MFMA-based tiled GEMM on this GPU — the actual kernel names
+dispatched were captured with `rocprof`. Full traces are in `rocprof_bf16_kernels.csv`
+and `rocprof_fp8_kernels.csv` alongside this report.
+
+**bf16 8192³ `torch.matmul`** dispatches a Tensile/rocBLAS GEMM kernel:
+
+```
+Cijk_Ailk_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT256x256x64_MI16x16x1_..._ISA950_..._MIWT4_16_..._WS64_WG64_4_1
+```
+
+Key fields decoded:
+- `Cijk_Ailk_Bljk` — GEMM computation (C = A·B)
+- `MT256x256x64` — Macro Tile 256×256×64 (tiled GEMM, same structure FlyDSL expresses)
+- `MI16x16x1` — MFMA instruction tile 16×16, matching FlyDSL's `MFMA(16,16,16,bf16)` atom
+- `ISA950` — targets gfx950 (this exact GPU)
+- `WS64_WG64` — wave size 64, workgroup 64 threads
+
+**fp8 8192³ `torch._scaled_mm`** dispatches a hipBLASLt GEMM kernel:
+
+```
+Custom_Cijk_Alik_Bljk_F8BS_BH_SAB_NTD_UserArgs_shortname1_gfx950
+```
+
+Key fields decoded:
+- `F8` — Float8 (e4m3) inputs
+- `SAB` — Scaled A and B (the `cdna4.mfma_scale` path)
+- `gfx950` — targets this exact GPU
+
+This confirms: the measured operation is a tiled MFMA GEMM on gfx950, the same
+hardware operation FlyDSL's kernels target — just via rocBLAS/hipBLASLt codegen
+instead of FlyDSL's layout-IR codegen.
+
 ## Environment (read from the machine, not assumed)
 
 | Field | Value |
