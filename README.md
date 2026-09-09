@@ -52,7 +52,9 @@ FlyDSL/
 │   ├── 01-vectorAdd.py        # Vector addition with layout algebra
 │   ├── 02-tiledCopy.py        # Tiled copy with partitioned tensors
 │   ├── 03-tiledMma.py         # Tiled MMA (GEMM) with MFMA atoms
-│   └── 04-preshuffle_gemm.py  # Preshuffle GEMM end-to-end example
+│   ├── 04-preshuffle_gemm.py  # Preshuffle GEMM end-to-end example
+│   ├── 05-gather_scatter.py   # Gather/scatter copy atoms
+│   └── 06-universal_copy_atomic_sum.py # 128b load and scalar atomic-add sum
 ├── kernels/                   # Production GPU kernels (importable as `kernels.*`)
 ├── tests/                     # All tests (kernels/, mlir/, unit/)
 ├── CMakeLists.txt             # top-level CMake
