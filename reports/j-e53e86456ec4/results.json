@@ -1,0 +1,956 @@
+[
+  {
+    "case": "bf16_gemm_buffer128",
+    "dtype": "torch.bfloat16",
+    "environment": {
+      "backend": "RocmBackend",
+      "compile_options": {
+        "arch": "",
+        "backend": "rocm",
+        "compile_only": false,
+        "llvm_dir": "",
+        "opt_level": 2
+      },
+      "debug_options": {
+        "ast_diff": false,
+        "dump_asm": true,
+        "dump_dir": "/job/artifacts/dumps/bf16_gemm_buffer128",
+        "dump_ir": true,
+        "enable_debug_info": false,
+        "enable_verifier": true,
+        "log_level": "WARNING",
+        "log_to_console": false,
+        "log_to_file": "",
+        "max_loc_depth": 5,
+        "print_after_all": false,
+        "print_origin_ir": false,
+        "show_stacktrace": true
+      },
+      "flyc_path": "/opt/venv/lib/python3.12/site-packages/flydsl/compiler/__init__.py",
+      "flydsl_path": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+      "flydsl_version": "0.2.4",
+      "fx_path": "/opt/venv/lib/python3.12/site-packages/flydsl/expr/__init__.py",
+      "gpu_capability": [
+        9,
+        5
+      ],
+      "gpu_name": "AMD Instinct MI350X",
+      "mlir_path": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/ir.py",
+      "platform": "Linux-4.18.0-513.1.1.el8_9.g12b5.x86_64-x86_64-with-glibc2.39",
+      "python": "/opt/venv/bin/python",
+      "python_version": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]",
+      "runtime_options": {
+        "cache_dir": "/job/.flydsl/cache",
+        "enable_cache": false,
+        "kind": "rocm",
+        "run_only": false
+      },
+      "target_arch": "gfx950",
+      "torch_hip": "7.2.26015-fc0010cf6a",
+      "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+      "triton_version": "3.5.1+rocm7.2.0.gita272dfa8",
+      "warp_size": 64
+    },
+    "error": "Failure while executing pass pipeline:\nerror: \"-\":66:7: failed to legalize operation 'fly.copy_atom_call_ssa' that was explicitly marked illegal: %82 = \"fly.copy_atom_call_ssa\"(%28, %80) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!fly.copy_atom<!fly_rocdl.cdna3.buffer_copy<128>, 16>, !fly.memref<bf16, global, 4:1>) -> vector<4xbf16>\n note: \"-\":66:7: see current operation: %82 = \"fly.copy_atom_call_ssa\"(%28, %80) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!fly.copy_atom<!fly_rocdl.cdna3.buffer_copy<128>, 16>, !fly.memref<bf16, global, 4:1>) -> vector<4xbf16>",
+    "error_type": "DSLCompileError",
+    "log_path": "/job/artifacts/logs/bf16_gemm_buffer128.log",
+    "resources": null,
+    "seed": 20260909,
+    "shape": [
+      64,
+      16,
+      128
+    ],
+    "status": "failed"
+  },
+  {
+    "case": "bf16_gemm_buffer32",
+    "dtype": "torch.bfloat16",
+    "environment": {
+      "backend": "RocmBackend",
+      "compile_options": {
+        "arch": "",
+        "backend": "rocm",
+        "compile_only": false,
+        "llvm_dir": "",
+        "opt_level": 2
+      },
+      "debug_options": {
+        "ast_diff": false,
+        "dump_asm": true,
+        "dump_dir": "/job/artifacts/dumps/bf16_gemm_buffer32",
+        "dump_ir": true,
+        "enable_debug_info": false,
+        "enable_verifier": true,
+        "log_level": "WARNING",
+        "log_to_console": false,
+        "log_to_file": "",
+        "max_loc_depth": 5,
+        "print_after_all": false,
+        "print_origin_ir": false,
+        "show_stacktrace": true
+      },
+      "flyc_path": "/opt/venv/lib/python3.12/site-packages/flydsl/compiler/__init__.py",
+      "flydsl_path": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+      "flydsl_version": "0.2.4",
+      "fx_path": "/opt/venv/lib/python3.12/site-packages/flydsl/expr/__init__.py",
+      "gpu_capability": [
+        9,
+        5
+      ],
+      "gpu_name": "AMD Instinct MI350X",
+      "mlir_path": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/ir.py",
+      "platform": "Linux-4.18.0-513.1.1.el8_9.g12b5.x86_64-x86_64-with-glibc2.39",
+      "python": "/opt/venv/bin/python",
+      "python_version": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]",
+      "runtime_options": {
+        "cache_dir": "/job/.flydsl/cache",
+        "enable_cache": false,
+        "kind": "rocm",
+        "run_only": false
+      },
+      "target_arch": "gfx950",
+      "torch_hip": "7.2.26015-fc0010cf6a",
+      "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+      "triton_version": "3.5.1+rocm7.2.0.gita272dfa8",
+      "warp_size": 64
+    },
+    "error": "Failure while executing pass pipeline:\nerror: \"-\":66:7: failed to legalize operation 'fly.copy_atom_call_ssa' that was explicitly marked illegal: %89 = \"fly.copy_atom_call_ssa\"(%35, %87) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!fly.copy_atom<!fly_rocdl.cdna3.buffer_copy<32>, 16>, !fly.memref<bf16, global, 2:1>) -> vector<2xbf16>\n note: \"-\":66:7: see current operation: %89 = \"fly.copy_atom_call_ssa\"(%35, %87) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!fly.copy_atom<!fly_rocdl.cdna3.buffer_copy<32>, 16>, !fly.memref<bf16, global, 2:1>) -> vector<2xbf16>",
+    "error_type": "DSLCompileError",
+    "log_path": "/job/artifacts/logs/bf16_gemm_buffer32.log",
+    "resources": null,
+    "seed": 20260909,
+    "shape": [
+      64,
+      16,
+      128
+    ],
+    "status": "failed"
+  },
+  {
+    "case": "bf16_gemm_buffer64",
+    "dtype": "torch.bfloat16",
+    "environment": {
+      "backend": "RocmBackend",
+      "compile_options": {
+        "arch": "",
+        "backend": "rocm",
+        "compile_only": false,
+        "llvm_dir": "",
+        "opt_level": 2
+      },
+      "debug_options": {
+        "ast_diff": false,
+        "dump_asm": true,
+        "dump_dir": "/job/artifacts/dumps/bf16_gemm_buffer64",
+        "dump_ir": true,
+        "enable_debug_info": false,
+        "enable_verifier": true,
+        "log_level": "WARNING",
+        "log_to_console": false,
+        "log_to_file": "",
+        "max_loc_depth": 5,
+        "print_after_all": false,
+        "print_origin_ir": false,
+        "show_stacktrace": true
+      },
+      "flyc_path": "/opt/venv/lib/python3.12/site-packages/flydsl/compiler/__init__.py",
+      "flydsl_path": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+      "flydsl_version": "0.2.4",
+      "fx_path": "/opt/venv/lib/python3.12/site-packages/flydsl/expr/__init__.py",
+      "gpu_capability": [
+        9,
+        5
+      ],
+      "gpu_name": "AMD Instinct MI350X",
+      "mlir_path": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/ir.py",
+      "platform": "Linux-4.18.0-513.1.1.el8_9.g12b5.x86_64-x86_64-with-glibc2.39",
+      "python": "/opt/venv/bin/python",
+      "python_version": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]",
+      "runtime_options": {
+        "cache_dir": "/job/.flydsl/cache",
+        "enable_cache": false,
+        "kind": "rocm",
+        "run_only": false
+      },
+      "target_arch": "gfx950",
+      "torch_hip": "7.2.26015-fc0010cf6a",
+      "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+      "triton_version": "3.5.1+rocm7.2.0.gita272dfa8",
+      "warp_size": 64
+    },
+    "error": "Failure while executing pass pipeline:\nerror: \"-\":66:7: failed to legalize operation 'fly.copy_atom_call_ssa' that was explicitly marked illegal: %82 = \"fly.copy_atom_call_ssa\"(%28, %80) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!fly.copy_atom<!fly_rocdl.cdna3.buffer_copy<64>, 16>, !fly.memref<bf16, global, 4:1>) -> vector<4xbf16>\n note: \"-\":66:7: see current operation: %82 = \"fly.copy_atom_call_ssa\"(%28, %80) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!fly.copy_atom<!fly_rocdl.cdna3.buffer_copy<64>, 16>, !fly.memref<bf16, global, 4:1>) -> vector<4xbf16>",
+    "error_type": "DSLCompileError",
+    "log_path": "/job/artifacts/logs/bf16_gemm_buffer64.log",
+    "resources": null,
+    "seed": 20260909,
+    "shape": [
+      64,
+      16,
+      128
+    ],
+    "status": "failed"
+  },
+  {
+    "case": "bf16_gemm_universal64",
+    "dtype": "torch.bfloat16",
+    "environment": {
+      "backend": "RocmBackend",
+      "compile_options": {
+        "arch": "",
+        "backend": "rocm",
+        "compile_only": false,
+        "llvm_dir": "",
+        "opt_level": 2
+      },
+      "debug_options": {
+        "ast_diff": false,
+        "dump_asm": true,
+        "dump_dir": "/job/artifacts/dumps/bf16_gemm_universal64",
+        "dump_ir": true,
+        "enable_debug_info": false,
+        "enable_verifier": true,
+        "log_level": "WARNING",
+        "log_to_console": false,
+        "log_to_file": "",
+        "max_loc_depth": 5,
+        "print_after_all": false,
+        "print_origin_ir": false,
+        "show_stacktrace": true
+      },
+      "flyc_path": "/opt/venv/lib/python3.12/site-packages/flydsl/compiler/__init__.py",
+      "flydsl_path": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+      "flydsl_version": "0.2.4",
+      "fx_path": "/opt/venv/lib/python3.12/site-packages/flydsl/expr/__init__.py",
+      "gpu_capability": [
+        9,
+        5
+      ],
+      "gpu_name": "AMD Instinct MI350X",
+      "mlir_path": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/ir.py",
+      "platform": "Linux-4.18.0-513.1.1.el8_9.g12b5.x86_64-x86_64-with-glibc2.39",
+      "python": "/opt/venv/bin/python",
+      "python_version": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]",
+      "runtime_options": {
+        "cache_dir": "/job/.flydsl/cache",
+        "enable_cache": false,
+        "kind": "rocm",
+        "run_only": false
+      },
+      "target_arch": "gfx950",
+      "torch_hip": "7.2.26015-fc0010cf6a",
+      "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+      "triton_version": "3.5.1+rocm7.2.0.gita272dfa8",
+      "warp_size": 64
+    },
+    "gates": {
+      "atol": 0.1,
+      "rtol": 0.1
+    },
+    "log_path": "/job/artifacts/logs/bf16_gemm_universal64.log",
+    "max_abs_error": 7.62939453125e-06,
+    "mean_abs_error": 4.600151441991329e-07,
+    "mismatch_count": 0,
+    "output_first16": [
+      -17.033695220947266,
+      -26.125009536743164,
+      -18.675186157226562,
+      32.09722137451172,
+      1.0701581239700317,
+      -0.9100494384765625,
+      16.249897003173828,
+      0.5643205642700195,
+      -7.756331443786621,
+      -1.465848445892334,
+      -2.49641489982605,
+      12.74057388305664,
+      7.275700569152832,
+      4.952539443969727,
+      -0.8806872367858887,
+      -8.412282943725586
+    ],
+    "output_sha256": "cd925d38514cd96be784c2ce29dcf36f4167beee2e64f0d585f865b1c5f0e11d",
+    "reference_first16": [
+      -17.0336971282959,
+      -26.125009536743164,
+      -18.675186157226562,
+      32.097225189208984,
+      1.0701581239700317,
+      -0.9100489616394043,
+      16.249897003173828,
+      0.5643205642700195,
+      -7.756330490112305,
+      -1.465848445892334,
+      -2.4964144229888916,
+      12.74057388305664,
+      7.275700569152832,
+      4.952539443969727,
+      -0.8806871175765991,
+      -8.412282943725586
+    ],
+    "reference_sha256": "9e2a7330a826cc8925a26bdcdcbe56b4844e7e7bed64538bd9cd1f846d1dad8d",
+    "resources": {
+      "isa_path": "/job/artifacts/dumps/bf16_gemm_universal64/gemm_kernel_0/21_final_isa.s",
+      "isa_sha256": "3b639e89d74419af3ee24f290992307e7af0d43b55332167d3f7edf0f7eaee7a",
+      "lds_bytes": 0,
+      "scratch_bytes": 0,
+      "sgpr": 28,
+      "vgpr": 40
+    },
+    "seed": 20260909,
+    "shape": [
+      64,
+      16,
+      128
+    ],
+    "status": "ran"
+  },
+  {
+    "case": "bf16_raw",
+    "dtype": "torch.bfloat16",
+    "environment": {
+      "backend": "RocmBackend",
+      "compile_options": {
+        "arch": "",
+        "backend": "rocm",
+        "compile_only": false,
+        "llvm_dir": "",
+        "opt_level": 2
+      },
+      "debug_options": {
+        "ast_diff": false,
+        "dump_asm": true,
+        "dump_dir": "/job/artifacts/dumps/bf16_raw",
+        "dump_ir": true,
+        "enable_debug_info": false,
+        "enable_verifier": true,
+        "log_level": "WARNING",
+        "log_to_console": false,
+        "log_to_file": "",
+        "max_loc_depth": 5,
+        "print_after_all": false,
+        "print_origin_ir": false,
+        "show_stacktrace": true
+      },
+      "flyc_path": "/opt/venv/lib/python3.12/site-packages/flydsl/compiler/__init__.py",
+      "flydsl_path": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+      "flydsl_version": "0.2.4",
+      "fx_path": "/opt/venv/lib/python3.12/site-packages/flydsl/expr/__init__.py",
+      "gpu_capability": [
+        9,
+        5
+      ],
+      "gpu_name": "AMD Instinct MI350X",
+      "mlir_path": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/ir.py",
+      "platform": "Linux-4.18.0-513.1.1.el8_9.g12b5.x86_64-x86_64-with-glibc2.39",
+      "python": "/opt/venv/bin/python",
+      "python_version": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]",
+      "runtime_options": {
+        "cache_dir": "/job/.flydsl/cache",
+        "enable_cache": false,
+        "kind": "rocm",
+        "run_only": false
+      },
+      "target_arch": "gfx950",
+      "torch_hip": "7.2.26015-fc0010cf6a",
+      "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+      "triton_version": "3.5.1+rocm7.2.0.gita272dfa8",
+      "warp_size": 64
+    },
+    "gates": {
+      "atol": 0.1,
+      "rtol": 0.1
+    },
+    "log_path": "/job/artifacts/logs/bf16_raw.log",
+    "max_abs_error": 3.814697265625e-06,
+    "mean_abs_error": 4.2491592466831207e-07,
+    "mismatch_count": 0,
+    "output_first16": [
+      -17.033695220947266,
+      -26.125009536743164,
+      -18.675188064575195,
+      32.09722137451172,
+      1.0701583623886108,
+      -0.9100494384765625,
+      16.249895095825195,
+      0.5643205642700195,
+      -7.7563323974609375,
+      -1.465848445892334,
+      -2.4964139461517334,
+      12.740572929382324,
+      7.275700569152832,
+      4.952539443969727,
+      -0.8806872367858887,
+      -8.412282943725586
+    ],
+    "output_sha256": "c69e4028d9fac13e5498f2c2019679750b325bf35faaabe8aa6c9770c1e9fdb0",
+    "reference_first16": [
+      -17.0336971282959,
+      -26.125009536743164,
+      -18.675186157226562,
+      32.097225189208984,
+      1.0701581239700317,
+      -0.9100489616394043,
+      16.249897003173828,
+      0.5643205642700195,
+      -7.756330490112305,
+      -1.465848445892334,
+      -2.4964144229888916,
+      12.74057388305664,
+      7.275700569152832,
+      4.952539443969727,
+      -0.8806871175765991,
+      -8.412282943725586
+    ],
+    "reference_sha256": "9e2a7330a826cc8925a26bdcdcbe56b4844e7e7bed64538bd9cd1f846d1dad8d",
+    "resources": {
+      "isa_path": "/job/artifacts/dumps/bf16_raw/raw_bf16_kernel_0/21_final_isa.s",
+      "isa_sha256": "394b4e4c013bc404bf0a7594e96d17cc84942fd8f4ee9e04c359a2dcab32551d",
+      "lds_bytes": 0,
+      "scratch_bytes": 0,
+      "sgpr": 10,
+      "vgpr": 34
+    },
+    "seed": 20260909,
+    "shape": [
+      64,
+      16,
+      128
+    ],
+    "status": "ran"
+  },
+  {
+    "case": "fp8_gemm_buffer128",
+    "dtype": "torch.float8_e4m3fn",
+    "environment": {
+      "backend": "RocmBackend",
+      "compile_options": {
+        "arch": "",
+        "backend": "rocm",
+        "compile_only": false,
+        "llvm_dir": "",
+        "opt_level": 2
+      },
+      "debug_options": {
+        "ast_diff": false,
+        "dump_asm": true,
+        "dump_dir": "/job/artifacts/dumps/fp8_gemm_buffer128",
+        "dump_ir": true,
+        "enable_debug_info": false,
+        "enable_verifier": true,
+        "log_level": "WARNING",
+        "log_to_console": false,
+        "log_to_file": "",
+        "max_loc_depth": 5,
+        "print_after_all": false,
+        "print_origin_ir": false,
+        "show_stacktrace": true
+      },
+      "flyc_path": "/opt/venv/lib/python3.12/site-packages/flydsl/compiler/__init__.py",
+      "flydsl_path": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+      "flydsl_version": "0.2.4",
+      "fx_path": "/opt/venv/lib/python3.12/site-packages/flydsl/expr/__init__.py",
+      "gpu_capability": [
+        9,
+        5
+      ],
+      "gpu_name": "AMD Instinct MI350X",
+      "mlir_path": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/ir.py",
+      "platform": "Linux-4.18.0-513.1.1.el8_9.g12b5.x86_64-x86_64-with-glibc2.39",
+      "python": "/opt/venv/bin/python",
+      "python_version": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]",
+      "runtime_options": {
+        "cache_dir": "/job/.flydsl/cache",
+        "enable_cache": false,
+        "kind": "rocm",
+        "run_only": false
+      },
+      "target_arch": "gfx950",
+      "torch_hip": "7.2.26015-fc0010cf6a",
+      "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+      "triton_version": "3.5.1+rocm7.2.0.gita272dfa8",
+      "warp_size": 64
+    },
+    "error": "Failure while executing pass pipeline:\nerror: \"-\":66:7: failed to legalize operation 'fly.copy_atom_call_ssa' that was explicitly marked illegal: %80 = \"fly.copy_atom_call_ssa\"(%26, %78) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!fly.copy_atom<!fly_rocdl.cdna3.buffer_copy<128>, 8>, !fly.memref<f8E4M3FN, global, 8:1>) -> vector<8xi8>\n note: \"-\":66:7: see current operation: %80 = \"fly.copy_atom_call_ssa\"(%26, %78) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!fly.copy_atom<!fly_rocdl.cdna3.buffer_copy<128>, 8>, !fly.memref<f8E4M3FN, global, 8:1>) -> vector<8xi8>",
+    "error_type": "DSLCompileError",
+    "log_path": "/job/artifacts/logs/fp8_gemm_buffer128.log",
+    "resources": null,
+    "seed": 20260909,
+    "shape": [
+      64,
+      16,
+      128
+    ],
+    "status": "failed"
+  },
+  {
+    "case": "fp8_gemm_buffer32",
+    "dtype": "torch.float8_e4m3fn",
+    "environment": {
+      "backend": "RocmBackend",
+      "compile_options": {
+        "arch": "",
+        "backend": "rocm",
+        "compile_only": false,
+        "llvm_dir": "",
+        "opt_level": 2
+      },
+      "debug_options": {
+        "ast_diff": false,
+        "dump_asm": true,
+        "dump_dir": "/job/artifacts/dumps/fp8_gemm_buffer32",
+        "dump_ir": true,
+        "enable_debug_info": false,
+        "enable_verifier": true,
+        "log_level": "WARNING",
+        "log_to_console": false,
+        "log_to_file": "",
+        "max_loc_depth": 5,
+        "print_after_all": false,
+        "print_origin_ir": false,
+        "show_stacktrace": true
+      },
+      "flyc_path": "/opt/venv/lib/python3.12/site-packages/flydsl/compiler/__init__.py",
+      "flydsl_path": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+      "flydsl_version": "0.2.4",
+      "fx_path": "/opt/venv/lib/python3.12/site-packages/flydsl/expr/__init__.py",
+      "gpu_capability": [
+        9,
+        5
+      ],
+      "gpu_name": "AMD Instinct MI350X",
+      "mlir_path": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/ir.py",
+      "platform": "Linux-4.18.0-513.1.1.el8_9.g12b5.x86_64-x86_64-with-glibc2.39",
+      "python": "/opt/venv/bin/python",
+      "python_version": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]",
+      "runtime_options": {
+        "cache_dir": "/job/.flydsl/cache",
+        "enable_cache": false,
+        "kind": "rocm",
+        "run_only": false
+      },
+      "target_arch": "gfx950",
+      "torch_hip": "7.2.26015-fc0010cf6a",
+      "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+      "triton_version": "3.5.1+rocm7.2.0.gita272dfa8",
+      "warp_size": 64
+    },
+    "error": "Failure while executing pass pipeline:\nerror: \"-\":66:7: failed to legalize operation 'fly.copy_atom_call_ssa' that was explicitly marked illegal: %83 = \"fly.copy_atom_call_ssa\"(%29, %81) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!fly.copy_atom<!fly_rocdl.cdna3.buffer_copy<32>, 8>, !fly.memref<f8E4M3FN, global, 4:1>) -> vector<4xi8>\n note: \"-\":66:7: see current operation: %83 = \"fly.copy_atom_call_ssa\"(%29, %81) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!fly.copy_atom<!fly_rocdl.cdna3.buffer_copy<32>, 8>, !fly.memref<f8E4M3FN, global, 4:1>) -> vector<4xi8>",
+    "error_type": "DSLCompileError",
+    "log_path": "/job/artifacts/logs/fp8_gemm_buffer32.log",
+    "resources": null,
+    "seed": 20260909,
+    "shape": [
+      64,
+      16,
+      128
+    ],
+    "status": "failed"
+  },
+  {
+    "case": "fp8_gemm_buffer64",
+    "dtype": "torch.float8_e4m3fn",
+    "environment": {
+      "backend": "RocmBackend",
+      "compile_options": {
+        "arch": "",
+        "backend": "rocm",
+        "compile_only": false,
+        "llvm_dir": "",
+        "opt_level": 2
+      },
+      "debug_options": {
+        "ast_diff": false,
+        "dump_asm": true,
+        "dump_dir": "/job/artifacts/dumps/fp8_gemm_buffer64",
+        "dump_ir": true,
+        "enable_debug_info": false,
+        "enable_verifier": true,
+        "log_level": "WARNING",
+        "log_to_console": false,
+        "log_to_file": "",
+        "max_loc_depth": 5,
+        "print_after_all": false,
+        "print_origin_ir": false,
+        "show_stacktrace": true
+      },
+      "flyc_path": "/opt/venv/lib/python3.12/site-packages/flydsl/compiler/__init__.py",
+      "flydsl_path": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+      "flydsl_version": "0.2.4",
+      "fx_path": "/opt/venv/lib/python3.12/site-packages/flydsl/expr/__init__.py",
+      "gpu_capability": [
+        9,
+        5
+      ],
+      "gpu_name": "AMD Instinct MI350X",
+      "mlir_path": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/ir.py",
+      "platform": "Linux-4.18.0-513.1.1.el8_9.g12b5.x86_64-x86_64-with-glibc2.39",
+      "python": "/opt/venv/bin/python",
+      "python_version": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]",
+      "runtime_options": {
+        "cache_dir": "/job/.flydsl/cache",
+        "enable_cache": false,
+        "kind": "rocm",
+        "run_only": false
+      },
+      "target_arch": "gfx950",
+      "torch_hip": "7.2.26015-fc0010cf6a",
+      "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+      "triton_version": "3.5.1+rocm7.2.0.gita272dfa8",
+      "warp_size": 64
+    },
+    "error": "Failure while executing pass pipeline:\nerror: \"-\":66:7: failed to legalize operation 'fly.copy_atom_call_ssa' that was explicitly marked illegal: %80 = \"fly.copy_atom_call_ssa\"(%26, %78) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!fly.copy_atom<!fly_rocdl.cdna3.buffer_copy<64>, 8>, !fly.memref<f8E4M3FN, global, 8:1>) -> vector<8xi8>\n note: \"-\":66:7: see current operation: %80 = \"fly.copy_atom_call_ssa\"(%26, %78) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!fly.copy_atom<!fly_rocdl.cdna3.buffer_copy<64>, 8>, !fly.memref<f8E4M3FN, global, 8:1>) -> vector<8xi8>",
+    "error_type": "DSLCompileError",
+    "log_path": "/job/artifacts/logs/fp8_gemm_buffer64.log",
+    "resources": null,
+    "seed": 20260909,
+    "shape": [
+      64,
+      16,
+      128
+    ],
+    "status": "failed"
+  },
+  {
+    "case": "fp8_gemm_universal32",
+    "dtype": "torch.float8_e4m3fn",
+    "environment": {
+      "backend": "RocmBackend",
+      "compile_options": {
+        "arch": "",
+        "backend": "rocm",
+        "compile_only": false,
+        "llvm_dir": "",
+        "opt_level": 2
+      },
+      "debug_options": {
+        "ast_diff": false,
+        "dump_asm": true,
+        "dump_dir": "/job/artifacts/dumps/fp8_gemm_universal32",
+        "dump_ir": true,
+        "enable_debug_info": false,
+        "enable_verifier": true,
+        "log_level": "WARNING",
+        "log_to_console": false,
+        "log_to_file": "",
+        "max_loc_depth": 5,
+        "print_after_all": false,
+        "print_origin_ir": false,
+        "show_stacktrace": true
+      },
+      "flyc_path": "/opt/venv/lib/python3.12/site-packages/flydsl/compiler/__init__.py",
+      "flydsl_path": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+      "flydsl_version": "0.2.4",
+      "fx_path": "/opt/venv/lib/python3.12/site-packages/flydsl/expr/__init__.py",
+      "gpu_capability": [
+        9,
+        5
+      ],
+      "gpu_name": "AMD Instinct MI350X",
+      "mlir_path": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/ir.py",
+      "platform": "Linux-4.18.0-513.1.1.el8_9.g12b5.x86_64-x86_64-with-glibc2.39",
+      "python": "/opt/venv/bin/python",
+      "python_version": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]",
+      "runtime_options": {
+        "cache_dir": "/job/.flydsl/cache",
+        "enable_cache": false,
+        "kind": "rocm",
+        "run_only": false
+      },
+      "target_arch": "gfx950",
+      "torch_hip": "7.2.26015-fc0010cf6a",
+      "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+      "triton_version": "3.5.1+rocm7.2.0.gita272dfa8",
+      "warp_size": 64
+    },
+    "gates": {
+      "atol": 0.1,
+      "rtol": 0.1
+    },
+    "log_path": "/job/artifacts/logs/fp8_gemm_universal32.log",
+    "max_abs_error": 0.00079345703125,
+    "mean_abs_error": 9.797140955924988e-05,
+    "mismatch_count": 0,
+    "output_first16": [
+      -16.07763671875,
+      -25.4383544921875,
+      -19.1343994140625,
+      32.172607421875,
+      2.41485595703125,
+      -0.46258544921875,
+      15.06982421875,
+      1.5313720703125,
+      -5.5855712890625,
+      -1.6923828125,
+      -1.327880859375,
+      10.9451904296875,
+      5.47247314453125,
+      4.201812744140625,
+      0.5003662109375,
+      -9.42279052734375
+    ],
+    "output_sha256": "dcfd453b455a067e8589498c415cbe061b60bf7def60919fa08fe9f517cd3304",
+    "reference_first16": [
+      -16.0777587890625,
+      -25.43841552734375,
+      -19.134262084960938,
+      32.1728515625,
+      2.4148712158203125,
+      -0.46246337890625,
+      15.0699462890625,
+      1.5314712524414062,
+      -5.5854949951171875,
+      -1.69232177734375,
+      -1.327880859375,
+      10.94476318359375,
+      5.47235107421875,
+      4.201812744140625,
+      0.5003662109375,
+      -9.422698974609375
+    ],
+    "reference_sha256": "bccbaf4d7ca2f35f19e94eedf9e28400ee8f71ce450f422144779e7551a5c998",
+    "resources": {
+      "isa_path": "/job/artifacts/dumps/fp8_gemm_universal32/gemm_kernel_0/21_final_isa.s",
+      "isa_sha256": "39927f8a845264d4ac4ccd58bdacde7fd124485add17aceb6bc4866dadcb7a6d",
+      "lds_bytes": 0,
+      "scratch_bytes": 0,
+      "sgpr": 28,
+      "vgpr": 26
+    },
+    "seed": 20260909,
+    "shape": [
+      64,
+      16,
+      128
+    ],
+    "status": "ran"
+  },
+  {
+    "case": "fp8_raw",
+    "dtype": "torch.float8_e4m3fn",
+    "environment": {
+      "backend": "RocmBackend",
+      "compile_options": {
+        "arch": "",
+        "backend": "rocm",
+        "compile_only": false,
+        "llvm_dir": "",
+        "opt_level": 2
+      },
+      "debug_options": {
+        "ast_diff": false,
+        "dump_asm": true,
+        "dump_dir": "/job/artifacts/dumps/fp8_raw",
+        "dump_ir": true,
+        "enable_debug_info": false,
+        "enable_verifier": true,
+        "log_level": "WARNING",
+        "log_to_console": false,
+        "log_to_file": "",
+        "max_loc_depth": 5,
+        "print_after_all": false,
+        "print_origin_ir": false,
+        "show_stacktrace": true
+      },
+      "flyc_path": "/opt/venv/lib/python3.12/site-packages/flydsl/compiler/__init__.py",
+      "flydsl_path": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+      "flydsl_version": "0.2.4",
+      "fx_path": "/opt/venv/lib/python3.12/site-packages/flydsl/expr/__init__.py",
+      "gpu_capability": [
+        9,
+        5
+      ],
+      "gpu_name": "AMD Instinct MI350X",
+      "mlir_path": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/ir.py",
+      "platform": "Linux-4.18.0-513.1.1.el8_9.g12b5.x86_64-x86_64-with-glibc2.39",
+      "python": "/opt/venv/bin/python",
+      "python_version": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]",
+      "runtime_options": {
+        "cache_dir": "/job/.flydsl/cache",
+        "enable_cache": false,
+        "kind": "rocm",
+        "run_only": false
+      },
+      "target_arch": "gfx950",
+      "torch_hip": "7.2.26015-fc0010cf6a",
+      "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+      "triton_version": "3.5.1+rocm7.2.0.gita272dfa8",
+      "warp_size": 64
+    },
+    "gates": {
+      "atol": 0.1,
+      "rtol": 0.1
+    },
+    "log_path": "/job/artifacts/logs/fp8_raw.log",
+    "max_abs_error": 0.00079345703125,
+    "mean_abs_error": 9.797140955924988e-05,
+    "mismatch_count": 0,
+    "output_first16": [
+      -16.07763671875,
+      -25.4383544921875,
+      -19.1343994140625,
+      32.172607421875,
+      2.41485595703125,
+      -0.46258544921875,
+      15.06982421875,
+      1.5313720703125,
+      -5.5855712890625,
+      -1.6923828125,
+      -1.327880859375,
+      10.9451904296875,
+      5.47247314453125,
+      4.201812744140625,
+      0.5003662109375,
+      -9.42279052734375
+    ],
+    "output_sha256": "dcfd453b455a067e8589498c415cbe061b60bf7def60919fa08fe9f517cd3304",
+    "reference_first16": [
+      -16.0777587890625,
+      -25.43841552734375,
+      -19.134262084960938,
+      32.1728515625,
+      2.4148712158203125,
+      -0.46246337890625,
+      15.0699462890625,
+      1.5314712524414062,
+      -5.5854949951171875,
+      -1.69232177734375,
+      -1.327880859375,
+      10.94476318359375,
+      5.47235107421875,
+      4.201812744140625,
+      0.5003662109375,
+      -9.422698974609375
+    ],
+    "reference_sha256": "bccbaf4d7ca2f35f19e94eedf9e28400ee8f71ce450f422144779e7551a5c998",
+    "resources": {
+      "isa_path": "/job/artifacts/dumps/fp8_raw/raw_fp8_kernel_0/21_final_isa.s",
+      "isa_sha256": "0401f66ad357be6efa2e4d76025a3d472b1d627f0fd1a45f8539d4d3e29fc17b",
+      "lds_bytes": 0,
+      "scratch_bytes": 0,
+      "sgpr": 10,
+      "vgpr": 26
+    },
+    "seed": 20260909,
+    "shape": [
+      64,
+      16,
+      128
+    ],
+    "status": "ran"
+  },
+  {
+    "case": "fp8_raw_issue_store",
+    "dtype": "torch.float8_e4m3fn",
+    "environment": {
+      "backend": "RocmBackend",
+      "compile_options": {
+        "arch": "",
+        "backend": "rocm",
+        "compile_only": false,
+        "llvm_dir": "",
+        "opt_level": 2
+      },
+      "debug_options": {
+        "ast_diff": false,
+        "dump_asm": true,
+        "dump_dir": "/job/artifacts/dumps/fp8_raw_issue_store",
+        "dump_ir": true,
+        "enable_debug_info": false,
+        "enable_verifier": true,
+        "log_level": "WARNING",
+        "log_to_console": false,
+        "log_to_file": "",
+        "max_loc_depth": 5,
+        "print_after_all": false,
+        "print_origin_ir": false,
+        "show_stacktrace": true
+      },
+      "flyc_path": "/opt/venv/lib/python3.12/site-packages/flydsl/compiler/__init__.py",
+      "flydsl_path": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+      "flydsl_version": "0.2.4",
+      "fx_path": "/opt/venv/lib/python3.12/site-packages/flydsl/expr/__init__.py",
+      "gpu_capability": [
+        9,
+        5
+      ],
+      "gpu_name": "AMD Instinct MI350X",
+      "mlir_path": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/ir.py",
+      "platform": "Linux-4.18.0-513.1.1.el8_9.g12b5.x86_64-x86_64-with-glibc2.39",
+      "python": "/opt/venv/bin/python",
+      "python_version": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]",
+      "runtime_options": {
+        "cache_dir": "/job/.flydsl/cache",
+        "enable_cache": false,
+        "kind": "rocm",
+        "run_only": false
+      },
+      "target_arch": "gfx950",
+      "torch_hip": "7.2.26015-fc0010cf6a",
+      "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+      "triton_version": "3.5.1+rocm7.2.0.gita272dfa8",
+      "warp_size": 64
+    },
+    "gates": {
+      "atol": 0.1,
+      "rtol": 0.1
+    },
+    "log_path": "/job/artifacts/logs/fp8_raw_issue_store.log",
+    "max_abs_error": 44.596458435058594,
+    "mean_abs_error": 10.69356632232666,
+    "mismatch_count": 918,
+    "output_first16": [
+      -16.07763671875,
+      -9.236053466796875,
+      -2.867919921875,
+      0.6954345703125,
+      9.09796142578125,
+      7.6236572265625,
+      14.678466796875,
+      -14.996826171875,
+      -7.4364013671875,
+      -1.0401611328125,
+      -9.541015625,
+      -0.8973388671875,
+      3.1939697265625,
+      -11.8360595703125,
+      12.2200927734375,
+      26.368896484375
+    ],
+    "output_sha256": "aae834f46b8e5db1be34d0744d26097b7bb036b7e3f20f5a9dd268fe18362468",
+    "reference_first16": [
+      -16.0777587890625,
+      -25.43841552734375,
+      -19.134262084960938,
+      32.1728515625,
+      2.4148712158203125,
+      -0.46246337890625,
+      15.0699462890625,
+      1.5314712524414062,
+      -5.5854949951171875,
+      -1.69232177734375,
+      -1.327880859375,
+      10.94476318359375,
+      5.47235107421875,
+      4.201812744140625,
+      0.5003662109375,
+      -9.422698974609375
+    ],
+    "reference_sha256": "bccbaf4d7ca2f35f19e94eedf9e28400ee8f71ce450f422144779e7551a5c998",
+    "resources": {
+      "isa_path": "/job/artifacts/dumps/fp8_raw_issue_store/raw_fp8_issue_store_kernel_0/21_final_isa.s",
+      "isa_sha256": "dc46206c1a417477f021aeedc09fb607ef133942e819492d6685b2af852fea07",
+      "lds_bytes": 0,
+      "scratch_bytes": 0,
+      "sgpr": 10,
+      "vgpr": 24
+    },
+    "seed": 20260909,
+    "shape": [
+      64,
+      16,
+      128
+    ],
+    "status": "ran"
+  }
+]
