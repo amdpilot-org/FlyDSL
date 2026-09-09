@@ -113,18 +113,50 @@ def test_conv3d_layout_contract(splitk, layout, out_layout):
 
 
 @_skip_non_cdna4
+@pytest.mark.parametrize("bias_dtype", [torch.float32, torch.bfloat16])
+@pytest.mark.parametrize("layout,out_layout", [("NCDHW", "NDHWC"), ("NDHWC", "NCDHW")])
+def test_conv3d_mixed_layouts_and_bias_dtype(layout, out_layout, bias_dtype):
+    torch.manual_seed(3350)
+    n, c, t, h, w, k = 2, 32, 5, 9, 10, 64
+    x = torch.randn((n, c, t, h, w), device="cuda", dtype=torch.bfloat16)
+    weight = torch.randn((k, c, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    bias = torch.randn((k,), device="cuda", dtype=bias_dtype)
+    x_arg = x.permute(0, 2, 3, 4, 1).contiguous() if layout == "NDHWC" else x
+
+    y = conv3d_implicit(
+        x_arg,
+        weight,
+        bias=bias,
+        stride=(1, 2, 1),
+        padding=(1, 0, 1),
+        layout=layout,
+        out_layout=out_layout,
+    )
+    y_ref = F.conv3d(x, weight, bias=bias.to(torch.bfloat16), stride=(1, 2, 1), padding=(1, 0, 1))
+    if out_layout == "NDHWC":
+        y_ref = y_ref.permute(0, 2, 3, 4, 1).contiguous()
+    torch.cuda.synchronize()
+
+    assert y.shape == y_ref.shape
+    assert torch.allclose(y, y_ref, rtol=2e-2, atol=2e-2)
+
+
+@_skip_non_cdna4
 def test_conv3d_layout_chain():
     torch.manual_seed(3400)
     n, c, t, h, w = 1, 32, 4, 8, 8
-    weight_1 = torch.randn((64, c, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
-    weight_2 = torch.randn((64, 64, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    weight_1 = torch.randn((64, c, 3, 3, 3), device="cuda", dtype=torch.bfloat16) * 0.1
+    weight_2 = torch.randn((64, 64, 3, 3, 3), device="cuda", dtype=torch.bfloat16) * 0.1
+    weight_3 = torch.randn((32, 64, 3, 3, 3), device="cuda", dtype=torch.bfloat16) * 0.1
     x = torch.randn((n, c, t, h, w), device="cuda", dtype=torch.bfloat16)
     x_cl = x.permute(0, 2, 3, 4, 1).contiguous()
 
     y = conv3d_implicit(x_cl, weight_1, stride=1, padding=1, layout="NDHWC", out_layout="NDHWC")
     y = conv3d_implicit(y, weight_2, stride=1, padding=1, layout="NDHWC", out_layout="NDHWC")
+    y = conv3d_implicit(y, weight_3, stride=1, padding=1, layout="NDHWC", out_layout="NDHWC")
     ref = F.conv3d(x, weight_1, stride=1, padding=1)
-    ref = F.conv3d(ref, weight_2, stride=1, padding=1).permute(0, 2, 3, 4, 1).contiguous()
+    ref = F.conv3d(ref, weight_2, stride=1, padding=1)
+    ref = F.conv3d(ref, weight_3, stride=1, padding=1).permute(0, 2, 3, 4, 1).contiguous()
     torch.cuda.synchronize()
 
     assert y.shape == ref.shape

@@ -96,6 +96,14 @@ def _check_layouts(rank, input_layout, output_layout):
         assert v in names, f"{what} must be one of {names}, got {v!r}"
 
 
+def _layout_for_rank(layout, rank):
+    if layout == "NCDHW":
+        return LAYOUTS[rank][0]
+    if layout == "NDHWC":
+        return LAYOUTS[rank][1]
+    return layout
+
+
 def _shape_ncdhw(x, ndhwc):
     """Unpack a 5-D input in either layout to (n, c, d, h, w)."""
     if ndhwc:
@@ -1301,6 +1309,8 @@ def conv3d_implicit(
     epilogue's transpose. Channels-last output does give up the vectorized store on the
     ``n == 1`` fast path, since a lane's four accumulator values are four M rows and those
     are K apart once channels are innermost.
+    The rank-specific ``input_layout`` / ``output_layout`` spellings remain accepted; when
+    both forms are supplied, they must agree.
 
     ``padding`` takes an int, a per-axis tuple, or one of torch's two strings. "valid" is
     no padding. "same" pads so the output keeps the input's spatial extent, which needs
@@ -1337,12 +1347,16 @@ def conv3d_implicit(
     assert x.dim() == weight.dim(), f"x rank {x.dim()} != weight rank {weight.dim()}"
     has_input_layout = "input_layout" in kwargs
     has_output_layout = "output_layout" in kwargs
-    input_layout = kwargs.pop("input_layout", layout)
-    output_layout = kwargs.pop("output_layout", out_layout if out_layout is not None else input_layout)
-    if has_input_layout and layout != "NCDHW" and input_layout != layout:
+    input_layout = kwargs.pop("input_layout", None)
+    output_layout = kwargs.pop("output_layout", None)
+    if has_input_layout and layout != "NCDHW" and input_layout != _layout_for_rank(layout, spatial_rank):
         raise ValueError("input_layout conflicts with layout")
-    if has_output_layout and out_layout is not None and output_layout != out_layout:
+    if has_output_layout and out_layout is not None and output_layout != _layout_for_rank(out_layout, spatial_rank):
         raise ValueError("output_layout conflicts with out_layout")
+    if input_layout is None:
+        input_layout = _layout_for_rank(layout, spatial_rank)
+    if output_layout is None:
+        output_layout = _layout_for_rank(out_layout, spatial_rank) if out_layout is not None else input_layout
     impl = {3: _conv3d_impl, 2: _conv2d_impl, 1: _conv1d_impl}[spatial_rank]
     y = impl(
         x,
