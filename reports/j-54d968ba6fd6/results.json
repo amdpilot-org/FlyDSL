@@ -1,0 +1,84 @@
+{
+  "status": "PASS",
+  "source_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+  "source_version": "0.3.3",
+  "hybrid_package_version": "0.2.4",
+  "source_autotune_path": "/job/FlyDSL/python/flydsl/autotune.py",
+  "hybrid_autotune_path": "/job/flydsl-hybrid/flydsl/autotune.py",
+  "source_autotune_sha256": "a3cd737c86f2eb75c61b6936cafbf472b2d6906deb8cd0733e204fc04f0d629e",
+  "hybrid_autotune_sha256": "a3cd737c86f2eb75c61b6936cafbf472b2d6906deb8cd0733e204fc04f0d629e",
+  "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+  "torch_hip_version": "7.2.26015-fc0010cf6a",
+  "torch_path": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+  "triton_version": "3.5.1+rocm7.2.0.gita272dfa8",
+  "triton_path": "/opt/venv/lib/python3.12/site-packages/triton/__init__.py",
+  "native_mlir_path": "/job/flydsl-hybrid/flydsl/_mlir",
+  "gpu": {
+    "name": "AMD Instinct MI350X",
+    "architecture": "gfx950",
+    "compute_capability": [
+      9,
+      5
+    ],
+    "compute_units": 256
+  },
+  "cache": {
+    "autotune_dir": "/job/flydsl-autotune-cache-j-54d968ba6fd6/run-3936",
+    "runtime_dir": "/job/flydsl-runtime-cache-j-54d968ba6fd6/run-3936",
+    "autotune_file": "/job/flydsl-autotune-cache-j-54d968ba6fd6/run-3936/mutating_add.json"
+  },
+  "candidate_blocks": [
+    64,
+    128,
+    256
+  ],
+  "default_block": 128,
+  "chosen_block": 128,
+  "search_calls": {
+    "default": 0,
+    "explicit": 3,
+    "final_total": 3
+  },
+  "phases": [
+    {
+      "phase": "default_call_A",
+      "exact": true
+    },
+    {
+      "phase": "default_call_C",
+      "exact": true
+    },
+    {
+      "phase": "explicit_search_A_restored",
+      "exact": true
+    },
+    {
+      "phase": "explicit_search_C_clean_run",
+      "exact": true
+    },
+    {
+      "phase": "final_execution_A",
+      "exact": true
+    },
+    {
+      "phase": "final_execution_C",
+      "exact": true
+    },
+    {
+      "phase": "cache_hit_A",
+      "exact": true
+    },
+    {
+      "phase": "cache_hit_C",
+      "exact": true
+    },
+    {
+      "phase": "repeated_call_accumulated_A",
+      "exact": true
+    },
+    {
+      "phase": "repeated_call_accumulated_C",
+      "exact": true
+    }
+  ]
+}
