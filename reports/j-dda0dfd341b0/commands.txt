@@ -1,0 +1,53 @@
+Commands used to produce the delivered evidence:
+
+```bash
+# Working clone
+git clone https://github.com/amdpilot-org/FlyDSL.git /job/FlyDSL
+cd /job/FlyDSL
+git rev-parse HEAD
+git remote -v
+git status --short --branch
+
+# Issue 831 (read-only public API)
+curl --fail --silent --show-error --location --retry 2 --connect-timeout 10 \
+  -H 'Accept: application/vnd.github+json' \
+  -H 'X-GitHub-Api-Version: 2022-11-28' \
+  https://api.github.com/repos/ROCm/FlyDSL/issues/831 \
+  -o /tmp/flydsl-issue-831/issue.json
+curl --fail --silent --show-error --location --retry 2 --connect-timeout 10 \
+  -H 'Accept: application/vnd.github+json' \
+  -H 'X-GitHub-Api-Version: 2022-11-28' \
+  https://api.github.com/repos/ROCm/FlyDSL/issues/831/comments?per_page=100 \
+  -o /tmp/flydsl-issue-831/comments.json
+
+# PR 829 candidate on preserved head
+git fetch https://github.com/ROCm/FlyDSL.git \
+  ce8ce9c892a7f6c6fec4d93086509139e393dbf0
+git worktree add --detach /tmp/flydsl-pr-829-worktree \
+  ce8ce9c892a7f6c6fec4d93086509139e393dbf0
+cd /tmp/flydsl-pr-829-worktree
+PYTHONPATH=/tmp/flydsl-pr-829-worktree/python \
+  /opt/venv/bin/python -m pytest \
+  tests/unit/test_profiling.py tests/unit/test_autotune.py -q
+
+# Environment inventory
+cd /job/FlyDSL
+/opt/venv/bin/python --version
+/opt/venv/bin/pip show torch triton flydsl amd-aiter
+/opt/rocm/bin/rocminfo
+/opt/rocm/bin/rocm-smi --showproductname --showserial --showuniqueid --showmemuse
+/opt/rocm/bin/amd-smi metric
+/opt/rocm/bin/hipconfig --full
+
+# FlyDSL timing probe
+cd /job/FlyDSL
+FLYDSL_RUNTIME_ENABLE_CACHE=0 \
+  /opt/venv/bin/python reports/j-dda0dfd341b0/timing_probe.py \
+  --json-out reports/j-dda0dfd341b0/timing_results.json \
+  > reports/j-dda0dfd341b0/raw_results.txt
+
+# Validation
+/opt/venv/bin/python -m py_compile \
+  reports/j-dda0dfd341b0/timing_probe.py
+git diff --check
+```
