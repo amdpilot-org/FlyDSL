@@ -134,10 +134,6 @@ class RocmBackend(BaseBackend):
             for func_op in _iter_gpu_kernel_funcs(module):
                 func_op.attributes["rocdl.waves_per_eu"] = wpe_attr
 
-    def gpu_module_targets(self) -> List[str]:
-        """Let the ROCm pipeline own target attachment and compile options."""
-        return []
-
     # -- cache / fingerprint ---------------------------------------------
 
     def native_lib_patterns(self) -> List[str]:
