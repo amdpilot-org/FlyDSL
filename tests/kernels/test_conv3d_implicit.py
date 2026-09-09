@@ -172,6 +172,22 @@ def test_conv2d_public_layout_alias():
 
 
 @_skip_non_cdna4
+def test_conv1d_public_layout_alias():
+    torch.manual_seed(3380)
+    n, c, w, k = 1, 32, 20, 64
+    x = torch.randn((n, c, w), device="cuda", dtype=torch.bfloat16)
+    weight = torch.randn((k, c, 3), device="cuda", dtype=torch.bfloat16)
+    x_cl = x.permute(0, 2, 1).contiguous()
+
+    y = conv3d_implicit(x_cl, weight, stride=1, padding=1, layout="NDHWC")
+    y_ref = F.conv1d(x, weight, stride=1, padding=1).permute(0, 2, 1).contiguous()
+    torch.cuda.synchronize()
+
+    assert y.shape == y_ref.shape
+    assert torch.allclose(y, y_ref, rtol=2e-2, atol=2e-2)
+
+
+@_skip_non_cdna4
 def test_conv3d_layout_chain():
     torch.manual_seed(3400)
     n, c, t, h, w = 1, 32, 4, 8, 8
