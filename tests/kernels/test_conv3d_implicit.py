@@ -83,6 +83,161 @@ def test_conv3d_factorized_filters_vs_torch(kernel_shape, padding):
 
 
 @_skip_non_cdna4
+@pytest.mark.parametrize("splitk", [1, 2])
+@pytest.mark.parametrize("layout,out_layout", [("NCDHW", "NCDHW"), ("NDHWC", "NDHWC")])
+def test_conv3d_layout_contract(splitk, layout, out_layout):
+    torch.manual_seed(3300 + splitk)
+    n, c, t, h, w, k = 1, 32, 4, 8, 8, 64
+    x = torch.randn((n, c, t, h, w), device="cuda", dtype=torch.bfloat16)
+    weight = torch.randn((k, c, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    bias = torch.randn((k,), device="cuda", dtype=torch.float32)
+    x_arg = x.permute(0, 2, 3, 4, 1).contiguous() if layout == "NDHWC" else x
+
+    y = conv3d_implicit(
+        x_arg,
+        weight,
+        bias=bias,
+        stride=2,
+        padding=1,
+        splitk=splitk,
+        layout=layout,
+        out_layout=out_layout,
+    )
+    y_ref = F.conv3d(x, weight, bias=bias.to(torch.bfloat16), stride=2, padding=1)
+    if out_layout == "NDHWC":
+        y_ref = y_ref.permute(0, 2, 3, 4, 1).contiguous()
+    torch.cuda.synchronize()
+
+    assert y.shape == y_ref.shape
+    assert torch.allclose(y, y_ref, rtol=2e-2, atol=2e-2)
+
+
+@_skip_non_cdna4
+@pytest.mark.parametrize("bias_dtype", [torch.float32, torch.bfloat16])
+@pytest.mark.parametrize("layout,out_layout", [("NCDHW", "NDHWC"), ("NDHWC", "NCDHW")])
+def test_conv3d_mixed_layouts_and_bias_dtype(layout, out_layout, bias_dtype):
+    torch.manual_seed(3350)
+    n, c, t, h, w, k = 2, 32, 5, 9, 10, 64
+    x = torch.randn((n, c, t, h, w), device="cuda", dtype=torch.bfloat16)
+    weight = torch.randn((k, c, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    bias = torch.randn((k,), device="cuda", dtype=bias_dtype)
+    x_arg = x.permute(0, 2, 3, 4, 1).contiguous() if layout == "NDHWC" else x
+
+    y = conv3d_implicit(
+        x_arg,
+        weight,
+        bias=bias,
+        stride=(1, 2, 1),
+        padding=(1, 0, 1),
+        layout=layout,
+        out_layout=out_layout,
+    )
+    y_ref = F.conv3d(x, weight, bias=bias.to(torch.bfloat16), stride=(1, 2, 1), padding=(1, 0, 1))
+    if out_layout == "NDHWC":
+        y_ref = y_ref.permute(0, 2, 3, 4, 1).contiguous()
+    torch.cuda.synchronize()
+
+    assert y.shape == y_ref.shape
+    assert torch.allclose(y, y_ref, rtol=2e-2, atol=2e-2)
+
+
+@_skip_non_cdna4
+def test_conv3d_out_layout_defaults_to_layout():
+    torch.manual_seed(3360)
+    n, c, t, h, w, k = 1, 32, 4, 8, 8, 64
+    x = torch.randn((n, c, t, h, w), device="cuda", dtype=torch.bfloat16)
+    weight = torch.randn((k, c, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    x_cl = x.permute(0, 2, 3, 4, 1).contiguous()
+
+    y = conv3d_implicit(x_cl, weight, stride=1, padding=1, layout="NDHWC")
+    torch.cuda.synchronize()
+
+    assert y.shape == (n, t, h, w, k)
+
+
+@_skip_non_cdna4
+def test_conv2d_public_layout_alias():
+    torch.manual_seed(3370)
+    n, c, h, w, k = 1, 32, 9, 10, 64
+    x = torch.randn((n, c, h, w), device="cuda", dtype=torch.bfloat16)
+    weight = torch.randn((k, c, 3, 3), device="cuda", dtype=torch.bfloat16)
+    x_cl = x.permute(0, 2, 3, 1).contiguous()
+
+    y = conv3d_implicit(x_cl, weight, stride=1, padding=1, layout="NDHWC")
+    y_ref = F.conv2d(x, weight, stride=1, padding=1).permute(0, 2, 3, 1).contiguous()
+    torch.cuda.synchronize()
+
+    assert y.shape == y_ref.shape
+    assert torch.allclose(y, y_ref, rtol=2e-2, atol=2e-2)
+
+
+@_skip_non_cdna4
+def test_conv1d_public_layout_alias():
+    torch.manual_seed(3380)
+    n, c, w, k = 1, 32, 20, 64
+    x = torch.randn((n, c, w), device="cuda", dtype=torch.bfloat16)
+    weight = torch.randn((k, c, 3), device="cuda", dtype=torch.bfloat16)
+    x_cl = x.permute(0, 2, 1).contiguous()
+
+    y = conv3d_implicit(x_cl, weight, stride=1, padding=1, layout="NDHWC")
+    y_ref = F.conv1d(x, weight, stride=1, padding=1).permute(0, 2, 1).contiguous()
+    torch.cuda.synchronize()
+
+    assert y.shape == y_ref.shape
+    assert torch.allclose(y, y_ref, rtol=2e-2, atol=2e-2)
+
+
+@_skip_non_cdna4
+def test_conv3d_unbatched_ndhwc_layout():
+    torch.manual_seed(3390)
+    c, t, h, w, k = 32, 4, 8, 8, 64
+    x = torch.randn((c, t, h, w), device="cuda", dtype=torch.bfloat16)
+    weight = torch.randn((k, c, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    x_cl = x.permute(1, 2, 3, 0).contiguous()
+
+    y = conv3d_implicit(x_cl, weight, stride=1, padding=1, layout="NDHWC", out_layout="NDHWC")
+    y_ref = F.conv3d(x, weight, stride=1, padding=1).permute(1, 2, 3, 0).contiguous()
+    torch.cuda.synchronize()
+
+    assert y.shape == y_ref.shape
+    assert torch.allclose(y, y_ref, rtol=2e-2, atol=2e-2)
+
+
+@_skip_non_cdna4
+@pytest.mark.parametrize("argument", ["input_layout", "output_layout"])
+def test_conv3d_layout_alias_conflict(argument):
+    torch.manual_seed(3400)
+    x = torch.randn((1, 32, 4, 8, 8), device="cuda", dtype=torch.bfloat16)
+    weight = torch.randn((64, 32, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    kwargs = {argument: "NCDHW"}
+
+    with pytest.raises(ValueError, match=f"{argument} conflicts with"):
+        conv3d_implicit(x, weight, layout="NDHWC", out_layout="NDHWC", **kwargs)
+
+
+@_skip_non_cdna4
+def test_conv3d_layout_chain():
+    torch.manual_seed(3400)
+    n, c, t, h, w = 1, 32, 4, 8, 8
+    weight_1 = torch.randn((64, c, 3, 3, 3), device="cuda", dtype=torch.bfloat16) * 0.1
+    weight_2 = torch.randn((64, 64, 3, 3, 3), device="cuda", dtype=torch.bfloat16) * 0.1
+    weight_3 = torch.randn((32, 64, 3, 3, 3), device="cuda", dtype=torch.bfloat16) * 0.1
+    x = torch.randn((n, c, t, h, w), device="cuda", dtype=torch.bfloat16)
+    x_cl = x.permute(0, 2, 3, 4, 1).contiguous()
+
+    y = conv3d_implicit(x_cl, weight_1, stride=1, padding=1, layout="NDHWC", out_layout="NDHWC")
+    y = conv3d_implicit(y, weight_2, stride=1, padding=1, layout="NDHWC", out_layout="NDHWC")
+    y = conv3d_implicit(y, weight_3, stride=1, padding=1, layout="NDHWC", out_layout="NDHWC")
+    ref = F.conv3d(x, weight_1, stride=1, padding=1)
+    ref = F.conv3d(ref, weight_2, stride=1, padding=1)
+    ref = F.conv3d(ref, weight_3, stride=1, padding=1).permute(0, 2, 3, 4, 1).contiguous()
+    torch.cuda.synchronize()
+
+    assert y.shape == ref.shape
+    assert torch.allclose(y, ref, rtol=2e-2, atol=2e-2)
+
+
+@_skip_non_cdna4
 @pytest.mark.parametrize("c", [16, 64])
 def test_conv3d_runtime_k_loop_short_problems(c):
     """Exercise one- and two-K-tile runtime-pipeline epilogues."""
