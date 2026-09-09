@@ -61,6 +61,13 @@ unsigned mapAttrToLLVMAddressSpace(Attribute attr) {
   return 0; // default to generic address space
 }
 
+static uint64_t getTypeBitWidth(Type type) {
+  if (auto vectorTy = dyn_cast<VectorType>(type))
+    return static_cast<uint64_t>(vectorTy.getNumElements()) *
+           vectorTy.getElementType().getIntOrFloatBitWidth();
+  return type.getIntOrFloatBitWidth();
+}
+
 /// Byte alignment that still holds after `applySwizzleOnPtr`.
 ///
 /// The swizzle XORs address bits at and above `base`, so only the low `base`
@@ -651,6 +658,29 @@ public:
 
     Type resultTy = hasResult ? op.getResult(0).getType() : Type{};
     Type dstTy = op.getDst() ? op.getDst().getType() : Type{};
+
+    if (auto bufferCopy = dyn_cast<CopyOpCDNA3BufferCopyType>(copyAtom.getCopyOp())) {
+      auto srcMemTy = dyn_cast<fly::MemRefType>(srcTy);
+      auto dstMemTy = dstTy ? dyn_cast<fly::MemRefType>(dstTy) : fly::MemRefType();
+      bool srcIsMemory = srcMemTy != nullptr;
+      bool dstIsMemory = dstMemTy != nullptr;
+      auto srcIsSupported =
+          !srcIsMemory || isTargetAddressSpace<BufferDescAddressAttr>(srcMemTy.getAddressSpace()) ||
+          isGenericAddressSpace<AddressSpace::Global>(srcMemTy.getAddressSpace());
+      auto dstIsSupported =
+          !dstIsMemory || isTargetAddressSpace<BufferDescAddressAttr>(dstMemTy.getAddressSpace()) ||
+          isGenericAddressSpace<AddressSpace::Global>(dstMemTy.getAddressSpace());
+      if (srcIsMemory == dstIsMemory || !srcIsSupported || !dstIsSupported)
+        return op.emitError() << "CDNA3 BufferCopy requires one memory operand (buffer descriptor "
+                                 "or global) and one register operand";
+
+      Type valueTy = hasResult ? resultTy : srcTy;
+      uint64_t valueBits = getTypeBitWidth(valueTy);
+      if (valueBits != static_cast<uint64_t>(bufferCopy.getBitSize()))
+        return op.emitError() << "CDNA3 BufferCopy width (" << bufferCopy.getBitSize()
+                              << " bits) does not match its " << valueBits
+                              << "-bit register operand";
+    }
 
     FailureOr<Value> result;
     if (pred) {
