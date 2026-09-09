@@ -243,7 +243,11 @@ class TestCompileHintsPropagation:
     def test_create_gpu_module_preserves_multiple_targets(self):
         """Intentional multi-target construction remains supported."""
         from flydsl._mlir import ir
+        from flydsl.compiler.backends import get_backend
         from flydsl.compiler.kernel_function import create_gpu_module
+
+        backend = get_backend()
+        other_arch = "gfx950" if backend.target.arch != "gfx950" else "gfx942"
 
         with ir.Context() as ctx:
             ctx.allow_unregistered_dialects = True
@@ -253,8 +257,8 @@ class TestCompileHintsPropagation:
                     create_gpu_module(
                         "multi",
                         targets=[
-                            '#rocdl.target<chip = "gfx942">',
-                            '#rocdl.target<chip = "gfx950">',
+                            f'#rocdl.target<chip = "{backend.target.arch}">',
+                            f'#rocdl.target<chip = "{other_arch}">',
                         ],
                     )
                 ir_text = str(module)
