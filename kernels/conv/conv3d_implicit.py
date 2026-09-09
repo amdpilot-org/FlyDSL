@@ -96,6 +96,14 @@ def _check_layouts(rank, input_layout, output_layout):
         assert v in names, f"{what} must be one of {names}, got {v!r}"
 
 
+def _layout_for_rank(layout, rank):
+    if layout == "NCDHW":
+        return LAYOUTS[rank][0]
+    if layout == "NDHWC":
+        return LAYOUTS[rank][1]
+    return layout
+
+
 def _shape_ncdhw(x, ndhwc):
     """Unpack a 5-D input in either layout to (n, c, d, h, w)."""
     if ndhwc:
@@ -1278,12 +1286,22 @@ def _conv1d_impl(
     return y5.reshape(y5.shape[0], y5.shape[1], y5.shape[4])
 
 
-def conv3d_implicit(x, weight, bias=None, stride=1, padding=0, dilation=1, **kwargs):
+def conv3d_implicit(
+    x,
+    weight,
+    bias=None,
+    stride=1,
+    padding=0,
+    dilation=1,
+    layout="NCDHW",
+    out_layout=None,
+    **kwargs,
+):
     """Main implicit-GEMM conv entry; dispatches 1D/2D/3D by filter rank.
 
     Rank is taken from the filter (weight.dim() - 2): 3 -> 3D (N,C,D,H,W)/(K,C,T,R,S).
 
-    ``input_layout`` and ``output_layout`` are independent and named per rank:
+    ``layout`` and ``out_layout`` are independent and named per rank:
     "NCDHW"/"NDHWC", "NCHW"/"NHWC", "NCW"/"NWC". The weight stays KC*, and the batch axis
     leads in both, so an unbatched input works either way. Channels-last is the kernel's
     own layout on both sides: an NDHWC input skips the pre-transpose, and an NDHWC output
@@ -1291,6 +1309,8 @@ def conv3d_implicit(x, weight, bias=None, stride=1, padding=0, dilation=1, **kwa
     epilogue's transpose. Channels-last output does give up the vectorized store on the
     ``n == 1`` fast path, since a lane's four accumulator values are four M rows and those
     are K apart once channels are innermost.
+    The rank-specific ``input_layout`` / ``output_layout`` spellings remain accepted; when
+    both forms are supplied, they must agree.
 
     ``padding`` takes an int, a per-axis tuple, or one of torch's two strings. "valid" is
     no padding. "same" pads so the output keeps the input's spatial extent, which needs
@@ -1325,6 +1345,28 @@ def conv3d_implicit(x, weight, bias=None, stride=1, padding=0, dilation=1, **kwa
     if unbatched:
         x = x.unsqueeze(0)
     assert x.dim() == weight.dim(), f"x rank {x.dim()} != weight rank {weight.dim()}"
+    has_input_layout = "input_layout" in kwargs
+    has_output_layout = "output_layout" in kwargs
+    input_layout = kwargs.pop("input_layout", None)
+    output_layout = kwargs.pop("output_layout", None)
+    if has_input_layout and layout != "NCDHW" and input_layout != _layout_for_rank(layout, spatial_rank):
+        raise ValueError("input_layout conflicts with layout")
+    if has_output_layout and out_layout is not None and output_layout != _layout_for_rank(out_layout, spatial_rank):
+        raise ValueError("output_layout conflicts with out_layout")
+    if input_layout is None:
+        input_layout = _layout_for_rank(layout, spatial_rank)
+    if output_layout is None:
+        output_layout = _layout_for_rank(out_layout, spatial_rank) if out_layout is not None else input_layout
     impl = {3: _conv3d_impl, 2: _conv2d_impl, 1: _conv1d_impl}[spatial_rank]
-    y = impl(x, weight, bias=bias, stride=stride, padding=padding, dilation=dilation, **kwargs)
+    y = impl(
+        x,
+        weight,
+        bias=bias,
+        stride=stride,
+        padding=padding,
+        dilation=dilation,
+        input_layout=input_layout,
+        output_layout=output_layout,
+        **kwargs,
+    )
     return y.squeeze(0) if unbatched else y
