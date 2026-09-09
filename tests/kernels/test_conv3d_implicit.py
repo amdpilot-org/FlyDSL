@@ -204,6 +204,18 @@ def test_conv3d_unbatched_ndhwc_layout():
 
 
 @_skip_non_cdna4
+@pytest.mark.parametrize("argument", ["input_layout", "output_layout"])
+def test_conv3d_layout_alias_conflict(argument):
+    torch.manual_seed(3400)
+    x = torch.randn((1, 32, 4, 8, 8), device="cuda", dtype=torch.bfloat16)
+    weight = torch.randn((64, 32, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    kwargs = {argument: "NCDHW"}
+
+    with pytest.raises(ValueError, match=f"{argument} conflicts with"):
+        conv3d_implicit(x, weight, layout="NDHWC", out_layout="NDHWC", **kwargs)
+
+
+@_skip_non_cdna4
 def test_conv3d_layout_chain():
     torch.manual_seed(3400)
     n, c, t, h, w = 1, 32, 4, 8, 8
