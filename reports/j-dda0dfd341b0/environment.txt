@@ -1,0 +1,1026 @@
+### Image identity (operator-provided)
+image=amdpilotv2/open-job:gbt350-20260909
+local_image_id=sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7
+note=container hostname is not image identity
+
+### OS and kernel
+PRETTY_NAME="Ubuntu 24.04.3 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+VERSION="24.04.3 LTS (Noble Numbat)"
+VERSION_CODENAME=noble
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=noble
+LOGO=ubuntu-logo
+Linux gbt350-odcdh1-a08-1.png-odc.dcgpu 4.18.0-513.1.1.el8_9.g12b5.x86_64 #1 SMP Tue Dec 5 07:49:59 PST 2023 x86_64 x86_64 x86_64 GNU/Linux
+
+### Source clone
+/job/FlyDSL
+ed70142704e1a6d5563fb53e1607e3a4b85d7111
+amdpilot/j-dda0dfd341b0
+origin	https://github.com/amdpilot-org/FlyDSL.git (fetch)
+origin	https://github.com/amdpilot-org/FlyDSL.git (push)
+## amdpilot/j-dda0dfd341b0
+?? reports/
+
+### Python interpreter
+/opt/venv/bin/python
+Python 3.12.3
+
+### Python module paths and versions
+executable /opt/venv/bin/python
+version 3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]
+torch /opt/venv/lib/python3.12/site-packages/torch/__init__.py ['/opt/venv/lib/python3.12/site-packages/torch']
+triton /opt/venv/lib/python3.12/site-packages/triton/__init__.py ['/opt/venv/lib/python3.12/site-packages/triton']
+flydsl /opt/venv/lib/python3.12/site-packages/flydsl/__init__.py ['/opt/venv/lib/python3.12/site-packages/flydsl']
+aiter /opt/aiter/aiter/__init__.py ['/opt/aiter/aiter']
+torch 2.9.1+rocm7.2.0.git7e1940d4
+torch_hip 7.2.26015-fc0010cf6a
+triton 3.5.1+rocm7.2.0.gita272dfa8
+flydsl 0.2.4
+cuda_available True
+device_count 1
+device_name AMD Instinct MI350X
+capability (9, 5)
+
+### pip metadata
+Name: torch
+Version: 2.9.1+rocm7.2.0.lw.git7e1940d4
+Summary: Tensors and Dynamic neural networks in Python with strong GPU acceleration
+Home-page: https://pytorch.org
+Author: 
+Author-email: PyTorch Team <packages@pytorch.org>
+License: BSD-3-Clause
+Location: /opt/venv/lib/python3.12/site-packages
+Requires: filelock, fsspec, jinja2, networkx, setuptools, sympy, triton, typing-extensions
+Required-by: solar, torch_c_dlpack_ext, torchaudio, torchvision
+---
+Name: triton
+Version: 3.5.1+rocm7.2.0.gita272dfa8
+Summary: A language and compiler for custom Deep Learning operations
+Home-page: https://github.com/triton-lang/triton/
+Author: Philippe Tillet
+Author-email: phil@openai.com
+License: 
+Location: /opt/venv/lib/python3.12/site-packages
+Requires: 
+Required-by: torch
+---
+Name: flydsl
+Version: 0.2.4
+Summary: FlyDSL - ROCm Domain Specific Language for layout algebra (Python + embedded MLIR runtime)
+Home-page: 
+Author: 
+Author-email: 
+License: Apache-2.0
+Location: /opt/venv/lib/python3.12/site-packages
+Requires: 
+Required-by: amd-aiter
+---
+Name: amd-aiter
+Version: 0+gd9e5ef7ce08ee7045d583aed768cff41aa9210fe
+Summary: 
+Home-page: 
+Author: 
+Author-email: 
+License: 
+Location: /opt/venv/lib/python3.12/site-packages
+Editable project location: /opt/aiter
+Requires: einops, flydsl, ninja, packaging, pandas, psutil, pybind11
+Required-by: 
+
+### Native FlyDSL libraries
+/opt/venv/lib/python3.12/site-packages/flydsl.libs/libmlir_apfloat_wrappers-7e65a422.so.23.0git
+/opt/venv/lib/python3.12/site-packages/flydsl.libs/libzstd-76b78bac.so.1.4.4
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/__init__.py
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFly.cpython-312-x86_64-linux-gnu.so
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFly.pyi
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFlyROCDL.cpython-312-x86_64-linux-gnu.so
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFlyROCDL.pyi
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsGPU.cpython-312-x86_64-linux-gnu.so
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsGPU.pyi
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsLLVM.cpython-312-x86_64-linux-gnu.so
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsLLVM.pyi
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirExecutionEngine.cpython-312-x86_64-linux-gnu.so
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirExecutionEngine.pyi
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirGPUPasses.cpython-312-x86_64-linux-gnu.so
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirRegisterEverything.cpython-312-x86_64-linux-gnu.so
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libFlyPythonCAPI.so.23.0git
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libMLIRPythonSupport-mlir.so
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libmlir_c_runner_utils.so
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libmlir_float16_utils.so.23.0git
+/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libnanobind-mlir.so
+
+### ROCm native libraries
+/opt/rocm-7.2.0/lib/libamd_comgr.so.3.0.0
+/opt/rocm-7.2.0/lib/libamdhip64.so.7.2.70200
+/opt/rocm-7.2.0/lib/libhsa-runtime64.so.1.18.70200
+/opt/rocm-7.2.0/lib/librccl.so.1.0.70200
+
+### ROCm tools and versions
+[37mROCk module version 7.1.1.31500000 is loaded[0m
+=====================    
+HSA System Attributes    
+=====================    
+Runtime Version:         1.18
+Runtime Ext Version:     1.15
+System Timestamp Freq.:  1000.000000MHz
+Sig. Max Wait Duration:  18446744073709551615 (0xFFFFFFFFFFFFFFFF) (timestamp count)
+Machine Model:           LARGE                              
+System Endianness:       LITTLE                             
+Mwaitx:                  DISABLED
+XNACK enabled:           NO
+DMAbuf Support:          YES
+VMM Support:             YES
+
+==========               
+HSA Agents               
+==========               
+*******                  
+Agent 1                  
+*******                  
+  Name:                    AMD EPYC 9965 192-Core Processor   
+  Uuid:                    CPU-XX                             
+  Marketing Name:          AMD EPYC 9965 192-Core Processor   
+  Vendor Name:             CPU                                
+  Feature:                 None specified                     
+  Profile:                 FULL_PROFILE                       
+  Float Round Mode:        NEAR                               
+  Max Queue Number:        0(0x0)                             
+  Queue Min Size:          0(0x0)                             
+  Queue Max Size:          0(0x0)                             
+  Queue Type:              MULTI                              
+  Node:                    0                                  
+  Device Type:             CPU                                
+  Cache Info:              
+    L1:                      49152(0xc000) KB                   
+  Chip ID:                 0(0x0)                             
+  ASIC Revision:           0(0x0)                             
+  Cacheline Size:          64(0x40)                           
+  Max Clock Freq. (MHz):   3700                               
+  BDFID:                   0                                  
+  Internal Node ID:        0                                  
+  Compute Unit:            192                                
+  SIMDs per CU:            0                                  
+  Shader Engines:          0                                  
+  Shader Arrs. per Eng.:   0                                  
+  WatchPts on Addr. Ranges:1                                  
+  Memory Properties:       
+  Features:                None
+  Pool Info:               
+    Pool 1                   
+      Segment:                 GLOBAL; FLAGS: FINE GRAINED        
+      Size:                    1584260492(0x5e6de58c) KB          
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:4KB                                
+      Alloc Alignment:         4KB                                
+      Accessible by all:       TRUE                               
+    Pool 2                   
+      Segment:                 GLOBAL; FLAGS: EXTENDED FINE GRAINED
+      Size:                    1584260492(0x5e6de58c) KB          
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:4KB                                
+      Alloc Alignment:         4KB                                
+      Accessible by all:       TRUE                               
+    Pool 3                   
+      Segment:                 GLOBAL; FLAGS: KERNARG, FINE GRAINED
+      Size:                    1584260492(0x5e6de58c) KB          
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:4KB                                
+      Alloc Alignment:         4KB                                
+      Accessible by all:       TRUE                               
+    Pool 4                   
+      Segment:                 GLOBAL; FLAGS: COARSE GRAINED      
+      Size:                    1584260492(0x5e6de58c) KB          
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:4KB                                
+      Alloc Alignment:         4KB                                
+      Accessible by all:       TRUE                               
+  ISA Info:                
+*******                  
+Agent 2                  
+*******                  
+  Name:                    AMD EPYC 9965 192-Core Processor   
+  Uuid:                    CPU-XX                             
+  Marketing Name:          AMD EPYC 9965 192-Core Processor   
+  Vendor Name:             CPU                                
+  Feature:                 None specified                     
+  Profile:                 FULL_PROFILE                       
+  Float Round Mode:        NEAR                               
+  Max Queue Number:        0(0x0)                             
+  Queue Min Size:          0(0x0)                             
+  Queue Max Size:          0(0x0)                             
+  Queue Type:              MULTI                              
+  Node:                    1                                  
+  Device Type:             CPU                                
+  Cache Info:              
+    L1:                      49152(0xc000) KB                   
+  Chip ID:                 0(0x0)                             
+  ASIC Revision:           0(0x0)                             
+  Cacheline Size:          64(0x40)                           
+  Max Clock Freq. (MHz):   3700                               
+  BDFID:                   0                                  
+  Internal Node ID:        1                                  
+  Compute Unit:            192                                
+  SIMDs per CU:            0                                  
+  Shader Engines:          0                                  
+  Shader Arrs. per Eng.:   0                                  
+  WatchPts on Addr. Ranges:1                                  
+  Memory Properties:       
+  Features:                None
+  Pool Info:               
+    Pool 1                   
+      Segment:                 GLOBAL; FLAGS: FINE GRAINED        
+      Size:                    1453159132(0x569d72dc) KB          
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:4KB                                
+      Alloc Alignment:         4KB                                
+      Accessible by all:       TRUE                               
+    Pool 2                   
+      Segment:                 GLOBAL; FLAGS: EXTENDED FINE GRAINED
+      Size:                    1453159132(0x569d72dc) KB          
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:4KB                                
+      Alloc Alignment:         4KB                                
+      Accessible by all:       TRUE                               
+    Pool 3                   
+      Segment:                 GLOBAL; FLAGS: KERNARG, FINE GRAINED
+      Size:                    1453159132(0x569d72dc) KB          
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:4KB                                
+      Alloc Alignment:         4KB                                
+      Accessible by all:       TRUE                               
+    Pool 4                   
+      Segment:                 GLOBAL; FLAGS: COARSE GRAINED      
+      Size:                    1453159132(0x569d72dc) KB          
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:4KB                                
+      Alloc Alignment:         4KB                                
+      Accessible by all:       TRUE                               
+  ISA Info:                
+*******                  
+Agent 3                  
+*******                  
+  Name:                    gfx950                             
+  Uuid:                    GPU-593d46f1dbb5dce5               
+  Marketing Name:          AMD Instinct MI350X                
+  Vendor Name:             AMD                                
+  Feature:                 KERNEL_DISPATCH                    
+  Profile:                 BASE_PROFILE                       
+  Float Round Mode:        NEAR                               
+  Max Queue Number:        128(0x80)                          
+  Queue Min Size:          64(0x40)                           
+  Queue Max Size:          131072(0x20000)                    
+  Queue Type:              MULTI                              
+  Node:                    2                                  
+  Device Type:             GPU                                
+  Cache Info:              
+    L1:                      32(0x20) KB                        
+    L2:                      4096(0x1000) KB                    
+    L3:                      229376(0x38000) KB                 
+  Chip ID:                 30112(0x75a0)                      
+  ASIC Revision:           0(0x0)                             
+  Cacheline Size:          128(0x80)                          
+  Max Clock Freq. (MHz):   2200                               
+  BDFID:                   26112                              
+  Internal Node ID:        2                                  
+  Compute Unit:            256                                
+  SIMDs per CU:            4                                  
+  Shader Engines:          32                                 
+  Shader Arrs. per Eng.:   1                                  
+  WatchPts on Addr. Ranges:4                                  
+  Coherent Host Access:    FALSE                              
+  Memory Properties:       
+  Features:                KERNEL_DISPATCH 
+  Fast F16 Operation:      TRUE                               
+  Wavefront Size:          64(0x40)                           
+  Workgroup Max Size:      1024(0x400)                        
+  Workgroup Max Size per Dimension:
+    x                        1024(0x400)                        
+    y                        1024(0x400)                        
+    z                        1024(0x400)                        
+  Max Waves Per CU:        32(0x20)                           
+  Max Work-item Per CU:    2048(0x800)                        
+  Grid Max Size:           4294967295(0xffffffff)             
+  Grid Max Size per Dimension:
+    x                        2147483647(0x7fffffff)             
+    y                        65535(0xffff)                      
+    z                        65535(0xffff)                      
+  Max fbarriers/Workgrp:   32                                 
+  Packet Processor uCode:: 44                                 
+  SDMA engine uCode::      14                                 
+  IOMMU Support::          None                               
+  Pool Info:               
+    Pool 1                   
+      Segment:                 GLOBAL; FLAGS: COARSE GRAINED      
+      Size:                    264224768(0xfbfc000) KB            
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:2048KB                             
+      Alloc Alignment:         4KB                                
+      Accessible by all:       FALSE                              
+    Pool 2                   
+      Segment:                 GLOBAL; FLAGS: EXTENDED FINE GRAINED
+      Size:                    264224768(0xfbfc000) KB            
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:2048KB                             
+      Alloc Alignment:         4KB                                
+      Accessible by all:       FALSE                              
+    Pool 3                   
+      Segment:                 GLOBAL; FLAGS: FINE GRAINED        
+      Size:                    264224768(0xfbfc000) KB            
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:2048KB                             
+      Alloc Alignment:         4KB                                
+      Accessible by all:       FALSE                              
+    Pool 4                   
+      Segment:                 GROUP                              
+      Size:                    160(0xa0) KB                       
+      Allocatable:             FALSE                              
+      Alloc Granule:           0KB                                
+      Alloc Recommended Granule:0KB                                
+      Alloc Alignment:         0KB                                
+      Accessible by all:       FALSE                              
+  ISA Info:                
+    ISA 1                    
+      Name:                    amdgcn-amd-amdhsa--gfx950:sramecc+:xnack-
+      Machine Models:          HSA_MACHINE_MODEL_LARGE            
+      Profiles:                HSA_PROFILE_BASE                   
+      Default Rounding Mode:   NEAR                               
+      Default Rounding Mode:   NEAR                               
+      Fast f16:                TRUE                               
+      Workgroup Max Size:      1024(0x400)                        
+      Workgroup Max Size per Dimension:
+        x                        1024(0x400)                        
+        y                        1024(0x400)                        
+        z                        1024(0x400)                        
+      Grid Max Size:           4294967295(0xffffffff)             
+      Grid Max Size per Dimension:
+        x                        2147483647(0x7fffffff)             
+        y                        65535(0xffff)                      
+        z                        65535(0xffff)                      
+      FBarrier Max Size:       32                                 
+    ISA 2                    
+      Name:                    amdgcn-amd-amdhsa--gfx9-4-generic:sramecc+:xnack-
+      Machine Models:          HSA_MACHINE_MODEL_LARGE            
+      Profiles:                HSA_PROFILE_BASE                   
+      Default Rounding Mode:   NEAR                               
+      Default Rounding Mode:   NEAR                               
+      Fast f16:                TRUE                               
+      Workgroup Max Size:      1024(0x400)                        
+      Workgroup Max Size per Dimension:
+        x                        1024(0x400)                        
+        y                        1024(0x400)                        
+        z                        1024(0x400)                        
+      Grid Max Size:           4294967295(0xffffffff)             
+      Grid Max Size per Dimension:
+        x                        2147483647(0x7fffffff)             
+        y                        65535(0xffff)                      
+        z                        65535(0xffff)                      
+      FBarrier Max Size:       32                                 
+*** Done ***             
+ROCM-SMI version: 4.0.0+fc0010cf6a
+ROCM-SMI-LIB version: 7.8.0
+HIP version: 7.2.26015-fc0010cf6a
+
+==hipconfig
+HIP_PATH           :/opt/rocm-7.2.0
+ROCM_PATH          :/opt/rocm-7.2.0
+HIP_COMPILER       :clang
+HIP_PLATFORM       :amd
+HIP_RUNTIME        :rocclr
+CPP_CONFIG         : -D__HIP_PLATFORM_HCC__= -D__HIP_PLATFORM_AMD__= -I/opt/rocm-7.2.0/include -I/include
+
+==hip-clang
+HIP_CLANG_PATH     :/opt/rocm-7.2.0/lib/llvm/bin
+AMD clang version 22.0.0git (https://github.com/RadeonOpenCompute/llvm-project roc-7.2.0 26014 7b800a19466229b8479a78de19143dc33c3ab9b5)
+Target: x86_64-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /opt/rocm-7.2.0/lib/llvm/bin
+Configuration file: /opt/rocm-7.2.0/lib/llvm/bin/clang++.cfg
+AMD LLVM version 22.0.0git
+  Optimized build.
+  Default target: x86_64-unknown-linux-gnu
+  Host CPU: znver5
+
+  Registered Targets:
+    amdgcn - AMD GCN GPUs
+    r600   - AMD GPUs HD2XXX-HD6XXX
+    x86    - 32-bit X86: Pentium-Pro and above
+    x86-64 - 64-bit X86: EM64T and AMD64
+hip-clang-cxxflags :
+ -O3
+hip-clang-ldflags :
+--driver-mode=g++ -O3 --hip-link
+
+== Environment Variables
+PATH =/opt/node/lib/node_modules/@openai/codex/node_modules/@openai/codex-linux-x64/vendor/x86_64-unknown-linux-musl/codex-path:/job/.codex/tmp/arg0/codex-arg0dYVju8:/opt/venv/bin:/opt/node/bin:/opt/rocm/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/jobenv/bin
+LD_LIBRARY_PATH=/opt/rocm/lib
+
+== Linux Kernel
+Hostname      :
+gbt350-odcdh1-a08-1.png-odc.dcgpu
+Linux gbt350-odcdh1-a08-1.png-odc.dcgpu 4.18.0-513.1.1.el8_9.g12b5.x86_64 #1 SMP Tue Dec 5 07:49:59 PST 2023 x86_64 x86_64 x86_64 GNU/Linux
+Distributor ID:	Ubuntu
+Description:	Ubuntu 24.04.3 LTS
+Release:	24.04
+Codename:	noble
+
+ldd (Ubuntu GLIBC 2.39-0ubuntu8.6) 2.39
+
+### GPU identity (rocminfo)
+[37mROCk module version 7.1.1.31500000 is loaded[0m
+=====================    
+HSA System Attributes    
+=====================    
+Runtime Version:         1.18
+Runtime Ext Version:     1.15
+System Timestamp Freq.:  1000.000000MHz
+Sig. Max Wait Duration:  18446744073709551615 (0xFFFFFFFFFFFFFFFF) (timestamp count)
+Machine Model:           LARGE                              
+System Endianness:       LITTLE                             
+Mwaitx:                  DISABLED
+XNACK enabled:           NO
+DMAbuf Support:          YES
+VMM Support:             YES
+
+==========               
+HSA Agents               
+==========               
+*******                  
+Agent 1                  
+*******                  
+  Name:                    AMD EPYC 9965 192-Core Processor   
+  Uuid:                    CPU-XX                             
+  Marketing Name:          AMD EPYC 9965 192-Core Processor   
+  Vendor Name:             CPU                                
+  Feature:                 None specified                     
+  Profile:                 FULL_PROFILE                       
+  Float Round Mode:        NEAR                               
+  Max Queue Number:        0(0x0)                             
+  Queue Min Size:          0(0x0)                             
+  Queue Max Size:          0(0x0)                             
+  Queue Type:              MULTI                              
+  Node:                    0                                  
+  Device Type:             CPU                                
+  Cache Info:              
+    L1:                      49152(0xc000) KB                   
+  Chip ID:                 0(0x0)                             
+  ASIC Revision:           0(0x0)                             
+  Cacheline Size:          64(0x40)                           
+  Max Clock Freq. (MHz):   3700                               
+  BDFID:                   0                                  
+  Internal Node ID:        0                                  
+  Compute Unit:            192                                
+  SIMDs per CU:            0                                  
+  Shader Engines:          0                                  
+  Shader Arrs. per Eng.:   0                                  
+  WatchPts on Addr. Ranges:1                                  
+  Memory Properties:       
+  Features:                None
+  Pool Info:               
+    Pool 1                   
+      Segment:                 GLOBAL; FLAGS: FINE GRAINED        
+      Size:                    1584260492(0x5e6de58c) KB          
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:4KB                                
+      Alloc Alignment:         4KB                                
+      Accessible by all:       TRUE                               
+    Pool 2                   
+      Segment:                 GLOBAL; FLAGS: EXTENDED FINE GRAINED
+      Size:                    1584260492(0x5e6de58c) KB          
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:4KB                                
+      Alloc Alignment:         4KB                                
+      Accessible by all:       TRUE                               
+    Pool 3                   
+      Segment:                 GLOBAL; FLAGS: KERNARG, FINE GRAINED
+      Size:                    1584260492(0x5e6de58c) KB          
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:4KB                                
+      Alloc Alignment:         4KB                                
+      Accessible by all:       TRUE                               
+    Pool 4                   
+      Segment:                 GLOBAL; FLAGS: COARSE GRAINED      
+      Size:                    1584260492(0x5e6de58c) KB          
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:4KB                                
+      Alloc Alignment:         4KB                                
+      Accessible by all:       TRUE                               
+  ISA Info:                
+*******                  
+Agent 2                  
+*******                  
+  Name:                    AMD EPYC 9965 192-Core Processor   
+  Uuid:                    CPU-XX                             
+  Marketing Name:          AMD EPYC 9965 192-Core Processor   
+  Vendor Name:             CPU                                
+  Feature:                 None specified                     
+  Profile:                 FULL_PROFILE                       
+  Float Round Mode:        NEAR                               
+  Max Queue Number:        0(0x0)                             
+  Queue Min Size:          0(0x0)                             
+  Queue Max Size:          0(0x0)                             
+  Queue Type:              MULTI                              
+  Node:                    1                                  
+  Device Type:             CPU                                
+  Cache Info:              
+    L1:                      49152(0xc000) KB                   
+  Chip ID:                 0(0x0)                             
+  ASIC Revision:           0(0x0)                             
+  Cacheline Size:          64(0x40)                           
+  Max Clock Freq. (MHz):   3700                               
+  BDFID:                   0                                  
+  Internal Node ID:        1                                  
+  Compute Unit:            192                                
+  SIMDs per CU:            0                                  
+  Shader Engines:          0                                  
+  Shader Arrs. per Eng.:   0                                  
+  WatchPts on Addr. Ranges:1                                  
+  Memory Properties:       
+  Features:                None
+  Pool Info:               
+    Pool 1                   
+      Segment:                 GLOBAL; FLAGS: FINE GRAINED        
+      Size:                    1453159132(0x569d72dc) KB          
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:4KB                                
+      Alloc Alignment:         4KB                                
+      Accessible by all:       TRUE                               
+    Pool 2                   
+      Segment:                 GLOBAL; FLAGS: EXTENDED FINE GRAINED
+      Size:                    1453159132(0x569d72dc) KB          
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:4KB                                
+      Alloc Alignment:         4KB                                
+      Accessible by all:       TRUE                               
+    Pool 3                   
+      Segment:                 GLOBAL; FLAGS: KERNARG, FINE GRAINED
+      Size:                    1453159132(0x569d72dc) KB          
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:4KB                                
+      Alloc Alignment:         4KB                                
+      Accessible by all:       TRUE                               
+    Pool 4                   
+      Segment:                 GLOBAL; FLAGS: COARSE GRAINED      
+      Size:                    1453159132(0x569d72dc) KB          
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:4KB                                
+      Alloc Alignment:         4KB                                
+      Accessible by all:       TRUE                               
+  ISA Info:                
+*******                  
+Agent 3                  
+*******                  
+  Name:                    gfx950                             
+  Uuid:                    GPU-593d46f1dbb5dce5               
+  Marketing Name:          AMD Instinct MI350X                
+  Vendor Name:             AMD                                
+  Feature:                 KERNEL_DISPATCH                    
+  Profile:                 BASE_PROFILE                       
+  Float Round Mode:        NEAR                               
+  Max Queue Number:        128(0x80)                          
+  Queue Min Size:          64(0x40)                           
+  Queue Max Size:          131072(0x20000)                    
+  Queue Type:              MULTI                              
+  Node:                    2                                  
+  Device Type:             GPU                                
+  Cache Info:              
+    L1:                      32(0x20) KB                        
+    L2:                      4096(0x1000) KB                    
+    L3:                      229376(0x38000) KB                 
+  Chip ID:                 30112(0x75a0)                      
+  ASIC Revision:           0(0x0)                             
+  Cacheline Size:          128(0x80)                          
+  Max Clock Freq. (MHz):   2200                               
+  BDFID:                   26112                              
+  Internal Node ID:        2                                  
+  Compute Unit:            256                                
+  SIMDs per CU:            4                                  
+  Shader Engines:          32                                 
+  Shader Arrs. per Eng.:   1                                  
+  WatchPts on Addr. Ranges:4                                  
+  Coherent Host Access:    FALSE                              
+  Memory Properties:       
+  Features:                KERNEL_DISPATCH 
+  Fast F16 Operation:      TRUE                               
+  Wavefront Size:          64(0x40)                           
+  Workgroup Max Size:      1024(0x400)                        
+  Workgroup Max Size per Dimension:
+    x                        1024(0x400)                        
+    y                        1024(0x400)                        
+    z                        1024(0x400)                        
+  Max Waves Per CU:        32(0x20)                           
+  Max Work-item Per CU:    2048(0x800)                        
+  Grid Max Size:           4294967295(0xffffffff)             
+  Grid Max Size per Dimension:
+    x                        2147483647(0x7fffffff)             
+    y                        65535(0xffff)                      
+    z                        65535(0xffff)                      
+  Max fbarriers/Workgrp:   32                                 
+  Packet Processor uCode:: 44                                 
+  SDMA engine uCode::      14                                 
+  IOMMU Support::          None                               
+  Pool Info:               
+    Pool 1                   
+      Segment:                 GLOBAL; FLAGS: COARSE GRAINED      
+      Size:                    264224768(0xfbfc000) KB            
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:2048KB                             
+      Alloc Alignment:         4KB                                
+      Accessible by all:       FALSE                              
+    Pool 2                   
+      Segment:                 GLOBAL; FLAGS: EXTENDED FINE GRAINED
+      Size:                    264224768(0xfbfc000) KB            
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:2048KB                             
+      Alloc Alignment:         4KB                                
+      Accessible by all:       FALSE                              
+    Pool 3                   
+      Segment:                 GLOBAL; FLAGS: FINE GRAINED        
+      Size:                    264224768(0xfbfc000) KB            
+      Allocatable:             TRUE                               
+      Alloc Granule:           4KB                                
+      Alloc Recommended Granule:2048KB                             
+      Alloc Alignment:         4KB                                
+      Accessible by all:       FALSE                              
+    Pool 4                   
+      Segment:                 GROUP                              
+      Size:                    160(0xa0) KB                       
+      Allocatable:             FALSE                              
+      Alloc Granule:           0KB                                
+      Alloc Recommended Granule:0KB                                
+      Alloc Alignment:         0KB                                
+      Accessible by all:       FALSE                              
+  ISA Info:                
+    ISA 1                    
+      Name:                    amdgcn-amd-amdhsa--gfx950:sramecc+:xnack-
+      Machine Models:          HSA_MACHINE_MODEL_LARGE            
+      Profiles:                HSA_PROFILE_BASE                   
+      Default Rounding Mode:   NEAR                               
+      Default Rounding Mode:   NEAR                               
+      Fast f16:                TRUE                               
+      Workgroup Max Size:      1024(0x400)                        
+      Workgroup Max Size per Dimension:
+        x                        1024(0x400)                        
+        y                        1024(0x400)                        
+        z                        1024(0x400)                        
+      Grid Max Size:           4294967295(0xffffffff)             
+      Grid Max Size per Dimension:
+        x                        2147483647(0x7fffffff)             
+        y                        65535(0xffff)                      
+        z                        65535(0xffff)                      
+      FBarrier Max Size:       32                                 
+    ISA 2                    
+      Name:                    amdgcn-amd-amdhsa--gfx9-4-generic:sramecc+:xnack-
+      Machine Models:          HSA_MACHINE_MODEL_LARGE            
+      Profiles:                HSA_PROFILE_BASE                   
+      Default Rounding Mode:   NEAR                               
+      Default Rounding Mode:   NEAR                               
+      Fast f16:                TRUE                               
+      Workgroup Max Size:      1024(0x400)                        
+      Workgroup Max Size per Dimension:
+        x                        1024(0x400)                        
+        y                        1024(0x400)                        
+        z                        1024(0x400)                        
+      Grid Max Size:           4294967295(0xffffffff)             
+      Grid Max Size per Dimension:
+        x                        2147483647(0x7fffffff)             
+        y                        65535(0xffff)                      
+        z                        65535(0xffff)                      
+      FBarrier Max Size:       32                                 
+*** Done ***             
+
+### GPU identity (rocm-smi)
+WARNING: AMD GPU device(s) is/are in a low-power state. Check power control/runtime_status
+
+
+
+============================ ROCm System Management Interface ============================
+======================================= Unique ID ========================================
+GPU[0]		: Unique ID: 0x593d46f1dbb5dce5
+==========================================================================================
+=================================== Current Memory Use ===================================
+GPU[0]		: GPU Memory Allocated (VRAM%): 0
+GPU[0]		: GPU Memory Read/Write Activity (%): 0
+GPU[0]		: Memory Activity: N/A
+GPU[0]		: Not supported on the given system
+==========================================================================================
+===================================== Serial Number ======================================
+GPU[0]		: Serial Number: 692517020475
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI350X
+GPU[0]		: Card Model: 		0x75a0
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		N/A
+GPU[0]		: Subsystem ID: 	0x75a0
+GPU[0]		: Device Rev: 		0x00
+GPU[0]		: Node ID: 		4
+GPU[0]		: GUID: 		17079
+GPU[0]		: GFX Version: 		gfx950
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+
+### GPU identity (amd-smi metric)
+GPU: 0
+    USAGE:
+        GFX_ACTIVITY: 0 %
+        UMC_ACTIVITY: 0 %
+        MM_ACTIVITY: N/A
+        VCN_ACTIVITY: [N/A, N/A, N/A, N/A]
+        JPEG_ACTIVITY: [N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A]
+        GFX_BUSY_INST:
+            XCP_0: [0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %]
+        JPEG_BUSY:
+            XCP_0: [0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %, 0 %]
+        VCN_BUSY:
+            XCP_0: [0 %, 0 %, 0 %, 0 %]
+    POWER:
+        SOCKET_POWER: 240 W
+        GFX_VOLTAGE: N/A
+        SOC_VOLTAGE: N/A
+        MEM_VOLTAGE: N/A
+        THROTTLE_STATUS: N/A
+        POWER_MANAGEMENT: ENABLED
+    CLOCK:
+        GFX_0:
+            CLK: 108 MHz
+            MIN_CLK: 500 MHz
+            MAX_CLK: 1600 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_1:
+            CLK: 108 MHz
+            MIN_CLK: 500 MHz
+            MAX_CLK: 1600 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_2:
+            CLK: 107 MHz
+            MIN_CLK: 500 MHz
+            MAX_CLK: 1600 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_3:
+            CLK: 106 MHz
+            MIN_CLK: 500 MHz
+            MAX_CLK: 1600 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_4:
+            CLK: 107 MHz
+            MIN_CLK: 500 MHz
+            MAX_CLK: 1600 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_5:
+            CLK: 107 MHz
+            MIN_CLK: 500 MHz
+            MAX_CLK: 1600 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_6:
+            CLK: 107 MHz
+            MIN_CLK: 500 MHz
+            MAX_CLK: 1600 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_7:
+            CLK: 108 MHz
+            MIN_CLK: 500 MHz
+            MAX_CLK: 1600 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        MEM_0:
+            CLK: 1900 MHz
+            MIN_CLK: 1900 MHz
+            MAX_CLK: 1900 MHz
+            DEEP_SLEEP: DISABLED
+        VCLK_0:
+            CLK: 59 MHz
+            MIN_CLK: 1900 MHz
+            MAX_CLK: 1900 MHz
+            DEEP_SLEEP: ENABLED
+        VCLK_1:
+            CLK: 59 MHz
+            MIN_CLK: 1900 MHz
+            MAX_CLK: 1900 MHz
+            DEEP_SLEEP: ENABLED
+        VCLK_2:
+            CLK: 59 MHz
+            MIN_CLK: 1900 MHz
+            MAX_CLK: 1900 MHz
+            DEEP_SLEEP: ENABLED
+        VCLK_3:
+            CLK: 59 MHz
+            MIN_CLK: 1900 MHz
+            MAX_CLK: 1900 MHz
+            DEEP_SLEEP: ENABLED
+        DCLK_0:
+            CLK: 48 MHz
+            MIN_CLK: 1520 MHz
+            MAX_CLK: 1520 MHz
+            DEEP_SLEEP: ENABLED
+        DCLK_1:
+            CLK: 48 MHz
+            MIN_CLK: 1520 MHz
+            MAX_CLK: 1520 MHz
+            DEEP_SLEEP: ENABLED
+        DCLK_2:
+            CLK: 48 MHz
+            MIN_CLK: 1520 MHz
+            MAX_CLK: 1520 MHz
+            DEEP_SLEEP: ENABLED
+        DCLK_3:
+            CLK: 48 MHz
+            MIN_CLK: 1520 MHz
+            MAX_CLK: 1520 MHz
+            DEEP_SLEEP: ENABLED
+        FCLK_0:
+            CLK: 1500 MHz
+            MIN_CLK: 1250 MHz
+            MAX_CLK: 1500 MHz
+            DEEP_SLEEP: DISABLED
+        SOCCLK_0:
+            CLK: 39 MHz
+            MIN_CLK: 1200 MHz
+            MAX_CLK: 1200 MHz
+            DEEP_SLEEP: ENABLED
+    TEMPERATURE:
+        EDGE: N/A
+        HOTSPOT: 62 °C
+        MEM: 50 °C
+    PCIE:
+        WIDTH: 16
+        SPEED: 32 GT/s
+        BANDWIDTH: 49 Mb/s
+        REPLAY_COUNT: 0
+        L0_TO_RECOVERY_COUNT: 0
+        REPLAY_ROLL_OVER_COUNT: 0
+        NAK_SENT_COUNT: N/A
+        NAK_RECEIVED_COUNT: N/A
+        CURRENT_BANDWIDTH_SENT: N/A
+        CURRENT_BANDWIDTH_RECEIVED: N/A
+        MAX_PACKET_SIZE: N/A
+        LC_PERF_OTHER_END_RECOVERY: N/A
+    GPU_BOARD:
+        TEMPERATURE:
+            NODE_RETIMER_X: 73 °C
+            NODE_OAM_X_IBC: 50 °C
+            NODE_OAM_X_IBC_2: 49 °C
+            NODE_OAM_X_VDD18_VR: 56 °C
+            NODE_OAM_X_04_HBM_B_VR: 47 °C
+            NODE_OAM_X_04_HBM_D_VR: 45 °C
+            VDDCR_VDD0: 49 °C
+            VDDCR_VDD1: 49 °C
+            VDDCR_VDD2: 49 °C
+            VDDCR_VDD3: 48 °C
+            VDDCR_SOC_A: 48 °C
+            VDDCR_SOC_C: 49 °C
+            VDDCR_SOCIO_A: 49 °C
+            VDDCR_SOCIO_C: 51 °C
+            VDD_085_HBM: 51 °C
+            VDDCR_11_HBM_B: 54 °C
+            VDDCR_11_HBM_D: 49 °C
+            VDD_USR: 50 °C
+            VDDIO_11_E32: 60 °C
+    ECC:
+        TOTAL_CORRECTABLE_COUNT: 0
+        TOTAL_UNCORRECTABLE_COUNT: 0
+        TOTAL_DEFERRED_COUNT: 0
+        CACHE_CORRECTABLE_COUNT: 0
+        CACHE_UNCORRECTABLE_COUNT: 0
+    ECC_BLOCKS:
+        UMC:
+            CORRECTABLE_COUNT: 0
+            UNCORRECTABLE_COUNT: 0
+            DEFERRED_COUNT: 0
+        SDMA:
+            CORRECTABLE_COUNT: 0
+            UNCORRECTABLE_COUNT: 0
+            DEFERRED_COUNT: 0
+        GFX:
+            CORRECTABLE_COUNT: 0
+            UNCORRECTABLE_COUNT: 0
+            DEFERRED_COUNT: 0
+        MMHUB:
+            CORRECTABLE_COUNT: 0
+            UNCORRECTABLE_COUNT: 0
+            DEFERRED_COUNT: 0
+        PCIE_BIF:
+            CORRECTABLE_COUNT: N/A
+            UNCORRECTABLE_COUNT: N/A
+            DEFERRED_COUNT: N/A
+        HDP:
+            CORRECTABLE_COUNT: N/A
+            UNCORRECTABLE_COUNT: N/A
+            DEFERRED_COUNT: N/A
+        XGMI_WAFL:
+            CORRECTABLE_COUNT: 0
+            UNCORRECTABLE_COUNT: 0
+            DEFERRED_COUNT: 0
+    FAN:
+        SPEED: N/A
+        MAX: N/A
+        RPM: N/A
+        USAGE: N/A
+    VOLTAGE_CURVE:
+        POINT_0_FREQUENCY: N/A
+        POINT_0_VOLTAGE: N/A
+        POINT_1_FREQUENCY: N/A
+        POINT_1_VOLTAGE: N/A
+        POINT_2_FREQUENCY: N/A
+        POINT_2_VOLTAGE: N/A
+    OVERDRIVE: N/A
+    MEM_OVERDRIVE: N/A
+    PERF_LEVEL: AMDSMI_DEV_PERF_LEVEL_DETERMINISM
+    XGMI_ERR: N/A
+    VOLTAGE:
+        VDDBOARD: 53023 mV
+    ENERGY:
+        TOTAL_ENERGY_CONSUMPTION: 1063858391.4 J
+    MEM_USAGE:
+        TOTAL_VRAM: 258032 MB
+        USED_VRAM: 284 MB
+        FREE_VRAM: 257748 MB
+        TOTAL_VISIBLE_VRAM: 258032 MB
+        USED_VISIBLE_VRAM: 284 MB
+        FREE_VISIBLE_VRAM: 257748 MB
+        TOTAL_GTT: 1483115 MB
+        USED_GTT: 23 MB
+        FREE_GTT: 1483092 MB
+    THROTTLE:
+        ACCUMULATION_COUNTER: N/A
+        PROCHOT_ACCUMULATED: N/A
+        PPT_ACCUMULATED: N/A
+        SOCKET_THERMAL_ACCUMULATED: N/A
+        VR_THERMAL_ACCUMULATED: N/A
+        HBM_THERMAL_ACCUMULATED: N/A
+        GFX_CLK_BELOW_HOST_LIMIT_ACCUMULATED: N/A
+        GFX_CLK_BELOW_HOST_LIMIT_POWER_ACCUMULATED:
+            XCP_0: [0, 0, 0, 0, 0, 0, 0, 0]
+        GFX_CLK_BELOW_HOST_LIMIT_THERMAL_ACCUMULATED:
+            XCP_0: [0, 0, 0, 0, 0, 0, 0, 0]
+        TOTAL_GFX_CLK_BELOW_HOST_LIMIT_ACCUMULATED:
+            XCP_0: [3694912815, 3694931654, 3694948716, 3694973820, 3694991631, 3695008886, 3695027921, 3695037105]
+        LOW_UTILIZATION_ACCUMULATED:
+            XCP_0: [3694912815, 3694931654, 3694948716, 3694973820, 3694991631, 3695008886, 3695027921, 3695037105]
+        PROCHOT_VIOLATION_STATUS: N/A
+        PPT_VIOLATION_STATUS: N/A
+        SOCKET_THERMAL_VIOLATION_STATUS: N/A
+        VR_THERMAL_VIOLATION_STATUS: N/A
+        HBM_THERMAL_VIOLATION_STATUS: N/A
+        GFX_CLK_BELOW_HOST_LIMIT_VIOLATION_STATUS: N/A
+        GFX_CLK_BELOW_HOST_LIMIT_POWER_VIOLATION_STATUS:
+            XCP_0: [N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A]
+        GFX_CLK_BELOW_HOST_LIMIT_THERMAL_VIOLATION_STATUS:
+            XCP_0: [N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A]
+        TOTAL_GFX_CLK_BELOW_HOST_LIMIT_VIOLATION_STATUS:
+            XCP_0: [N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A]
+        LOW_UTILIZATION_VIOLATION_STATUS:
+            XCP_0: [N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A]
+        PROCHOT_VIOLATION_ACTIVITY: N/A
+        PPT_VIOLATION_ACTIVITY: N/A
+        SOCKET_THERMAL_VIOLATION_ACTIVITY: N/A
+        VR_THERMAL_VIOLATION_ACTIVITY: N/A
+        HBM_THERMAL_VIOLATION_ACTIVITY: N/A
+        GFX_CLK_BELOW_HOST_LIMIT_VIOLATION_ACTIVITY: N/A
+        GFX_CLK_BELOW_HOST_LIMIT_POWER_VIOLATION_ACTIVITY:
+            XCP_0: [N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A]
+        GFX_CLK_BELOW_HOST_LIMIT_THERMAL_VIOLATION_ACTIVITY:
+            XCP_0: [N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A]
+        TOTAL_GFX_CLK_BELOW_HOST_LIMIT_VIOLATION_ACTIVITY:
+            XCP_0: [N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A]
+        LOW_UTILIZATION_VIOLATION_ACTIVITY:
+            XCP_0: [N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A]
+
+
+### Environment variables
