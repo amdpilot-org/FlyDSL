@@ -1,0 +1,27 @@
+python /opt/venv/bin/python
+flydsl flydsl.expr /job/FlyDSL/build-fly/python_packages/flydsl/expr/__init__.py
+torch 2.9.1+rocm7.2.0.git7e1940d4 /opt/venv/lib/python3.10/site-packages/torch/__init__.py
+hip 7.2.26015-fc0010cf6a
+gpu AMD Instinct MI300X
+device logical_divide (32,) elements 256000 cosize 1015920 mismatches 0 written 256000 sentinel_untouched 1024
+device logical_divide (32, None, None) elements 256000 cosize 1015920 mismatches 0 written 256000 sentinel_untouched 1024
+device logical_divide (32, None, 40) elements 256000 cosize 1015920 mismatches 0 written 256000 sentinel_untouched 1024
+device zipped_divide (32,) elements 256000 cosize 1015920 mismatches 0 written 256000 sentinel_untouched 1024
+device zipped_divide (32, None, None) elements 256000 cosize 1015920 mismatches 0 written 256000 sentinel_untouched 1024
+device zipped_divide (32, None, 40) elements 256000 cosize 1015920 mismatches 0 written 256000 sentinel_untouched 1024
+
+focused test:
+tests/unit/test_layout_algebra.py::test_divide_lower_rank_and_none_tilers PASSED
+
+layout algebra suite:
+32 passed, 1 skipped in 1.16s
+
+installed FlyDSL 0.3.1 zipped_divide (32, None, None):
+Assertion `t.rank() == 2 && "intTupleZip2By expects rank-2 tuple at terminal"' failed.
+exit=134
+
+installed FlyDSL 0.3.1 zipped_divide (32, None, 40):
+Assertion `t.rank() == 2 && "intTupleZip2By expects rank-2 tuple at terminal"' failed.
+exit=134
+
+job-private FlyDSL 0.3.2 wheel reproduced the same assertion for both explicit-None cases.
