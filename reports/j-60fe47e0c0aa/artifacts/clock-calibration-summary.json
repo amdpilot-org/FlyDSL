@@ -1,0 +1,31 @@
+{
+  "samples": [
+    {
+      "run": 1,
+      "block_cycles": 99824,
+      "instrumented_median_us": 1129.6449899673462,
+      "observed_clock_ghz": 0.08836758529145121,
+      "event_overhead_estimate_us": -13.592004776000977,
+      "uninstrumented_exact": true,
+      "instrumented_exact": true
+    },
+    {
+      "run": 2,
+      "block_cycles": 101180,
+      "instrumented_median_us": 1056.9570064544678,
+      "observed_clock_ghz": 0.09572764018037538,
+      "event_overhead_estimate_us": -3.32796573638916,
+      "uninstrumented_exact": true,
+      "instrumented_exact": true
+    },
+    {
+      "run": 3,
+      "block_cycles": 97276,
+      "instrumented_median_us": 1066.5390491485596,
+      "observed_clock_ghz": 0.09120716215468853,
+      "event_overhead_estimate_us": 15.114068984985352,
+      "uninstrumented_exact": true,
+      "instrumented_exact": true
+    }
+  ]
+}
