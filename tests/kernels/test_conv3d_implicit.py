@@ -83,6 +83,55 @@ def test_conv3d_factorized_filters_vs_torch(kernel_shape, padding):
 
 
 @_skip_non_cdna4
+@pytest.mark.parametrize("splitk", [1, 2])
+@pytest.mark.parametrize("layout,out_layout", [("NCDHW", "NCDHW"), ("NDHWC", "NDHWC")])
+def test_conv3d_layout_contract(splitk, layout, out_layout):
+    torch.manual_seed(3300 + splitk)
+    n, c, t, h, w, k = 1, 32, 4, 8, 8, 64
+    x = torch.randn((n, c, t, h, w), device="cuda", dtype=torch.bfloat16)
+    weight = torch.randn((k, c, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    bias = torch.randn((k,), device="cuda", dtype=torch.float32)
+    x_arg = x.permute(0, 2, 3, 4, 1).contiguous() if layout == "NDHWC" else x
+
+    y = conv3d_implicit(
+        x_arg,
+        weight,
+        bias=bias,
+        stride=2,
+        padding=1,
+        splitk=splitk,
+        layout=layout,
+        out_layout=out_layout,
+    )
+    y_ref = F.conv3d(x, weight, bias=bias.to(torch.bfloat16), stride=2, padding=1)
+    if out_layout == "NDHWC":
+        y_ref = y_ref.permute(0, 2, 3, 4, 1).contiguous()
+    torch.cuda.synchronize()
+
+    assert y.shape == y_ref.shape
+    assert torch.allclose(y, y_ref, rtol=2e-2, atol=2e-2)
+
+
+@_skip_non_cdna4
+def test_conv3d_layout_chain():
+    torch.manual_seed(3400)
+    n, c, t, h, w = 1, 32, 4, 8, 8
+    weight_1 = torch.randn((64, c, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    weight_2 = torch.randn((64, 64, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    x = torch.randn((n, c, t, h, w), device="cuda", dtype=torch.bfloat16)
+    x_cl = x.permute(0, 2, 3, 4, 1).contiguous()
+
+    y = conv3d_implicit(x_cl, weight_1, stride=1, padding=1, layout="NDHWC", out_layout="NDHWC")
+    y = conv3d_implicit(y, weight_2, stride=1, padding=1, layout="NDHWC", out_layout="NDHWC")
+    ref = F.conv3d(x, weight_1, stride=1, padding=1)
+    ref = F.conv3d(ref, weight_2, stride=1, padding=1).permute(0, 2, 3, 4, 1).contiguous()
+    torch.cuda.synchronize()
+
+    assert y.shape == ref.shape
+    assert torch.allclose(y, ref, rtol=2e-2, atol=2e-2)
+
+
+@_skip_non_cdna4
 @pytest.mark.parametrize("c", [16, 64])
 def test_conv3d_runtime_k_loop_short_problems(c):
     """Exercise one- and two-K-tile runtime-pipeline epilogues."""
