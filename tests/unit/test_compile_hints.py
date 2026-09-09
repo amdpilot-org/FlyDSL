@@ -201,6 +201,13 @@ class TestCompileHintsPropagation:
         assert captured["hints"].get("fast_fp_math") is True
         assert captured["hints"].get("unsafe_fp_math") is True
 
+    def test_rocm_module_has_no_implicit_target(self):
+        """Let rocdl-attach-target create the sole, option-bearing target."""
+        from flydsl.compiler.backends import GPUTarget, rocm
+
+        backend = rocm.RocmBackend(GPUTarget(backend="rocm", arch="gfx950", warp_size=64))
+        assert backend.gpu_module_targets() == []
+
     def test_llvm_options_in_compile_hints(self):
         """Verify llvm_options key is accepted and doesn't crash."""
         _reset_jit_caches(_noop_launch)

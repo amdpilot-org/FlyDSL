@@ -135,8 +135,7 @@ class RocmBackend(BaseBackend):
                 func_op.attributes["rocdl.waves_per_eu"] = wpe_attr
 
     def gpu_module_targets(self) -> List[str]:
-        chip = self.target.arch
-        return [f'#rocdl.target<chip = "{chip}">']
+        return []
 
     # -- cache / fingerprint ---------------------------------------------
 

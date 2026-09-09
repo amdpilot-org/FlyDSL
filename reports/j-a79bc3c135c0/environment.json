@@ -1,0 +1,73 @@
+{
+  "campaign": "repo-e2e-20260909",
+  "coordination_tracker": "amdpilot-org/amdpilotv2 issue 402",
+  "mirror_issue": "amdpilot-org/FlyDSL issue 343",
+  "reference_issue": "ROCm/FlyDSL issue 1054",
+  "image": {
+    "name": "amdpilotv2/open-job:gbt350-20260909",
+    "local_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7",
+    "container_id": "ba185ce74d9eea3e4ff7dea52885fc75a49060c7367ec42df51f4d11fa7d9ca6",
+    "hostname": "gbt350-odcdh1-a08-1.png-odc.dcgpu"
+  },
+  "gpu": {
+    "name": "AMD Instinct MI350X",
+    "gfx": "gfx950",
+    "uuid": "GPU-593d46f1dbb5dce5",
+    "unique_id": "0x593d46f1dbb5dce5",
+    "serial": "692517020475",
+    "pci_bus": "0000:66:00.0",
+    "driver": "7.1.1.31500000",
+    "compute_units": 256,
+    "wavefront_size": 64,
+    "torch_capability": [
+      9,
+      5
+    ]
+  },
+  "python": {
+    "executable": "/opt/venv/bin/python3",
+    "version": "3.12.3"
+  },
+  "packages": {
+    "torch": {
+      "version": "2.9.1+rocm7.2.0.git7e1940d4",
+      "path": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+      "hip": "7.2.26015-fc0010cf6a"
+    },
+    "triton": {
+      "version": "3.5.1+rocm7.2.0.gita272dfa8",
+      "path": "/opt/venv/lib/python3.12/site-packages/triton/__init__.py"
+    },
+    "flydsl_installed": {
+      "version": "0.2.4",
+      "path": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+      "native_path": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs"
+    },
+    "flydsl_source": {
+      "version": "0.3.3",
+      "base_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+      "path": "/job/FlyDSL/python/flydsl"
+    },
+    "flydsl_compatibility_wheel": {
+      "version": "0.3.2",
+      "wheel": "/job/.cache/j-a79bc3c135c0/wheels/flydsl-0.3.2-cp312-cp312-manylinux_2_27_x86_64.whl",
+      "native_path": "/job/.cache/j-a79bc3c135c0/flydsl-0.3.2/flydsl/_mlir/_mlir_libs"
+    },
+    "aiter": {
+      "version": "0+gd9e5ef7ce08ee7045d583aed768cff41aa9210fe",
+      "path": "/opt/aiter/aiter/__init__.py",
+      "default_import": "failed after JIT build: No module named aiter.jit.module_aiter_core",
+      "triton_only_import": "succeeded with AITER_TRITON_ONLY=1"
+    }
+  },
+  "native_tools": {
+    "rocminfo": "/opt/rocm/bin/rocminfo",
+    "rocm_smi": "/opt/rocm/bin/rocm-smi",
+    "amd_clang": "/opt/rocm/bin/amdclang++",
+    "amd_clang_version": "AMD clang version 22.0.0git roc-7.2.0 26014 7b800a19466229b8479a78de19143dc33c3ab9b5",
+    "llvm_objdump": "/opt/rocm-7.2.0/lib/llvm/bin/llvm-objdump",
+    "llvm_objdump_version": "AMD LLVM version 22.0.0git",
+    "rocm_smi_version": "4.0.0+fc0010cf6a",
+    "rocm_smi_lib_version": "7.8.0"
+  }
+}
