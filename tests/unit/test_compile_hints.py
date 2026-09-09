@@ -201,6 +201,19 @@ class TestCompileHintsPropagation:
         assert captured["hints"].get("fast_fp_math") is True
         assert captured["hints"].get("unsafe_fp_math") is True
 
+    def test_hinted_compilation_emits_one_configured_target(self, monkeypatch):
+        """Verify construction does not add a second, bare ROCDL target."""
+        monkeypatch.setenv("ARCH", "gfx942")
+        monkeypatch.setenv("FLYDSL_RUNTIME_ENABLE_CACHE", "0")
+        _reset_jit_caches(_noop_launch)
+
+        exe = flyc.compile[{"fast_fp_math": True, "unsafe_fp_math": True}](_noop_launch)
+        exe()
+
+        ir_text = _noop_launch._last_compiled[1]._ir_text
+        assert ir_text.count("#gpu.object<") == 1
+        assert "flags = {fast, unsafe_math}" in ir_text
+
     def test_llvm_options_in_compile_hints(self):
         """Verify llvm_options key is accepted and doesn't crash."""
         _reset_jit_caches(_noop_launch)
