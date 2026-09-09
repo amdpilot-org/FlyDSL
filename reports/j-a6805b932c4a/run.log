@@ -1,0 +1,14 @@
+[W909 23:13:10.188429259 collection.cpp:1133] Warning: ROCTracer produced duplicate flow start: 1 (function operator())
+{
+  "output": "reports/j-a6805b932c4a/results.json",
+  "all_correct": true,
+  "timing_ms": {
+    "single_ncdhw_to_ndhwc": 0.03886845111846924,
+    "single_ndhwc_to_ndhwc": 0.025906300544738768,
+    "two_layer_ncdhw": 0.07043684720993042,
+    "two_layer_ndhwc": 0.047420600056648256,
+    "two_layer_mixed": 0.05819864869117737,
+    "two_layer_explicit_mid_conversion": 0.07027084827423095,
+    "direct_ncdhw_to_ndhwc": 0.011040149629116059
+  }
+}
