@@ -75,6 +75,12 @@ def _make_call(x, weight, layout, splitk):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--quick", action="store_true", help="Use fewer warmup/timed iterations")
+    parser.add_argument(
+        "--cases",
+        nargs="+",
+        choices=[name for name, _, _ in CASES],
+        help="Run only the named benchmark cases",
+    )
     parser.add_argument("--output", help="Write detailed JSON results to this path")
     args = parser.parse_args()
 
@@ -84,6 +90,8 @@ def main():
     torch.manual_seed(993)
     results = []
     for name, input_shape, weight_shape in CASES:
+        if args.cases and name not in args.cases:
+            continue
         rank = len(input_shape) - 2
         x_nc = torch.randn(input_shape, device="cuda", dtype=torch.bfloat16) * 0.1
         if rank == 3:
