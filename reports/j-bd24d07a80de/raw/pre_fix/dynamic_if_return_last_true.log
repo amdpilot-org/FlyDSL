@@ -1,0 +1,1 @@
+RESULT form=dynamic_if_return_last flag=1 flag_const=1 actual=1 expected=1

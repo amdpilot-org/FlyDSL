@@ -1,0 +1,7 @@
+RESULT form=top_level_value_return flag=1 flag_const=1 actual=99 expected=1
+Traceback (most recent call last):
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 171, in <module>
+    main()
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 167, in main
+    raise AssertionError(f"numerical gate failed: actual={actual}, expected={args.expected}")
+AssertionError: numerical gate failed: actual=99, expected=1

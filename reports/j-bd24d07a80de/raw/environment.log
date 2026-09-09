@@ -1,0 +1,132 @@
+=== date ===
+2026-09-09T22:04:32+00:00
+=== image ===
+Qualified image: amdpilotv2/open-job-mi300:jit-config-readable-260909-banff5
+Local image ID (operator-provided): sha256:39fe745feda79ecf4c17f4d806d8ef12150bef720f2f07f5c63a20b3ccfd63f1
+Container hostname (not image identity):
+banff-cyxtera-cx57-5
+=== source ===
+ed70142704e1a6d5563fb53e1607e3a4b85d7111
+main
+ed70142704e1a6d5563fb53e1607e3a4b85d7111
+Qiping Pan <60682078+ppppqp@users.noreply.github.com>
+2026-09-09T02:41:11-07:00
+[Chore] pre commit formatter (#1102)
+source=/job/work/FlyDSL
+python_source_build=/job/build-cache/flydsl-build/python_packages
+native_bindings=/job/build-cache/flydsl-build/python_packages/flydsl/_mlir/_mlir_libs
+preinstalled_python=/opt/venv/lib/python3.10/site-packages/flydsl
+preinstalled_native=/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs
+pinned_mlir_source=/job/build-cache/llvm-project
+pinned_mlir_install=/job/build-cache/llvm-project/mlir_install
+=== python/package/toolchain ===
+Python 3.10.12
+torch_version=2.9.1+rocm7.2.0.git7e1940d4
+torch_file=/opt/venv/lib/python3.10/site-packages/torch/__init__.py
+torch_hip_available=True
+torch_device_count=1
+torch_device_0=AMD Instinct MI300X
+torch_device_0_capability=(9, 4)
+working_source_flydsl_version=0.3.3
+working_source_flydsl_file=/job/build-cache/flydsl-build/python_packages/flydsl/__init__.py
+preinstalled_flydsl_version=0.3.1
+--- git ---
+/usr/bin/git
+--- gh ---
+/usr/local/bin/gh
+--- cmake ---
+/opt/venv/bin/cmake
+--- ninja ---
+/opt/venv/bin/ninja
+--- hipcc ---
+/opt/rocm/bin/hipcc
+--- hipconfig ---
+/opt/rocm/bin/hipconfig
+--- rocminfo ---
+/opt/rocm/bin/rocminfo
+--- rocm-smi ---
+/opt/rocm/bin/rocm-smi
+--- git ---
+git version 2.34.1
+--- gh ---
+gh version 2.98.0 (2026-08-20)
+https://github.com/cli/cli/releases/tag/v2.98.0
+--- cmake ---
+cmake version 4.3.4
+
+--- ninja ---
+1.13.0.git.kitware.jobserver-pipe-1
+--- hipcc ---
+HIP version: 7.2.26015-fc0010cf6a
+AMD clang version 22.0.0git (https://github.com/RadeonOpenCompute/llvm-project roc-7.2.0 26014 7b800a19466229b8479a78de19143dc33c3ab9b5)
+Target: x86_64-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /opt/rocm-7.2.0/lib/llvm/bin
+Configuration file: /opt/rocm-7.2.0/lib/llvm/bin/clang++.cfg
+--- hipconfig ---
+7.2.26015-fc0010cf6a--- rocm-smi ---
+WARNING: AMD GPU device(s) is/are in a low-power state. Check power control/runtime_status
+
+
+
+============================ ROCm System Management Interface ============================
+======================================= Unique ID ========================================
+GPU[0]		: Unique ID: 0x6e8448eb6f49db1d
+==========================================================================================
+===================================== Serial Number ======================================
+GPU[0]		: Serial Number: 692440004395
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI300X
+GPU[0]		: Card Model: 		0x74a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		M3000108
+GPU[0]		: Subsystem ID: 	0x74a1
+GPU[0]		: Device Rev: 		0x00
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		9845
+GPU[0]		: GFX Version: 		gfx942
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+--- rocminfo GPU agent ---
+Agent 3                  
+*******                  
+  Name:                    gfx942                             
+  Uuid:                    GPU-6e8448eb6f49db1d               
+  Marketing Name:          AMD Instinct MI300X                
+  Vendor Name:             AMD                                
+  Feature:                 KERNEL_DISPATCH                    
+  Profile:                 BASE_PROFILE                       
+  Float Round Mode:        NEAR                               
+  Max Queue Number:        128(0x80)                          
+  Queue Min Size:          64(0x40)                           
+  Queue Max Size:          131072(0x20000)                    
+  Queue Type:              MULTI                              
+  Node:                    2                                  
+  Device Type:             GPU                                
+  Cache Info:              
+    L1:                      32(0x20) KB                        
+    L2:                      4096(0x1000) KB                    
+    L3:                      262144(0x40000) KB                 
+  Chip ID:                 29857(0x74a1)                      
+  ASIC Revision:           1(0x1)                             
+  Cacheline Size:          128(0x80)                          
+  Max Clock Freq. (MHz):   2100                               
+  BDFID:                   3072                               
+  Internal Node ID:        2                                  
+  Compute Unit:            304                                
+  SIMDs per CU:            4                                  
+  Shader Engines:          32                                 
+  Shader Arrs. per Eng.:   1                                  
+  WatchPts on Addr. Ranges:4                                  
+  Coherent Host Access:    FALSE                              
+  Memory Properties:       
+  Features:                KERNEL_DISPATCH 
+  Fast F16 Operation:      TRUE                               
+  Wavefront Size:          64(0x40)                           
+  Workgroup Max Size:      1024(0x400)                        
+  Workgroup Max Size per Dimension:
+    x                        1024(0x400)                        
+    y                        1024(0x400)                        
+    z                        1024(0x400)                        
+  Max Waves Per CU:        32(0x20)                           

@@ -53,6 +53,14 @@ def _is_constexpr(node):
     return target_name == "const_expr"
 
 
+def _is_range_constexpr(node):
+    if not isinstance(node, ast.Call):
+        return False
+    target = node.func
+    target_name = getattr(target, "id", None) or getattr(target, "attr", None)
+    return target_name == "range_constexpr"
+
+
 def _unwrap_constexpr(node):
     if _is_constexpr(node):
         return node.args[0] if node.args else node
@@ -259,7 +267,7 @@ class ASTRewriter:
         return transformer
 
     @classmethod
-    def transform(cls, f):
+    def transform(cls, f, *, function_kind="jit"):
         if not cls.transformers:
             return f
 
@@ -267,7 +275,7 @@ class ASTRewriter:
         module = ast.parse(f_src)
         assert isinstance(module.body[0], ast.FunctionDef), f"unexpected ast node {module.body[0]}"
 
-        context = types.SimpleNamespace(python_globals=f.__globals__)
+        context = types.SimpleNamespace(python_globals=f.__globals__, function_kind=function_kind)
         context.filename = f.__code__.co_filename
         for transformer_ctor in cls.transformers:
             orig_code = ast.unparse(module) if env.debug.ast_diff else None
@@ -484,6 +492,68 @@ class Transformer(ast.NodeTransformer):
             if item.optional_vars is not None:
                 self._record_target_symbols(item.optional_vars)
         return self.generic_visit(node)
+
+
+@ASTRewriter.register
+class ValidateReturns(Transformer):
+    def __init__(self, context, first_lineno):
+        super().__init__(context, first_lineno)
+        self.dynamic_depth = 0
+
+    def _reject(self, node, message):
+        raise SyntaxError(
+            message,
+            (
+                self.context.filename,
+                node.lineno,
+                node.col_offset + 1,
+                ast.unparse(node),
+            ),
+        )
+
+    def visit_Return(self, node: ast.Return):
+        if self.context.function_kind == "kernel" and node.value is not None:
+            self._reject(node, "FlyDSL kernel return must not carry a value")
+        if self.dynamic_depth:
+            self._reject(
+                node,
+                "FlyDSL does not support early return inside dynamic control flow; "
+                "restructure the kernel to yield carried state or use const_expr control flow",
+            )
+        return node
+
+    def visit_If(self, node: ast.If):
+        dynamic = not _is_constexpr(node.test)
+        if dynamic:
+            self.dynamic_depth += 1
+        try:
+            self.generic_visit(node)
+        finally:
+            if dynamic:
+                self.dynamic_depth -= 1
+        return node
+
+    def visit_For(self, node: ast.For):
+        dynamic = not _is_range_constexpr(node.iter)
+        if dynamic:
+            self.dynamic_depth += 1
+        try:
+            self.generic_visit(node)
+        finally:
+            if dynamic:
+                self.dynamic_depth -= 1
+        return node
+
+    def visit_While(self, node: ast.While):
+        dynamic = not _is_constexpr(node.test)
+        if dynamic:
+            self.dynamic_depth += 1
+        try:
+            self.generic_visit(node)
+        finally:
+            if dynamic:
+                self.dynamic_depth -= 1
+        return node
 
 
 @ASTRewriter.register
