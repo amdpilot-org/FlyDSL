@@ -1,0 +1,32 @@
+Date: 2026-09-09T21:42:49Z
+Campaign: repo-e2e-20260909
+Coordination tracker: amdpilot-org/amdpilotv2 issue 402
+Mirror issue: amdpilot-org/FlyDSL issue 324
+Read-only upstream issue: ROCm/FlyDSL issue 688
+
+Repository: https://github.com/amdpilot-org/FlyDSL.git
+Tested source commit: ed70142704e1a6d5563fb53e1607e3a4b85d7111
+Source branch: main
+Source Python path: /job/FlyDSL/python
+Source FlyDSL version: 0.3.3
+
+Preinstalled FlyDSL version: 0.3.1
+Preinstalled Python module: /opt/venv/lib/python3.10/site-packages/flydsl/__init__.py
+Native candidate: FlyDSL 0.3.2 wheel
+Native candidate path: /tmp/flydsl-wheel-032-extract/flydsl
+
+Python: /opt/venv/bin/python (3.10.12)
+Torch: 2.9.1+rocm7.2.0.git7e1940d4
+HIP: 7.2.26015-fc0010cf6a
+GPU: AMD Instinct MI300X
+GPU architecture: gfx942
+GPU identity command: rocm-smi --showproductname --csv
+HIP compiler: /opt/rocm/bin/hipcc
+Ninja: /opt/venv/bin/ninja
+Git: 2.34.1
+GitHub CLI: 2.98.0
+
+Required qualified image identity:
+sha256:dfc9419089c338b5712da4841768b38b1ab79f3da41f8c58c3cd4dfcc1147ff1
+
+Container hostname is not used as image identity.

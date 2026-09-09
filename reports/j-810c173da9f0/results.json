@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "source_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+  "source_python_path": "/job/FlyDSL/python",
+  "native_mlir_package": "/tmp/flydsl-wheel-032-extract/flydsl",
+  "flydsl_source_version": "0.3.3",
+  "installed_flydsl_version": "0.3.1",
+  "native_flydsl_version": "0.3.2",
+  "image_identity": "sha256:dfc9419089c338b5712da4841768b38b1ab79f3da41f8c58c3cd4dfcc1147ff1",
+  "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+  "torch_hip_version": "7.2.26015-fc0010cf6a",
+  "gpu_name": "AMD Instinct MI300X",
+  "gpu_arch": "gfx942",
+  "python_version": "3.10.12",
+  "cases": [
+    {
+      "name": "if_liveout",
+      "argument": 1,
+      "actual": [
+        9
+      ],
+      "expected": [
+        9
+      ],
+      "max_abs_error": 0.0,
+      "gate": "torch.equal (rtol=0, atol=0)",
+      "passed": true
+    },
+    {
+      "name": "nested_if",
+      "argument": 2,
+      "actual": [
+        23
+      ],
+      "expected": [
+        23
+      ],
+      "max_abs_error": 0.0,
+      "gate": "torch.equal (rtol=0, atol=0)",
+      "passed": true
+    },
+    {
+      "name": "for_carry",
+      "argument": 5,
+      "actual": [
+        115
+      ],
+      "expected": [
+        115
+      ],
+      "max_abs_error": 0.0,
+      "gate": "torch.equal (rtol=0, atol=0)",
+      "passed": true
+    },
+    {
+      "name": "while_carry",
+      "argument": 5,
+      "actual": [
+        132
+      ],
+      "expected": [
+        132
+      ],
+      "max_abs_error": 0.0,
+      "gate": "torch.equal (rtol=0, atol=0)",
+      "passed": true
+    },
+    {
+      "name": "for_nested_branch",
+      "argument": 5,
+      "actual": [
+        108
+      ],
+      "expected": [
+        108
+      ],
+      "max_abs_error": 0.0,
+      "gate": "torch.equal (rtol=0, atol=0)",
+      "passed": true
+    },
+    {
+      "name": "float_branch",
+      "argument": 0,
+      "actual": [
+        1.375
+      ],
+      "expected": [
+        1.375
+      ],
+      "max_abs_error": 0.0,
+      "gate": "torch.equal (rtol=0, atol=0)",
+      "passed": true
+    }
+  ],
+  "diagnostics": [
+    {
+      "name": "none_initialized_dynamic_if",
+      "status": "pass",
+      "diagnostic": "Variable(s) ['value'] initialized as None before a dynamic if/else (scf.if). Branches assign to these variables, but None cannot be yielded as an scf.if result. Initialize them with a value whose type matches the branch assignment (e.g. fx.Int32(0), fx.Float32(0.0)), or wrap the condition with const_expr() if it is a compile-time constant."
+    }
+  ],
+  "all_numeric_cases_passed": true,
+  "all_diagnostics_passed": true
+}
