@@ -1,0 +1,2968 @@
+{
+  "gpu_name": "AMD Instinct MI350X",
+  "gpu_capability": [
+    9,
+    5
+  ],
+  "wave_threads": 64,
+  "flydsl_version": "0.3.2",
+  "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+  "correctness": [
+    {
+      "case": "float16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 64,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 8.59375,
+      "torch_sum": 8.6015625,
+      "torch_float64_sum": 8.599235534667969,
+      "absolute_error": 0.0078125,
+      "relative_error": 0.0009082652134423251,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true
+    },
+    {
+      "case": "float16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 128,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": -4.8359375,
+      "torch_sum": -4.84375,
+      "torch_float64_sum": -4.845325469970703,
+      "absolute_error": 0.0078125,
+      "relative_error": 0.0016129032258064516,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true
+    },
+    {
+      "case": "float16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 256,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 8.3359375,
+      "torch_sum": 8.3203125,
+      "torch_float64_sum": 8.32082748413086,
+      "absolute_error": 0.015625,
+      "relative_error": 0.0018779342723004694,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true
+    },
+    {
+      "case": "float16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        1024,
+        1,
+        1
+      ],
+      "block_threads": 1024,
+      "active_threads": 1024,
+      "waves": 16,
+      "all_threads_equal": true,
+      "flydsl_sum": 21.90625,
+      "torch_sum": 21.9375,
+      "torch_float64_sum": 21.938560664653778,
+      "absolute_error": 0.03125,
+      "relative_error": 0.0014245014245014246,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true
+    },
+    {
+      "case": "float16",
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 64,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 7.015625,
+      "torch_sum": 7.01171875,
+      "torch_float64_sum": 7.012547492980957,
+      "absolute_error": 0.00390625,
+      "relative_error": 0.0005571030640668524,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true
+    },
+    {
+      "case": "float16",
+      "algorithm": "RAKING",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 128,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": -7.6484375,
+      "torch_sum": -7.65234375,
+      "torch_float64_sum": -7.650856018066406,
+      "absolute_error": 0.00390625,
+      "relative_error": 0.0005104645227156713,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true
+    },
+    {
+      "case": "float16",
+      "algorithm": "RAKING",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 256,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 7.734375,
+      "torch_sum": 7.734375,
+      "torch_float64_sum": 7.735719680786133,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true
+    },
+    {
+      "case": "float16",
+      "algorithm": "RAKING",
+      "block_size": [
+        1024,
+        1,
+        1
+      ],
+      "block_threads": 1024,
+      "active_threads": 1024,
+      "waves": 16,
+      "all_threads_equal": true,
+      "flydsl_sum": 42.96875,
+      "torch_sum": 42.9375,
+      "torch_float64_sum": 42.95063018798828,
+      "absolute_error": 0.03125,
+      "relative_error": 0.000727802037845706,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 64,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": -2.625,
+      "torch_sum": -2.640625,
+      "torch_float64_sum": -2.63507080078125,
+      "absolute_error": 0.015625,
+      "relative_error": 0.005917159763313609,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 128,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": -5.46875,
+      "torch_sum": -5.5,
+      "torch_float64_sum": -5.515472412109375,
+      "absolute_error": 0.03125,
+      "relative_error": 0.005681818181818182,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 256,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": -19.75,
+      "torch_sum": -19.875,
+      "torch_float64_sum": -19.934600830078125,
+      "absolute_error": 0.125,
+      "relative_error": 0.006289308176100629,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        1024,
+        1,
+        1
+      ],
+      "block_threads": 1024,
+      "active_threads": 1024,
+      "waves": 16,
+      "all_threads_equal": true,
+      "flydsl_sum": -12.9375,
+      "torch_sum": -13.0625,
+      "torch_float64_sum": -13.074409484863281,
+      "absolute_error": 0.125,
+      "relative_error": 0.009569377990430622,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 64,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": -0.328125,
+      "torch_sum": -0.349609375,
+      "torch_float64_sum": -0.3504638671875,
+      "absolute_error": 0.021484375,
+      "relative_error": 0.061452513966480445,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "RAKING",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 128,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 11.8125,
+      "torch_sum": 11.8125,
+      "torch_float64_sum": 11.843475341796875,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "RAKING",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 256,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": -18.5,
+      "torch_sum": -18.625,
+      "torch_float64_sum": -18.589881896972656,
+      "absolute_error": 0.125,
+      "relative_error": 0.006711409395973154,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "RAKING",
+      "block_size": [
+        1024,
+        1,
+        1
+      ],
+      "block_threads": 1024,
+      "active_threads": 1024,
+      "waves": 16,
+      "all_threads_equal": true,
+      "flydsl_sum": 90.0,
+      "torch_sum": 90.0,
+      "torch_float64_sum": 90.01414489746094,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 64,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": -8.896332740783691,
+      "torch_sum": -8.896332740783691,
+      "torch_float64_sum": -8.896333006210625,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 128,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 3.7821383476257324,
+      "torch_sum": 3.7821388244628906,
+      "torch_float64_sum": 3.7821381292305887,
+      "absolute_error": 4.76837158203125e-07,
+      "relative_error": 1.2607605916497303e-07,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 256,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": -13.960453033447266,
+      "torch_sum": -13.960454940795898,
+      "torch_float64_sum": -13.960453260224313,
+      "absolute_error": 1.9073486328125e-06,
+      "relative_error": 1.3662510576491e-07,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        1024,
+        1,
+        1
+      ],
+      "block_threads": 1024,
+      "active_threads": 1024,
+      "waves": 16,
+      "all_threads_equal": true,
+      "flydsl_sum": 4.010857582092285,
+      "torch_sum": 4.010856628417969,
+      "torch_float64_sum": 4.010854043066502,
+      "absolute_error": 9.5367431640625e-07,
+      "relative_error": 2.3777322521309236e-07,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 64,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 14.443758010864258,
+      "torch_sum": 14.443758010864258,
+      "torch_float64_sum": 14.443758394569159,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 128,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": -6.619630813598633,
+      "torch_sum": -6.619632244110107,
+      "torch_float64_sum": -6.619630847591907,
+      "absolute_error": 1.430511474609375e-06,
+      "relative_error": 2.161013515338694e-07,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 256,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 15.217371940612793,
+      "torch_sum": 15.217371940612793,
+      "torch_float64_sum": 15.217370806261897,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        1024,
+        1,
+        1
+      ],
+      "block_threads": 1024,
+      "active_threads": 1024,
+      "waves": 16,
+      "all_threads_equal": true,
+      "flydsl_sum": 32.468685150146484,
+      "torch_sum": 32.46868896484375,
+      "torch_float64_sum": 32.46868486440508,
+      "absolute_error": 3.814697265625e-06,
+      "relative_error": 1.1748849082743854e-07,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float64",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 64,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 4.573565143411058,
+      "torch_sum": 4.573565143411058,
+      "torch_float64_sum": 4.573565143411058,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true
+    },
+    {
+      "case": "float64",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 128,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": -12.34569680899583,
+      "torch_sum": -12.345696808995832,
+      "torch_float64_sum": -12.345696808995832,
+      "absolute_error": 1.7763568394002505e-15,
+      "relative_error": 1.4388469657750608e-16,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true
+    },
+    {
+      "case": "float64",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 256,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": -15.82154990989443,
+      "torch_sum": -15.82154990989443,
+      "torch_float64_sum": -15.82154990989443,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true
+    },
+    {
+      "case": "float64",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        1024,
+        1,
+        1
+      ],
+      "block_threads": 1024,
+      "active_threads": 1024,
+      "waves": 16,
+      "all_threads_equal": true,
+      "flydsl_sum": -5.814325401541948,
+      "torch_sum": -5.814325401541957,
+      "torch_float64_sum": -5.814325401541957,
+      "absolute_error": 8.881784197001252e-15,
+      "relative_error": 1.527569164712695e-15,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true
+    },
+    {
+      "case": "float64",
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 64,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": -4.13107457790429,
+      "torch_sum": -4.13107457790429,
+      "torch_float64_sum": -4.13107457790429,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true
+    },
+    {
+      "case": "float64",
+      "algorithm": "RAKING",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 128,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": -14.189215034803915,
+      "torch_sum": -14.189215034803915,
+      "torch_float64_sum": -14.189215034803915,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true
+    },
+    {
+      "case": "float64",
+      "algorithm": "RAKING",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 256,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": -12.607272702477715,
+      "torch_sum": -12.607272702477715,
+      "torch_float64_sum": -12.607272702477715,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true
+    },
+    {
+      "case": "float64",
+      "algorithm": "RAKING",
+      "block_size": [
+        1024,
+        1,
+        1
+      ],
+      "block_threads": 1024,
+      "active_threads": 1024,
+      "waves": 16,
+      "all_threads_equal": true,
+      "flydsl_sum": -3.515235399774866,
+      "torch_sum": -3.5152353997748675,
+      "torch_float64_sum": -3.5152353997748675,
+      "absolute_error": 1.3322676295501878e-15,
+      "relative_error": 3.7899812616688846e-16,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 1,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 0.05041419342160225,
+      "torch_sum": 0.05041419342160225,
+      "torch_float64_sum": 0.05041419342160225,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 1,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.6945488452911377,
+      "torch_sum": 1.6945488452911377,
+      "torch_float64_sum": 1.6945488452911377,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 33,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": -7.703317642211914,
+      "torch_sum": -7.703317642211914,
+      "torch_float64_sum": -7.703318100422621,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 33,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 8.195550918579102,
+      "torch_sum": 8.195551872253418,
+      "torch_float64_sum": 8.195551909913775,
+      "absolute_error": 9.5367431640625e-07,
+      "relative_error": 1.1636486856180819e-07,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 3.3856208324432373,
+      "torch_sum": 3.3856208324432373,
+      "torch_float64_sum": 3.3856213726103306,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": -6.961379051208496,
+      "torch_sum": -6.961379528045654,
+      "torch_float64_sum": -6.9613792560994625,
+      "absolute_error": 4.76837158203125e-07,
+      "relative_error": 6.849750919082453e-08,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 65,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 13.483353614807129,
+      "torch_sum": 13.483353614807129,
+      "torch_float64_sum": 13.483354143798351,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 65,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.5259226560592651,
+      "torch_sum": 1.5259227752685547,
+      "torch_float64_sum": 1.5259233857505023,
+      "absolute_error": 1.1920928955078125e-07,
+      "relative_error": 7.812275397082334e-08,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": -6.138340950012207,
+      "torch_sum": -6.138340950012207,
+      "torch_float64_sum": -6.138340984471142,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": -0.7269048690795898,
+      "torch_sum": -0.7269058227539062,
+      "torch_float64_sum": -0.726905435709341,
+      "absolute_error": 9.5367431640625e-07,
+      "relative_error": 1.311964062680395e-06,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 129,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": -10.808154106140137,
+      "torch_sum": -10.80815315246582,
+      "torch_float64_sum": -10.808153808116913,
+      "absolute_error": 9.5367431640625e-07,
+      "relative_error": 8.823656576227128e-08,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 129,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": -6.244864463806152,
+      "torch_sum": -6.244864463806152,
+      "torch_float64_sum": -6.244865076616406,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": -29.639820098876953,
+      "torch_sum": -29.63981819152832,
+      "torch_float64_sum": -29.63982005804428,
+      "absolute_error": 1.9073486328125e-06,
+      "relative_error": 6.435088840584252e-08,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": -5.055591583251953,
+      "torch_sum": -5.055591106414795,
+      "torch_float64_sum": -5.055591270327568,
+      "absolute_error": 4.76837158203125e-07,
+      "relative_error": 9.431877463311647e-08,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        1024,
+        1,
+        1
+      ],
+      "block_threads": 1024,
+      "active_threads": 1023,
+      "waves": 16,
+      "all_threads_equal": true,
+      "flydsl_sum": 47.34722137451172,
+      "torch_sum": 47.347225189208984,
+      "torch_float64_sum": 47.34722467971733,
+      "absolute_error": 3.814697265625e-06,
+      "relative_error": 8.056854969601083e-08,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        1024,
+        1,
+        1
+      ],
+      "block_threads": 1024,
+      "active_threads": 1023,
+      "waves": 16,
+      "all_threads_equal": true,
+      "flydsl_sum": -9.47880744934082,
+      "torch_sum": -9.47880744934082,
+      "torch_float64_sum": -9.478812057292089,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true
+    },
+    {
+      "case": "float16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 33248.0,
+      "torch_sum": 33280.0,
+      "torch_float64_sum": 33264.0,
+      "absolute_error": 32.0,
+      "relative_error": 0.0009615384615384616,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "float16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 0.00372314453125,
+      "torch_sum": 0.00372314453125,
+      "torch_float64_sum": 0.00372314453125,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "float16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 7.78125,
+      "torch_sum": 7.77734375,
+      "torch_float64_sum": 7.77899169921875,
+      "absolute_error": 0.00390625,
+      "relative_error": 0.0005022601707684581,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "float16",
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 33248.0,
+      "torch_sum": 33280.0,
+      "torch_float64_sum": 33264.0,
+      "absolute_error": 32.0,
+      "relative_error": 0.0009615384615384616,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "float16",
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 0.00372314453125,
+      "torch_sum": 0.00372314453125,
+      "torch_float64_sum": 0.00372314453125,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "float16",
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": -3.2578125,
+      "torch_sum": -3.2578125,
+      "torch_float64_sum": -3.25848388671875,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "float16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 32992.0,
+      "torch_sum": 32992.0,
+      "torch_float64_sum": 32996.0,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "float16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 0.00762939453125,
+      "torch_sum": 0.00762939453125,
+      "torch_float64_sum": 0.00762939453125,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "float16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": -6.51171875,
+      "torch_sum": -6.51171875,
+      "torch_float64_sum": -6.512176513671875,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "float16",
+      "algorithm": "RAKING",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 32992.0,
+      "torch_sum": 32992.0,
+      "torch_float64_sum": 32996.0,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "float16",
+      "algorithm": "RAKING",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 0.00762939453125,
+      "torch_sum": 0.00762939453125,
+      "torch_float64_sum": 0.00762939453125,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "float16",
+      "algorithm": "RAKING",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": -2.1328125,
+      "torch_sum": -2.134765625,
+      "torch_float64_sum": -2.1344223022460938,
+      "absolute_error": 0.001953125,
+      "relative_error": 0.0009149130832570906,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "float16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 32928.0,
+      "torch_sum": 32928.0,
+      "torch_float64_sum": 32917.75,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "float16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 0.0120849609375,
+      "torch_sum": 0.0120849609375,
+      "torch_float64_sum": 0.0120849609375,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "float16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": -10.28125,
+      "torch_sum": -10.265625,
+      "torch_float64_sum": -10.26800537109375,
+      "absolute_error": 0.015625,
+      "relative_error": 0.0015220700152207,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "float16",
+      "algorithm": "RAKING",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 32960.0,
+      "torch_sum": 32928.0,
+      "torch_float64_sum": 32917.75,
+      "absolute_error": 32.0,
+      "relative_error": 0.0009718172983479105,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "float16",
+      "algorithm": "RAKING",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 0.0120849609375,
+      "torch_sum": 0.0120849609375,
+      "torch_float64_sum": 0.0120849609375,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "float16",
+      "algorithm": "RAKING",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": -15.203125,
+      "torch_sum": -15.203125,
+      "torch_float64_sum": -15.202323913574219,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.7147041145625415e+38,
+      "torch_sum": 1.7147041145625415e+38,
+      "torch_float64_sum": 1.715534882059907e+38,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 7.170515540015954e-37,
+      "torch_sum": 6.935416669851496e-37,
+      "torch_float64_sum": 6.935416669851496e-37,
+      "absolute_error": 2.350988701644575e-38,
+      "relative_error": 0.03389830508474576,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 2.03125,
+      "torch_sum": 2.0625,
+      "torch_float64_sum": 2.06610107421875,
+      "absolute_error": 0.03125,
+      "relative_error": 0.015151515151515152,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.7147041145625415e+38,
+      "torch_sum": 1.7147041145625415e+38,
+      "torch_float64_sum": 1.715534882059907e+38,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 7.170515540015954e-37,
+      "torch_sum": 6.935416669851496e-37,
+      "torch_float64_sum": 6.935416669851496e-37,
+      "absolute_error": 2.350988701644575e-38,
+      "relative_error": 0.03389830508474576,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 4.1875,
+      "torch_sum": 4.1875,
+      "torch_float64_sum": 4.19940185546875,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.7014118346046923e+38,
+      "torch_sum": 1.7014118346046923e+38,
+      "torch_float64_sum": 1.7016195264790337e+38,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.4693679385278594e-36,
+      "torch_sum": 1.4458580515114136e-36,
+      "torch_float64_sum": 1.4458580515114136e-36,
+      "absolute_error": 2.350988701644575e-38,
+      "relative_error": 0.016260162601626018,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 6.40625,
+      "torch_sum": 6.375,
+      "torch_float64_sum": 6.3631333112716675,
+      "absolute_error": 0.03125,
+      "relative_error": 0.004901960784313725,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "RAKING",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.7014118346046923e+38,
+      "torch_sum": 1.7014118346046923e+38,
+      "torch_float64_sum": 1.7016195264790337e+38,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "RAKING",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.4693679385278594e-36,
+      "torch_sum": 1.4458580515114136e-36,
+      "torch_float64_sum": 1.4458580515114136e-36,
+      "absolute_error": 2.350988701644575e-38,
+      "relative_error": 0.016260162601626018,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "RAKING",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": -6.3125,
+      "torch_sum": -6.3125,
+      "torch_float64_sum": -6.326904296875,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.7014118346046923e+38,
+      "torch_sum": 1.7014118346046923e+38,
+      "torch_float64_sum": 1.7053060572485934e+38,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 2.3274788146281293e-36,
+      "torch_sum": 2.3039689276116835e-36,
+      "torch_float64_sum": 2.3039689276116835e-36,
+      "absolute_error": 2.350988701644575e-38,
+      "relative_error": 0.01020408163265306,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": -0.4375,
+      "torch_sum": -0.470703125,
+      "torch_float64_sum": -0.47052001953125,
+      "absolute_error": 0.033203125,
+      "relative_error": 0.07053941908713693,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "RAKING",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.6881195546468432e+38,
+      "torch_sum": 1.7014118346046923e+38,
+      "torch_float64_sum": 1.7053060572485934e+38,
+      "absolute_error": 1.329227995784916e+36,
+      "relative_error": 0.0078125,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "RAKING",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 2.3274788146281293e-36,
+      "torch_sum": 2.3039689276116835e-36,
+      "torch_float64_sum": 2.3039689276116835e-36,
+      "absolute_error": 2.350988701644575e-38,
+      "relative_error": 0.01020408163265306,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "bfloat16",
+      "algorithm": "RAKING",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 10.25,
+      "torch_sum": 10.25,
+      "torch_float64_sum": 10.2393798828125,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 0.1,
+        "atol": 0.1
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.7284182686401466e+38,
+      "torch_sum": 1.7284182686401466e+38,
+      "torch_float64_sum": 1.7284182686401466e+38,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 7.170515540015954e-37,
+      "torch_sum": 6.935416669851496e-37,
+      "torch_float64_sum": 6.935416669851496e-37,
+      "absolute_error": 2.350988701644575e-38,
+      "relative_error": 0.03389830508474576,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 10.045147895812988,
+      "torch_sum": 10.045147895812988,
+      "torch_float64_sum": 10.045148148201406,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.7284182686401466e+38,
+      "torch_sum": 1.7284182686401466e+38,
+      "torch_float64_sum": 1.7284182686401466e+38,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 7.170515540015954e-37,
+      "torch_sum": 6.935416669851496e-37,
+      "torch_float64_sum": 6.935416669851496e-37,
+      "absolute_error": 2.350988701644575e-38,
+      "relative_error": 0.03389830508474576,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": -3.0418763160705566,
+      "torch_sum": -3.0418758392333984,
+      "torch_float64_sum": -3.041876164264977,
+      "absolute_error": 4.76837158203125e-07,
+      "relative_error": 1.5675760070578542e-07,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.7148085689720003e+38,
+      "torch_sum": 1.7148085689720003e+38,
+      "torch_float64_sum": 1.7148085816485063e+38,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.4693679385278594e-36,
+      "torch_sum": 1.4458580515114136e-36,
+      "torch_float64_sum": 1.4458580515114136e-36,
+      "absolute_error": 2.350988701644575e-38,
+      "relative_error": 0.016260162601626018,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": -5.390793323516846,
+      "torch_sum": -5.3907928466796875,
+      "torch_float64_sum": -5.390794085338712,
+      "absolute_error": 4.76837158203125e-07,
+      "relative_error": 8.845399401626421e-08,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.7148085689720003e+38,
+      "torch_sum": 1.7148085689720003e+38,
+      "torch_float64_sum": 1.7148085816485063e+38,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.4693679385278594e-36,
+      "torch_sum": 1.4458580515114136e-36,
+      "torch_float64_sum": 1.4458580515114136e-36,
+      "absolute_error": 2.350988701644575e-38,
+      "relative_error": 0.016260162601626018,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 21.833526611328125,
+      "torch_sum": 21.833526611328125,
+      "torch_float64_sum": 21.83352649747394,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.709919088488848e+38,
+      "torch_sum": 1.709918885664752e+38,
+      "torch_float64_sum": 1.70991872879299e+38,
+      "absolute_error": 2.028240960365167e+31,
+      "relative_error": 1.1861620907103225e-07,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 2.3274788146281293e-36,
+      "torch_sum": 2.3039689276116835e-36,
+      "torch_float64_sum": 2.3039689276116835e-36,
+      "absolute_error": 2.350988701644575e-38,
+      "relative_error": 0.01020408163265306,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "float32",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 7.948144912719727,
+      "torch_sum": 7.948145389556885,
+      "torch_float64_sum": 7.9481441816315055,
+      "absolute_error": 4.76837158203125e-07,
+      "relative_error": 5.99935123015797e-08,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.709918885664752e+38,
+      "torch_sum": 1.709918885664752e+38,
+      "torch_float64_sum": 1.70991872879299e+38,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 2.3274788146281293e-36,
+      "torch_sum": 2.3039689276116835e-36,
+      "torch_float64_sum": 2.3039689276116835e-36,
+      "absolute_error": 2.350988701644575e-38,
+      "relative_error": 0.01020408163265306,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "float32",
+      "algorithm": "RAKING",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 5.678205490112305,
+      "torch_sum": 5.678205490112305,
+      "torch_float64_sum": 5.678204948082566,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-05,
+        "atol": 0.001
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "float64",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 9.131139732633983e+307,
+      "torch_sum": 9.131139732633983e+307,
+      "torch_float64_sum": 9.131139732633983e+307,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "float64",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.3572950536893928e-306,
+      "torch_sum": 1.3127935765192488e-306,
+      "torch_float64_sum": 1.3127935765192488e-306,
+      "absolute_error": 4.450147717014403e-308,
+      "relative_error": 0.03389830508474576,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "float64",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 5.174772136208794,
+      "torch_sum": 5.1747721362087935,
+      "torch_float64_sum": 5.1747721362087935,
+      "absolute_error": 8.881784197001252e-16,
+      "relative_error": 1.7163623756211101e-16,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "float64",
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 9.131139732633983e+307,
+      "torch_sum": 9.131139732633983e+307,
+      "torch_float64_sum": 9.131139732633983e+307,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "float64",
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 1.3572950536893928e-306,
+      "torch_sum": 1.3127935765192488e-306,
+      "torch_float64_sum": 1.3127935765192488e-306,
+      "absolute_error": 4.450147717014403e-308,
+      "relative_error": 0.03389830508474576,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "float64",
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "active_threads": 63,
+      "waves": 1,
+      "all_threads_equal": true,
+      "flydsl_sum": 13.703392274879324,
+      "torch_sum": 13.70339227487932,
+      "torch_float64_sum": 13.70339227487932,
+      "absolute_error": 3.552713678800501e-15,
+      "relative_error": 2.59257971131224e-16,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "float64",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 9.059240994581747e+307,
+      "torch_sum": 9.059240994581747e+307,
+      "torch_float64_sum": 9.059240994581747e+307,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "float64",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 2.7813423231340017e-306,
+      "torch_sum": 2.7368408459638577e-306,
+      "torch_float64_sum": 2.7368408459638577e-306,
+      "absolute_error": 4.450147717014403e-308,
+      "relative_error": 0.016260162601626018,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "float64",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": -2.8625679915363484,
+      "torch_sum": -2.862567991536351,
+      "torch_float64_sum": -2.862567991536351,
+      "absolute_error": 2.6645352591003757e-15,
+      "relative_error": 9.308199026113994e-16,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "float64",
+      "algorithm": "RAKING",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 9.059240994581747e+307,
+      "torch_sum": 9.059240994581747e+307,
+      "torch_float64_sum": 9.059240994581747e+307,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "float64",
+      "algorithm": "RAKING",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": 2.7813423231340017e-306,
+      "torch_sum": 2.7368408459638577e-306,
+      "torch_float64_sum": 2.7368408459638577e-306,
+      "absolute_error": 4.450147717014403e-308,
+      "relative_error": 0.016260162601626018,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "float64",
+      "algorithm": "RAKING",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "active_threads": 127,
+      "waves": 2,
+      "all_threads_equal": true,
+      "flydsl_sum": -14.249665972697123,
+      "torch_sum": -14.249665972697123,
+      "torch_float64_sum": -14.249665972697123,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "float64",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 9.033408002683136e+307,
+      "torch_sum": 9.033408002683136e+307,
+      "torch_float64_sum": 9.033408002683136e+307,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "float64",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 4.405646239844259e-306,
+      "torch_sum": 4.361144762674115e-306,
+      "torch_float64_sum": 4.361144762674115e-306,
+      "absolute_error": 4.450147717014403e-308,
+      "relative_error": 0.01020408163265306,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "float64",
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": -6.820743605801657,
+      "torch_sum": -6.820743605801657,
+      "torch_float64_sum": -6.820743605801657,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    },
+    {
+      "case": "float64",
+      "algorithm": "RAKING",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 9.03340800268314e+307,
+      "torch_sum": 9.033408002683136e+307,
+      "torch_float64_sum": 9.033408002683136e+307,
+      "absolute_error": 3.99168061906944e+292,
+      "relative_error": 4.4187981079608226e-16,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true,
+      "adversarial_case": "large_mixed_sign"
+    },
+    {
+      "case": "float64",
+      "algorithm": "RAKING",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 4.405646239844259e-306,
+      "torch_sum": 4.361144762674115e-306,
+      "torch_float64_sum": 4.361144762674115e-306,
+      "absolute_error": 4.450147717014403e-308,
+      "relative_error": 0.01020408163265306,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true,
+      "adversarial_case": "cancellation"
+    },
+    {
+      "case": "float64",
+      "algorithm": "RAKING",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "active_threads": 200,
+      "waves": 4,
+      "all_threads_equal": true,
+      "flydsl_sum": 10.397065485729456,
+      "torch_sum": 10.397065485729453,
+      "torch_float64_sum": 10.397065485729453,
+      "absolute_error": 3.552713678800501e-15,
+      "relative_error": 3.4170350121164447e-16,
+      "gate": {
+        "rtol": 1e-12,
+        "atol": 1e-09
+      },
+      "passed": true,
+      "adversarial_case": "random_mixed_sign"
+    }
+  ],
+  "timing": [
+    {
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "waves": 1,
+      "warmup": 50,
+      "iterations": 500,
+      "total_ms": 15.166333198547363,
+      "mean_us_per_launch": 30.332666397094727
+    },
+    {
+      "algorithm": "RAKING",
+      "block_size": [
+        64,
+        1,
+        1
+      ],
+      "block_threads": 64,
+      "waves": 1,
+      "warmup": 50,
+      "iterations": 500,
+      "total_ms": 17.846923828125,
+      "mean_us_per_launch": 35.69384765625
+    },
+    {
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "waves": 2,
+      "warmup": 50,
+      "iterations": 500,
+      "total_ms": 14.730408668518066,
+      "mean_us_per_launch": 29.460817337036133
+    },
+    {
+      "algorithm": "RAKING",
+      "block_size": [
+        128,
+        1,
+        1
+      ],
+      "block_threads": 128,
+      "waves": 2,
+      "warmup": 50,
+      "iterations": 500,
+      "total_ms": 14.54300594329834,
+      "mean_us_per_launch": 29.08601188659668
+    },
+    {
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "waves": 4,
+      "warmup": 50,
+      "iterations": 500,
+      "total_ms": 14.697608947753906,
+      "mean_us_per_launch": 29.395217895507812
+    },
+    {
+      "algorithm": "RAKING",
+      "block_size": [
+        256,
+        1,
+        1
+      ],
+      "block_threads": 256,
+      "waves": 4,
+      "warmup": 50,
+      "iterations": 500,
+      "total_ms": 14.479726791381836,
+      "mean_us_per_launch": 28.959453582763672
+    },
+    {
+      "algorithm": "WARP_REDUCTIONS",
+      "block_size": [
+        1024,
+        1,
+        1
+      ],
+      "block_threads": 1024,
+      "waves": 16,
+      "warmup": 50,
+      "iterations": 500,
+      "total_ms": 14.474726676940918,
+      "mean_us_per_launch": 28.949453353881836
+    },
+    {
+      "algorithm": "RAKING",
+      "block_size": [
+        1024,
+        1,
+        1
+      ],
+      "block_threads": 1024,
+      "waves": 16,
+      "warmup": 50,
+      "iterations": 500,
+      "total_ms": 14.40365219116211,
+      "mean_us_per_launch": 28.80730438232422
+    }
+  ],
+  "non_power_of_two_block_rejection": [
+    {
+      "algorithm": "WARP_REDUCTIONS",
+      "error": "block_dim_x * block_dim_y * block_dim_z must be a power of two, got 63"
+    },
+    {
+      "algorithm": "RAKING",
+      "error": "block_dim_x * block_dim_y * block_dim_z must be a power of two, got 63"
+    }
+  ]
+}

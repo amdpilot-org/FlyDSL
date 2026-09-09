@@ -1,0 +1,87 @@
+DATE_UTC=
+2026-09-09T23:09:34+00:00
+PYTHON=
+3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]
+/opt/venv/bin/python
+GPU_ROCM_SMI:
+WARNING: AMD GPU device(s) is/are in a low-power state. Check power control/runtime_status
+
+
+
+============================ ROCm System Management Interface ============================
+============================== Version of System Component ===============================
+Driver version: 7.1.1.31500000
+==========================================================================================
+======================================= Unique ID ========================================
+GPU[0]		: Unique ID: 0x5e94f9cc641f4027
+==========================================================================================
+===================================== Serial Number ======================================
+GPU[0]		: Serial Number: 692517020474
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI350X
+GPU[0]		: Card Model: 		0x75a0
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		N/A
+GPU[0]		: Subsystem ID: 	0x75a0
+GPU[0]		: Device Rev: 		0x00
+GPU[0]		: Node ID: 		7
+GPU[0]		: GUID: 		51966
+GPU[0]		: GFX Version: 		gfx950
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+GPU_ROCM_INFO:
+  Compute Unit:            192                                
+  Compute Unit:            192                                
+  Name:                    gfx950                             
+  Marketing Name:          AMD Instinct MI350X                
+  Compute Unit:            256                                
+  Wavefront Size:          64(0x40)                           
+  Workgroup Max Size:      1024(0x400)                        
+  Workgroup Max Size per Dimension:
+  Max Waves Per CU:        32(0x20)                           
+      Name:                    amdgcn-amd-amdhsa--gfx950:sramecc+:xnack-
+      Workgroup Max Size:      1024(0x400)                        
+      Workgroup Max Size per Dimension:
+      Workgroup Max Size:      1024(0x400)                        
+      Workgroup Max Size per Dimension:
+HIPCC:
+HIP version: 7.2.26015-fc0010cf6a
+AMD clang version 22.0.0git (https://github.com/RadeonOpenCompute/llvm-project roc-7.2.0 26014 7b800a19466229b8479a78de19143dc33c3ab9b5)
+Target: x86_64-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /opt/rocm-7.2.0/lib/llvm/bin
+Configuration file: /opt/rocm-7.2.0/lib/llvm/bin/clang++.cfg
+PYTHON_MODULES:
+torch 2.9.1+rocm7.2.0.git7e1940d4 /opt/venv/lib/python3.12/site-packages/torch/__init__.py hip 7.2.26015-fc0010cf6a
+triton 3.5.1+rocm7.2.0.gita272dfa8 /opt/venv/lib/python3.12/site-packages/triton/__init__.py
+flydsl 0.3.2 /job/.cache/flydsl-wheel/flydsl/__init__.py
+AITER_SOURCE:
+__version__ = '0+gd9e5ef7ce08ee7045d583aed768cff41aa9210fe'
+NATIVE_PATHS:
+/opt/rocm-7.2.0/lib/libamdhip64.so.7.2.70200
+/opt/rocm-7.2.0/lib/libhiprtc.so.7.2.70200
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/__init__.py
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/_mlirDialectsFly.cpython-312-x86_64-linux-gnu.so
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/_mlirDialectsFly.pyi
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/_mlirDialectsFlyROCDL.cpython-312-x86_64-linux-gnu.so
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/_mlirDialectsFlyROCDL.pyi
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/_mlirDialectsGPU.cpython-312-x86_64-linux-gnu.so
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/_mlirDialectsGPU.pyi
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/_mlirDialectsLLVM.cpython-312-x86_64-linux-gnu.so
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/_mlirDialectsLLVM.pyi
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/_mlirExecutionEngine.cpython-312-x86_64-linux-gnu.so
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/_mlirExecutionEngine.pyi
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/_mlirGPUPasses.cpython-312-x86_64-linux-gnu.so
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/_mlirRegisterEverything.cpython-312-x86_64-linux-gnu.so
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/libFlyPythonCAPI.so.24.0git
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/libMLIRPythonSupport-mlir.so
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/libmlir_c_runner_utils.so
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/libmlir_float16_utils.so.24.0git
+/job/.cache/flydsl-wheel/flydsl/_mlir/_mlir_libs/libnanobind-mlir.so
+IMAGE_IDENTITY:
+qualified_image=amdpilotv2/open-job:gbt350-20260909
+local_image_id=sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7
+container_id=fc166f52feb222da535e49c138e61ec201cd18b8d7da738f75e2e16759594b30
