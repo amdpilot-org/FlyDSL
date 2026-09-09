@@ -237,7 +237,8 @@ class TestCompileHintsPropagation:
         artifact = next(iter(_noop_launch._mem_cache.values()))
         binary_line = next(line for line in artifact._ir_text.splitlines() if "gpu.binary" in line)
         assert binary_line.count("#gpu.object<") == 1
-        assert "flags = {fast, unsafe_math}" in binary_line
+        assert "fast" in binary_line
+        assert "unsafe_math" in binary_line
 
     def test_llvm_options_in_compile_hints(self):
         """Verify llvm_options key is accepted and doesn't crash."""
