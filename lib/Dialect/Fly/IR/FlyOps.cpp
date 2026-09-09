@@ -1603,6 +1603,11 @@ FLY_INFER_RETURN_TYPES(TiledCopyRetileOp) {
   if (!inputLayout)
     return emitOptionalError(location,
                              "TiledCopyRetileOp: MemRefType with ComposedLayout is not supported");
+  int32_t expectedInputRank = tileMN.rank() + 1;
+  if (inputLayout.rank() < expectedInputRank)
+    return emitOptionalError(location, "TiledCopyRetileOp: expected input rank at least ",
+                             expectedInputRank, " (one value mode plus ", tileMN.rank(),
+                             " tile modes), got ", inputLayout.rank());
   LayoutBuilder<LayoutAttr> builder(context);
   LayoutAttr retiled =
       layoutTiledCopyRetile(builder, copyAtom, tiledLayoutThrVal, tileMN, inputLayout);

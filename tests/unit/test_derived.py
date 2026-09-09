@@ -91,6 +91,17 @@ def test_tile_unpack_int_modes():
         assert tiled_copy.tile_mn.unpack() == (8, 64)
 
 
+def test_tiled_copy_retile_rejects_missing_tile_modes():
+    with _trace_context():
+        copy_atom = fx.make_copy_atom(fx.UniversalAtomicAdd(fx.Float32), fx.Float32)
+        tv_layout = fx.make_layout(((8, 32), 8), ((256, 1), 32))
+        tiled_copy = fx.make_tiled_copy(copy_atom, tv_layout, (32, 64))
+        fragment = fx.make_rmem_tensor(fx.make_layout((1, 8), (0, 1)), fx.Float32)
+
+        with pytest.raises(Exception, match="expected input rank at least 3"):
+            tiled_copy.get_slice(0).retile(fragment)
+
+
 def test_tile_unpack_single_mode_is_leaf():
     # A single (non-list) mode builds a leaf tile.
     with _trace_context():
