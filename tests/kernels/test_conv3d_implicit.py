@@ -142,6 +142,20 @@ def test_conv3d_mixed_layouts_and_bias_dtype(layout, out_layout, bias_dtype):
 
 
 @_skip_non_cdna4
+def test_conv3d_out_layout_defaults_to_layout():
+    torch.manual_seed(3360)
+    n, c, t, h, w, k = 1, 32, 4, 8, 8, 64
+    x = torch.randn((n, c, t, h, w), device="cuda", dtype=torch.bfloat16)
+    weight = torch.randn((k, c, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    x_cl = x.permute(0, 2, 3, 4, 1).contiguous()
+
+    y = conv3d_implicit(x_cl, weight, stride=1, padding=1, layout="NDHWC")
+    torch.cuda.synchronize()
+
+    assert y.shape == (n, t, h, w, k)
+
+
+@_skip_non_cdna4
 def test_conv3d_layout_chain():
     torch.manual_seed(3400)
     n, c, t, h, w = 1, 32, 4, 8, 8
