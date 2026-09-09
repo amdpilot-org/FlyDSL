@@ -1,0 +1,42 @@
+2026-09-09 UTC investigation commands
+
+git clone --depth 50 https://github.com/amdpilot-org/FlyDSL.git /job/FlyDSL
+git -C /job/FlyDSL rev-parse HEAD
+git -C /job/FlyDSL remote get-url origin
+
+gh issue view 821 --repo amdpilot-org/FlyDSL --json number,title,state,author,body,comments,url
+gh issue view 821 --repo ROCm/FlyDSL --json number,title,state,author,body,comments,url
+curl -L --max-time 20 -sS https://api.github.com/repos/ROCm/FlyDSL/issues/821
+curl -L --max-time 20 -sS https://api.github.com/repos/ROCm/FlyDSL/issues/821/comments
+
+rocm-smi --showproductname --showid
+hipcc --version
+/opt/venv/bin/python -c 'import torch, triton, flydsl; print(torch.__version__, triton.__version__, flydsl.__version__)'
+/opt/venv/bin/python -m pip show flydsl amd-aiter triton torch
+ldconfig -p | rg 'libamdhip64|libhipblas|libhipblaslt'
+
+for case in \
+  fp8_raw \
+  fp8_raw_issue_store \
+  fp8_gemm_universal32 \
+  fp8_gemm_buffer32 \
+  fp8_gemm_buffer64 \
+  fp8_gemm_buffer128 \
+  bf16_raw \
+  bf16_gemm_universal64 \
+  bf16_gemm_buffer32 \
+  bf16_gemm_buffer64 \
+  bf16_gemm_buffer128
+do
+  FLYDSL_COMPILE_ARCH=gfx950 \
+  /opt/venv/bin/python reports/j-e53e86456ec4/gemm_gfx950_compare.py \
+    "$case" --dump-root /job/artifacts/dumps
+done
+
+for f in /job/artifacts/dumps/*/*/21_final_isa.s; do
+  rg '\.amdhsa_next_free_vgpr|\.amdhsa_next_free_sgpr|\.amdhsa_group_segment_fixed_size|\.amdhsa_private_segment_fixed_size' "$f"
+done
+
+git diff --binary main > /job/recovery.patch
+git push origin amdpilot/j-e53e86456ec4
+gh pr create --repo amdpilot-org/FlyDSL --base main --head amdpilot/j-e53e86456ec4 --title ... --body-file ...
