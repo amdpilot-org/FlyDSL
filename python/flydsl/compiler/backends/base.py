@@ -89,7 +89,11 @@ class BaseBackend(metaclass=ABCMeta):
 
     @abstractmethod
     def gpu_module_targets(self) -> List[str]:
-        """MLIR target attributes for ``create_gpu_module(..., targets=...)``."""
+        """MLIR target attributes for ``create_gpu_module(..., targets=...)``.
+
+        A backend may return an empty list when its pipeline owns target
+        attachment and compile options.
+        """
         ...
 
     # -- cache / fingerprint ---------------------------------------------
