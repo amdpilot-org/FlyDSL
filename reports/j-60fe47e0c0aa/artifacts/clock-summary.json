@@ -1,0 +1,58 @@
+{
+  "samples": [
+    {
+      "run": 1,
+      "block_cycles": [
+        2872,
+        5744,
+        8652,
+        11584,
+        14356,
+        17192,
+        20228,
+        22712
+      ],
+      "observed_clock_ghz": 0.10833655367442104,
+      "event_overhead_estimate_us": -1.0230019688606262,
+      "cycle_regression_intercept_cycles": 76.85714285714312,
+      "uninstrumented_exact": true,
+      "instrumented_exact": true
+    },
+    {
+      "run": 2,
+      "block_cycles": [
+        2848,
+        5632,
+        8580,
+        11336,
+        14332,
+        17020,
+        19888,
+        22500
+      ],
+      "observed_clock_ghz": 0.11111796696764331,
+      "event_overhead_estimate_us": -0.9814947843551636,
+      "cycle_regression_intercept_cycles": 62.0,
+      "uninstrumented_exact": true,
+      "instrumented_exact": true
+    },
+    {
+      "run": 3,
+      "block_cycles": [
+        2852,
+        5568,
+        8456,
+        11216,
+        14032,
+        16696,
+        19756,
+        22992
+      ],
+      "observed_clock_ghz": 0.11382995271588547,
+      "event_overhead_estimate_us": -1.6440004110336304,
+      "cycle_regression_intercept_cycles": -132.0,
+      "uninstrumented_exact": true,
+      "instrumented_exact": true
+    }
+  ]
+}

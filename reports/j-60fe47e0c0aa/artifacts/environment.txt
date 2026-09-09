@@ -1,0 +1,156 @@
+=== date ===
+Wed Sep  9 21:44:17 UTC 2026
+=== qualified image ===
+amdpilotv2/open-job-mi300:jit-config-readable-260909-banff5
+sha256:39fe745feda79ecf4c17f4d806d8ef12150bef720f2f07f5c63a20b3ccfd63f1
+=== hostname ===
+banff-cyxtera-cx57-5
+=== os ===
+PRETTY_NAME="Ubuntu 22.04.5 LTS"
+NAME="Ubuntu"
+VERSION_ID="22.04"
+VERSION="22.04.5 LTS (Jammy Jellyfish)"
+VERSION_CODENAME=jammy
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=jammy
+=== python ===
+Python 3.10.12
+=== flydsl package ===
+Name: flydsl
+Version: 0.3.1
+Summary: FlyDSL - ROCm Domain Specific Language for layout algebra (Python + embedded MLIR runtime)
+Home-page:
+Author:
+Author-email:
+License: Apache-2.0
+Location: /opt/venv/lib/python3.10/site-packages
+Requires:
+Required-by: amd-aiter
+=== torch package ===
+Name: torch
+Version: 2.9.1+rocm7.2.0.lw.git7e1940d4
+Summary: Tensors and Dynamic neural networks in Python with strong GPU acceleration
+Home-page: https://pytorch.org
+Author:
+Author-email: PyTorch Team <packages@pytorch.org>
+License: BSD-3-Clause
+Location: /opt/venv/lib/python3.10/site-packages
+Requires: filelock, fsspec, jinja2, networkx, sympy, typing-extensions
+Required-by: accelerate, cache_dit, compressed-tensors, fast_hadamard_transform, nixl-cu12, outlines, peft, runai-model-streamer, st-attn, tilelang, timm, torchaudio, torchvision, vsa, xgrammar
+=== python paths ===
+flydsl /opt/venv/lib/python3.10/site-packages/flydsl/__init__.py
+torch /opt/venv/lib/python3.10/site-packages/torch/__init__.py
+torch version 2.9.1+rocm7.2.0.git7e1940d4
+torch hip 7.2.26015-fc0010cf6a
+cuda available True
+device count 1
+device name AMD Instinct MI300X
+capability (9, 4)
+=== hipcc ===
+HIP version: 7.2.26015-fc0010cf6a
+AMD clang version 22.0.0git (https://github.com/RadeonOpenCompute/llvm-project roc-7.2.0 26014 7b800a19466229b8479a78de19143dc33c3ab9b5)
+Target: x86_64-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /opt/rocm-7.2.0/lib/llvm/bin
+Configuration file: /opt/rocm-7.2.0/lib/llvm/bin/clang++.cfg
+=== rocm clang ===
+AMD clang version 22.0.0git (https://github.com/RadeonOpenCompute/llvm-project roc-7.2.0 26014 7b800a19466229b8479a78de19143dc33c3ab9b5)
+Target: x86_64-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /opt/rocm-7.2.0/lib/llvm/bin
+Configuration file: /opt/rocm-7.2.0/lib/llvm/bin/clang.cfg
+=== cmake ===
+cmake version 4.3.4
+
+=== ninja ===
+1.13.0.git.kitware.jobserver-pipe-1
+=== rocm-smi ===
+
+
+============================ ROCm System Management Interface ============================
+============================== Version of System Component ===============================
+Driver version: 6.19.14.31400000
+==========================================================================================
+======================================= Unique ID ========================================
+GPU[0]		: Unique ID: 0xd77d585f96863a60
+==========================================================================================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor junction) (C): 43.0
+GPU[0]		: Temperature (Sensor memory) (C): 38.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (1300Mhz)
+GPU[0]		: mclk clock level: 0: (900Mhz)
+GPU[0]		: sclk clock level: S: (132Mhz)
+GPU[0]		: socclk clock level: S: (28Mhz)
+==========================================================================================
+================================= Show Performance Level =================================
+GPU[0]		: Performance Level: auto
+==========================================================================================
+==================================== OverDrive Level =====================================
+GPU[0]		: get_mem_overdrive_level_mclk, Not supported on the given system
+==========================================================================================
+===================================== Serial Number ======================================
+GPU[0]		: Serial Number: 692440004359
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI300X
+GPU[0]		: Card Model: 		0x74a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		M3000108
+GPU[0]		: Subsystem ID: 	0x74a1
+GPU[0]		: Device Rev: 		0x00
+GPU[0]		: Node ID: 		3
+GPU[0]		: GUID: 		39656
+GPU[0]		: GFX Version: 		gfx942
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+=== rocminfo gpu summary ===
+  Name:                    Intel(R) Xeon(R) Platinum 8480C
+  Marketing Name:          Intel(R) Xeon(R) Platinum 8480C
+  Vendor Name:             CPU
+  Node:                    0
+  Device Type:             CPU
+  Name:                    Intel(R) Xeon(R) Platinum 8480C
+  Marketing Name:          Intel(R) Xeon(R) Platinum 8480C
+  Vendor Name:             CPU
+  Node:                    1
+  Device Type:             CPU
+  Name:                    gfx942
+  Marketing Name:          AMD Instinct MI300X
+  Vendor Name:             AMD
+  Node:                    2
+  Device Type:             GPU
+  Wavefront Size:          64(0x40)
+      Name:                    amdgcn-amd-amdhsa--gfx942:sramecc+:xnack-
+      Name:                    amdgcn-amd-amdhsa--gfx9-4-generic:sramecc+:xnack-
+=== git ===
+ed70142704e1a6d5563fb53e1607e3a4b85d7111
+origin	https://github.com/amdpilot-org/FlyDSL.git (fetch)
+origin	https://github.com/amdpilot-org/FlyDSL.git (push)
+=== native modules ===
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/__init__.py
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-310-x86_64-linux-gnu.so
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFly.cpython-310-x86_64-linux-gnu.so
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFly.pyi
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFlyROCDL.cpython-310-x86_64-linux-gnu.so
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFlyROCDL.pyi
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsGPU.cpython-310-x86_64-linux-gnu.so
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsGPU.pyi
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsLLVM.cpython-310-x86_64-linux-gnu.so
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsLLVM.pyi
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/_mlirExecutionEngine.cpython-310-x86_64-linux-gnu.so
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/_mlirExecutionEngine.pyi
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/_mlirGPUPasses.cpython-310-x86_64-linux-gnu.so
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/_mlirRegisterEverything.cpython-310-x86_64-linux-gnu.so
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/libFlyPythonCAPI.so.24.0git
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/libMLIRPythonSupport-mlir.so
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/libmlir_c_runner_utils.so
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/libmlir_float16_utils.so.24.0git
+/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/_mlir_libs/libnanobind-mlir.so
