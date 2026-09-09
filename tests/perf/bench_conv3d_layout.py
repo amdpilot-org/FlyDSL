@@ -72,6 +72,25 @@ def _make_call(x, weight, layout, splitk):
     )
 
 
+def _print_summary(results):
+    print("\nConv3d layout benchmark summary")
+    print("=" * 96)
+    print(f"{'case':24s} {'mode':8s} {'NCDHW ms':>10s} {'NDHWC ms':>10s} {'speedup':>8s} {'transpose us':>14s}")
+    print("-" * 96)
+    for case in results:
+        for splitk_name in ("auto", "direct"):
+            default = case[f"{splitk_name}_default"]
+            channels_last = case[f"{splitk_name}_channels_last"]
+            speedup = default["ms"] / channels_last["ms"]
+            transpose = default["profile"]["transpose_us"]
+            print(
+                f"{case['name']:24s} {splitk_name:8s} "
+                f"{default['ms']:10.3f} {channels_last['ms']:10.3f} "
+                f"{speedup:7.3f}x {transpose:14.1f}"
+            )
+    print("=" * 96)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--quick", action="store_true", help="Use fewer warmup/timed iterations")
@@ -124,6 +143,7 @@ def main():
     if args.output:
         with open(args.output, "w") as handle:
             json.dump(payload, handle, indent=2)
+    _print_summary(results)
     print(json.dumps(payload, indent=2))
 
 
