@@ -1,0 +1,23 @@
+{
+  "issue_reported_vgpr": {
+    "raw_mfma": 24,
+    "fx_gemm_universal_copy32": 26
+  },
+  "installed_flydsl_0_3_1": {
+    "raw_mfma_vgpr": 24,
+    "raw_mfma_max_abs_error_vs_torch": 25.018585205078125,
+    "raw_mfma_numerically_valid": false,
+    "fx_gemm_universal_copy32_vgpr": 28,
+    "fx_gemm_max_abs_error_vs_torch": 0.0,
+    "fx_gemm_numerically_valid": true
+  },
+  "source_build_at_2c12064": {
+    "raw_mfma_vgpr": 24,
+    "raw_mfma_max_abs_error_vs_torch": 25.018585205078125,
+    "raw_mfma_numerically_valid": false,
+    "fx_gemm_universal_copy32_vgpr": 28,
+    "fx_gemm_max_abs_error_vs_torch": 0.0,
+    "fx_gemm_numerically_valid": true
+  },
+  "conclusion": "The attached raw-MFMA epilogue does not store the MFMA accumulator in the C layout used by the Torch reference. Its VGPR count is therefore not a valid like-for-like compiler-overhead measurement."
+}
