@@ -1,0 +1,92 @@
+{
+  "runs": [
+    {
+      "mode": "baseline",
+      "run": 1,
+      "process_wall_seconds": 3.033872,
+      "compile_and_launch_milliseconds": 500.184,
+      "gpu_object_count": 2,
+      "allclose": true
+    },
+    {
+      "mode": "baseline",
+      "run": 2,
+      "process_wall_seconds": 2.92555,
+      "compile_and_launch_milliseconds": 457.702,
+      "gpu_object_count": 2,
+      "allclose": true
+    },
+    {
+      "mode": "baseline",
+      "run": 3,
+      "process_wall_seconds": 2.907209,
+      "compile_and_launch_milliseconds": 446.857,
+      "gpu_object_count": 2,
+      "allclose": true
+    },
+    {
+      "mode": "candidate",
+      "run": 1,
+      "process_wall_seconds": 2.927628,
+      "compile_and_launch_milliseconds": 408.052,
+      "gpu_object_count": 1,
+      "allclose": true
+    },
+    {
+      "mode": "candidate",
+      "run": 2,
+      "process_wall_seconds": 2.741309,
+      "compile_and_launch_milliseconds": 380.66,
+      "gpu_object_count": 1,
+      "allclose": true
+    },
+    {
+      "mode": "candidate",
+      "run": 3,
+      "process_wall_seconds": 2.863693,
+      "compile_and_launch_milliseconds": 395.007,
+      "gpu_object_count": 1,
+      "allclose": true
+    }
+  ],
+  "baseline_process_wall_seconds": {
+    "values": [
+      3.033872,
+      2.92555,
+      2.907209
+    ],
+    "mean": 2.955544,
+    "min": 2.907209,
+    "max": 3.033872
+  },
+  "baseline_compile_and_launch_milliseconds": {
+    "values": [
+      500.184,
+      457.702,
+      446.857
+    ],
+    "mean": 468.248,
+    "min": 446.857,
+    "max": 500.184
+  },
+  "candidate_process_wall_seconds": {
+    "values": [
+      2.927628,
+      2.741309,
+      2.863693
+    ],
+    "mean": 2.84421,
+    "min": 2.741309,
+    "max": 2.927628
+  },
+  "candidate_compile_and_launch_milliseconds": {
+    "values": [
+      408.052,
+      380.66,
+      395.007
+    ],
+    "mean": 394.573,
+    "min": 380.66,
+    "max": 408.052
+  }
+}
