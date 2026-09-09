@@ -201,6 +201,44 @@ class TestCompileHintsPropagation:
         assert captured["hints"].get("fast_fp_math") is True
         assert captured["hints"].get("unsafe_fp_math") is True
 
+    def test_rocm_pipeline_owns_gpu_module_target(self):
+        """The pipeline's configured target must be the only gpu.binary object."""
+        from flydsl.compiler.backends import get_backend
+        from flydsl.runtime.device import get_warp_size
+
+        backend = get_backend()
+        assert backend.gpu_module_targets() == []
+
+        attach_target = next(
+            fragment
+            for fragment in backend.pipeline_fragments(compile_hints={})
+            if fragment.startswith("rocdl-attach-target")
+        )
+        assert "O=2" in attach_target
+        assert "abi=600" in attach_target
+        assert "correct-sqrt=true" in attach_target
+        assert "daz=false" in attach_target
+        assert "fast=false" in attach_target
+        assert "finite-only=false" in attach_target
+        assert "unsafe-math=false" in attach_target
+        assert f"wave64={str(get_warp_size(backend.target.arch) == 64).lower()}" in attach_target
+
+        _reset_jit_caches(_noop_launch)
+        default_exe = flyc.compile(_noop_launch)
+        default_exe()
+        default_artifact = next(iter(_noop_launch._mem_cache.values()))
+        default_binary = next(line for line in default_artifact._ir_text.splitlines() if "gpu.binary" in line)
+        assert default_binary.count("#gpu.object<") == 1
+
+        _reset_jit_caches(_noop_launch)
+        exe = flyc.compile[{"fast_fp_math": True, "unsafe_fp_math": True}](_noop_launch)
+        exe()
+
+        artifact = next(iter(_noop_launch._mem_cache.values()))
+        binary_line = next(line for line in artifact._ir_text.splitlines() if "gpu.binary" in line)
+        assert binary_line.count("#gpu.object<") == 1
+        assert "flags = {fast, unsafe_math}" in binary_line
+
     def test_llvm_options_in_compile_hints(self):
         """Verify llvm_options key is accepted and doesn't crash."""
         _reset_jit_caches(_noop_launch)
