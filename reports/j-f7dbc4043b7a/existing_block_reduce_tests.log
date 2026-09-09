@@ -1,0 +1,10 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.12, pytest-9.0.3, pluggy-1.6.0
+rootdir: /job/FlyDSL/tests
+configfile: pytest.ini
+collected 85 items
+
+tests/extension/coop/test_block_reduce.py .............................. [ 35%]
+.......................................................                  [100%]
+
+============================== 85 passed in 4.13s ==============================
