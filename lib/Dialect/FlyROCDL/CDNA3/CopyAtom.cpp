@@ -18,6 +18,19 @@ using namespace mlir::fly;
 
 namespace mlir::fly_rocdl {
 
+namespace {
+
+Value makeGlobalBufferRsrc(OpBuilder &builder, Location loc, Value base) {
+  MLIRContext *ctx = builder.getContext();
+  Value stride = arith::ConstantIntOp::create(builder, loc, 0, 16);
+  Value numRecords = arith::ConstantIntOp::create(builder, loc, 0xFFFFFFFF, 64);
+  Value flags = arith::ConstantIntOp::create(builder, loc, 0x27000, 32);
+  return ROCDL::MakeBufferRsrcOp::create(builder, loc, BufferFatPtr::getRsrcPtrType(ctx), base,
+                                         stride, numRecords, flags);
+}
+
+} // namespace
+
 std::optional<unsigned> CopyOpCDNA3BufferCopyType::getFieldIndex(AtomStateField field) {
   switch (field) {
   case AtomStateField::Soffset:
@@ -95,12 +108,23 @@ FailureOr<Value> CopyOpCDNA3BufferCopyType::emitAtomCallSSA(OpBuilder &builder, 
   auto srcMemTy = srcTyArg ? dyn_cast<fly::MemRefType>(srcTyArg) : fly::MemRefType();
   auto dstMemTy = dstTyArg ? dyn_cast<fly::MemRefType>(dstTyArg) : fly::MemRefType();
 
-  if (srcMemTy && isTargetAddressSpace<BufferDescAddressAttr>(srcMemTy.getAddressSpace())) {
+  bool srcIsBuffer =
+      srcMemTy && isTargetAddressSpace<BufferDescAddressAttr>(srcMemTy.getAddressSpace());
+  bool srcIsGlobal =
+      srcMemTy && isGenericAddressSpace<AddressSpace::Global>(srcMemTy.getAddressSpace());
+  if (srcMemTy && (srcIsBuffer || srcIsGlobal)) {
     // buffer -> reg
     Value soffset = computeSoffset(srcMemTy.getElemTy().getIntOrFloatBitWidth());
-    BufferFatPtr bp(srcMemTy.getPointerType(), src);
-    Value srcRsrc = bp.bufferRsrc(builder, loc);
-    Value srcOff = bp.swizzleByteOffset(builder, loc);
+    Value srcRsrc;
+    Value srcOff;
+    if (srcIsBuffer) {
+      BufferFatPtr bp(srcMemTy.getPointerType(), src);
+      srcRsrc = bp.bufferRsrc(builder, loc);
+      srcOff = bp.swizzleByteOffset(builder, loc);
+    } else {
+      srcRsrc = makeGlobalBufferRsrc(builder, loc, src);
+      srcOff = arith::ConstantIntOp::create(builder, loc, 0, 32);
+    }
 
     Value loaded = ROCDL::RawPtrBufferLoadOp::create(builder, loc, copyTy, srcRsrc, srcOff, soffset,
                                                      aux, noAttrs, noAttrs, noAttrs);
@@ -109,12 +133,23 @@ FailureOr<Value> CopyOpCDNA3BufferCopyType::emitAtomCallSSA(OpBuilder &builder, 
     return loaded;
   }
 
-  if (dstMemTy && isTargetAddressSpace<BufferDescAddressAttr>(dstMemTy.getAddressSpace())) {
+  bool dstIsBuffer =
+      dstMemTy && isTargetAddressSpace<BufferDescAddressAttr>(dstMemTy.getAddressSpace());
+  bool dstIsGlobal =
+      dstMemTy && isGenericAddressSpace<AddressSpace::Global>(dstMemTy.getAddressSpace());
+  if (dstMemTy && (dstIsBuffer || dstIsGlobal)) {
     // reg -> buffer
     Value soffset = computeSoffset(dstMemTy.getElemTy().getIntOrFloatBitWidth());
-    BufferFatPtr bp(dstMemTy.getPointerType(), dst);
-    Value dstRsrc = bp.bufferRsrc(builder, loc);
-    Value dstOff = bp.swizzleByteOffset(builder, loc);
+    Value dstRsrc;
+    Value dstOff;
+    if (dstIsBuffer) {
+      BufferFatPtr bp(dstMemTy.getPointerType(), dst);
+      dstRsrc = bp.bufferRsrc(builder, loc);
+      dstOff = bp.swizzleByteOffset(builder, loc);
+    } else {
+      dstRsrc = makeGlobalBufferRsrc(builder, loc, dst);
+      dstOff = arith::ConstantIntOp::create(builder, loc, 0, 32);
+    }
 
     Value stored = src;
     if (stored.getType() != copyTy)
@@ -162,13 +197,18 @@ LogicalResult CopyOpCDNA3BufferCopyType::emitAtomCall(OpBuilder &builder, Locati
   auto srcMemTy = cast<fly::MemRefType>(srcMemTyArg);
   auto dstMemTy = cast<fly::MemRefType>(dstMemTyArg);
 
+  bool srcIsRegister = isGenericAddressSpace<AddressSpace::Register>(srcMemTy.getAddressSpace());
+  bool dstIsRegister = isGenericAddressSpace<AddressSpace::Register>(dstMemTy.getAddressSpace());
   bool srcIsBuffer = isTargetAddressSpace<BufferDescAddressAttr>(srcMemTy.getAddressSpace());
   bool dstIsBuffer = isTargetAddressSpace<BufferDescAddressAttr>(dstMemTy.getAddressSpace());
+  bool srcIsGlobal = isGenericAddressSpace<AddressSpace::Global>(srcMemTy.getAddressSpace());
+  bool dstIsGlobal = isGenericAddressSpace<AddressSpace::Global>(dstMemTy.getAddressSpace());
 
-  if (srcIsBuffer == dstIsBuffer)
+  if (srcIsRegister == dstIsRegister || (!srcIsRegister && !srcIsBuffer && !srcIsGlobal) ||
+      (!dstIsRegister && !dstIsBuffer && !dstIsGlobal))
     return failure();
 
-  if (srcIsBuffer) {
+  if (!srcIsRegister) {
     auto dstSSATy = fly::RegMem2SSAType(dstMemTy, true);
     auto res = emitAtomCallSSA(builder, loc, dstSSATy, copyAtomTyArg, srcMemTyArg, Type{}, atomVal,
                                src, Value{});
