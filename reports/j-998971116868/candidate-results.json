@@ -1,0 +1,102 @@
+{
+  "environment": {
+    "flydsl_version": "0.3.3",
+    "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+    "hip_version": "7.2.26015-fc0010cf6a",
+    "gpu_name": "AMD Instinct MI300X",
+    "gpu_total_memory_bytes": 206141652992,
+    "gpu_count": 1,
+    "image_identity": "amdpilotv2/open-job-mi300:jit-config-readable-260909-banff5 sha256:39fe745feda79ecf4c17f4d806d8ef12150bef720f2f07f5c63a20b3ccfd63f1",
+    "source_commit": "2c12064fed5342d8af36bb72f6a4f583372a3aef",
+    "tool_paths": {
+      "hipcc": "/opt/rocm/bin/hipcc",
+      "rocminfo": "/opt/rocm/bin/rocminfo",
+      "rocm-smi": "/opt/rocm/bin/rocm-smi",
+      "clang++": null,
+      "lld": null,
+      "llvm-mc": null
+    },
+    "flydsl_python": "/job/flydsl-build-candidate/python_packages/flydsl/__init__.py",
+    "libFlyPythonCAPI": "/job/flydsl-build-candidate/python_packages/flydsl/_mlir/_mlir_libs/libFlyPythonCAPI.so.24.0git",
+    "libfly_jit_runtime": "/job/flydsl-build-candidate/python_packages/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so"
+  },
+  "shape": {
+    "M": 64,
+    "N": 16,
+    "K": 128
+  },
+  "results": {
+    "fp8_raw_mfma": {
+      "status": "passed",
+      "max_abs_error_vs_torch": 0.0,
+      "mean_abs_error_vs_torch": 0.0,
+      "vgpr_count": 26
+    },
+    "fp8_gemm_universal32": {
+      "status": "passed",
+      "max_abs_error_vs_torch": 0.0,
+      "mean_abs_error_vs_torch": 0.0,
+      "vgpr_count": 28
+    },
+    "fp8_gemm_buffer32": {
+      "status": "passed",
+      "max_abs_error_vs_torch": 0.0,
+      "mean_abs_error_vs_torch": 0.0,
+      "vgpr_count": 26
+    },
+    "fp8_gemm_buffer64": {
+      "status": "passed",
+      "max_abs_error_vs_torch": 0.0,
+      "mean_abs_error_vs_torch": 0.0,
+      "vgpr_count": 26
+    },
+    "fp8_gemm_global_buffer32": {
+      "status": "passed",
+      "max_abs_error_vs_torch": 0.0,
+      "mean_abs_error_vs_torch": 0.0,
+      "vgpr_count": 26
+    },
+    "fp8_gemm_global_buffer64": {
+      "status": "passed",
+      "max_abs_error_vs_torch": 0.0,
+      "mean_abs_error_vs_torch": 0.0,
+      "vgpr_count": 26
+    },
+    "bf16_raw_mfma": {
+      "status": "passed",
+      "max_abs_error_vs_torch": 3.814697265625e-06,
+      "mean_abs_error_vs_torch": 1.56724127009511e-07,
+      "vgpr_count": 34
+    },
+    "bf16_gemm_universal32": {
+      "status": "passed",
+      "max_abs_error_vs_torch": 1.9073486328125e-06,
+      "mean_abs_error_vs_torch": 1.0934309102594852e-07,
+      "vgpr_count": 40
+    },
+    "bf16_gemm_buffer64": {
+      "status": "passed",
+      "max_abs_error_vs_torch": 1.9073486328125e-06,
+      "mean_abs_error_vs_torch": 1.0934309102594852e-07,
+      "vgpr_count": 40
+    },
+    "fp16_raw_mfma": {
+      "status": "passed",
+      "max_abs_error_vs_torch": 3.814697265625e-06,
+      "mean_abs_error_vs_torch": 6.391674105543643e-07,
+      "vgpr_count": 34
+    },
+    "fp16_gemm_universal32": {
+      "status": "passed",
+      "max_abs_error_vs_torch": 3.814697265625e-06,
+      "mean_abs_error_vs_torch": 5.980145942885429e-07,
+      "vgpr_count": 40
+    },
+    "fp16_gemm_buffer64": {
+      "status": "passed",
+      "max_abs_error_vs_torch": 3.814697265625e-06,
+      "mean_abs_error_vs_torch": 5.980145942885429e-07,
+      "vgpr_count": 40
+    }
+  }
+}
