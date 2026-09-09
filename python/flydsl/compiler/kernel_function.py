@@ -481,7 +481,7 @@ class KernelFunction:
         self._original_func.__kwdefaults__ = func.__kwdefaults__
         self._original_func.__qualname__ = func.__qualname__
         self._original_func.__module__ = func.__module__
-        self._func = ASTRewriter.transform(func)
+        self._func = ASTRewriter.transform(func, function_kind="kernel")
         self._name = name
         self._known_block_size = _validate_known_block_size(known_block_size)
         self._kernel_name: Optional[str] = None

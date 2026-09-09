@@ -1,0 +1,35 @@
+Traceback (most recent call last):
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 257, in <module>
+    main()
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 242, in main
+    launcher = build(args.form)
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 122, in build
+    def kernel(Out: fx.Tensor):
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/kernel_function.py", line 692, in kernel
+    return KernelFunction(func, name=name, known_block_size=known_block_size)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/kernel_function.py", line 484, in __init__
+    self._func = ASTRewriter.transform(func, function_kind="kernel")
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 284, in transform
+    func_node = rewriter.visit(func_node)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 442, in visit_FunctionDef
+    node = self.generic_visit(node)
+  File "/usr/lib/python3.10/ast.py", line 494, in generic_visit
+    value = self.visit(value)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 541, in visit_For
+    self.generic_visit(node)
+  File "/usr/lib/python3.10/ast.py", line 494, in generic_visit
+    value = self.visit(value)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 518, in visit_Return
+    self._reject(
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 504, in _reject
+    raise SyntaxError(
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 5
+    return
+          ^
+SyntaxError: FlyDSL does not support early return inside dynamic control flow; restructure the kernel to yield carried state or use const_expr control flow

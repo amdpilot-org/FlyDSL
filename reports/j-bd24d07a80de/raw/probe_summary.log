@@ -1,0 +1,274 @@
+=== baseline_no_return: form=baseline_no_return flag=1 flag_const=1 expected=1 expected_status=0 ===
+RESULT form=baseline_no_return flag=1 flag_const=1 actual=1 expected=1
+EXIT_CODE=0
+=== top_level_return: form=top_level_return flag=1 flag_const=1 expected=1 expected_status=0 ===
+RESULT form=top_level_return flag=1 flag_const=1 actual=1 expected=1
+EXIT_CODE=0
+=== top_level_value_return: form=top_level_value_return flag=1 flag_const=1 expected=1 expected_status=1 ===
+Traceback (most recent call last):
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 257, in <module>
+    main()
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 242, in main
+    launcher = build(args.form)
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 48, in build
+    def kernel(Out: fx.Tensor):
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/kernel_function.py", line 692, in kernel
+    return KernelFunction(func, name=name, known_block_size=known_block_size)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/kernel_function.py", line 484, in __init__
+    self._func = ASTRewriter.transform(func, function_kind="kernel")
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 284, in transform
+    func_node = rewriter.visit(func_node)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 442, in visit_FunctionDef
+    node = self.generic_visit(node)
+  File "/usr/lib/python3.10/ast.py", line 494, in generic_visit
+    value = self.visit(value)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 516, in visit_Return
+    self._reject(node, "FlyDSL kernel return must not carry a value")
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 504, in _reject
+    raise SyntaxError(
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 3
+    return fx.Int32(1)
+        ^
+SyntaxError: FlyDSL kernel return must not carry a value
+EXIT_CODE=1
+=== dynamic_if_return_last: form=dynamic_if_return_last flag=1 flag_const=1 expected=1 expected_status=1 ===
+Traceback (most recent call last):
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 257, in <module>
+    main()
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 242, in main
+    launcher = build(args.form)
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 64, in build
+    def kernel(Out: fx.Tensor, flag: fx.Int32):
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/kernel_function.py", line 692, in kernel
+    return KernelFunction(func, name=name, known_block_size=known_block_size)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/kernel_function.py", line 484, in __init__
+    self._func = ASTRewriter.transform(func, function_kind="kernel")
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 284, in transform
+    func_node = rewriter.visit(func_node)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 442, in visit_FunctionDef
+    node = self.generic_visit(node)
+  File "/usr/lib/python3.10/ast.py", line 494, in generic_visit
+    value = self.visit(value)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 530, in visit_If
+    self.generic_visit(node)
+  File "/usr/lib/python3.10/ast.py", line 494, in generic_visit
+    value = self.visit(value)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 518, in visit_Return
+    self._reject(
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 504, in _reject
+    raise SyntaxError(
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 5
+    return
+          ^
+SyntaxError: FlyDSL does not support early return inside dynamic control flow; restructure the kernel to yield carried state or use const_expr control flow
+EXIT_CODE=1
+=== dynamic_if_return_after: form=dynamic_if_return_after flag=1 flag_const=1 expected=1 expected_status=1 ===
+Traceback (most recent call last):
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 257, in <module>
+    main()
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 242, in main
+    launcher = build(args.form)
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 83, in build
+    def kernel(Out: fx.Tensor, flag: fx.Int32):
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/kernel_function.py", line 692, in kernel
+    return KernelFunction(func, name=name, known_block_size=known_block_size)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/kernel_function.py", line 484, in __init__
+    self._func = ASTRewriter.transform(func, function_kind="kernel")
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 284, in transform
+    func_node = rewriter.visit(func_node)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 442, in visit_FunctionDef
+    node = self.generic_visit(node)
+  File "/usr/lib/python3.10/ast.py", line 494, in generic_visit
+    value = self.visit(value)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 530, in visit_If
+    self.generic_visit(node)
+  File "/usr/lib/python3.10/ast.py", line 494, in generic_visit
+    value = self.visit(value)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 518, in visit_Return
+    self._reject(
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 504, in _reject
+    raise SyntaxError(
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 5
+    return
+          ^
+SyntaxError: FlyDSL does not support early return inside dynamic control flow; restructure the kernel to yield carried state or use const_expr control flow
+EXIT_CODE=1
+=== dynamic_if_state_return: form=dynamic_if_state_return flag=1 flag_const=1 expected=1 expected_status=1 ===
+Traceback (most recent call last):
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 257, in <module>
+    main()
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 242, in main
+    launcher = build(args.form)
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 103, in build
+    def kernel(Out: fx.Tensor, flag: fx.Int32):
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/kernel_function.py", line 692, in kernel
+    return KernelFunction(func, name=name, known_block_size=known_block_size)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/kernel_function.py", line 484, in __init__
+    self._func = ASTRewriter.transform(func, function_kind="kernel")
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 284, in transform
+    func_node = rewriter.visit(func_node)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 442, in visit_FunctionDef
+    node = self.generic_visit(node)
+  File "/usr/lib/python3.10/ast.py", line 494, in generic_visit
+    value = self.visit(value)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 530, in visit_If
+    self.generic_visit(node)
+  File "/usr/lib/python3.10/ast.py", line 494, in generic_visit
+    value = self.visit(value)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 518, in visit_Return
+    self._reject(
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 504, in _reject
+    raise SyntaxError(
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 6
+    return
+          ^
+SyntaxError: FlyDSL does not support early return inside dynamic control flow; restructure the kernel to yield carried state or use const_expr control flow
+EXIT_CODE=1
+=== for_return_after: form=for_return_after flag=1 flag_const=1 expected=10 expected_status=1 ===
+Traceback (most recent call last):
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 257, in <module>
+    main()
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 242, in main
+    launcher = build(args.form)
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 122, in build
+    def kernel(Out: fx.Tensor):
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/kernel_function.py", line 692, in kernel
+    return KernelFunction(func, name=name, known_block_size=known_block_size)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/kernel_function.py", line 484, in __init__
+    self._func = ASTRewriter.transform(func, function_kind="kernel")
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 284, in transform
+    func_node = rewriter.visit(func_node)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 442, in visit_FunctionDef
+    node = self.generic_visit(node)
+  File "/usr/lib/python3.10/ast.py", line 494, in generic_visit
+    value = self.visit(value)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 541, in visit_For
+    self.generic_visit(node)
+  File "/usr/lib/python3.10/ast.py", line 494, in generic_visit
+    value = self.visit(value)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 518, in visit_Return
+    self._reject(
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 504, in _reject
+    raise SyntaxError(
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 5
+    return
+          ^
+SyntaxError: FlyDSL does not support early return inside dynamic control flow; restructure the kernel to yield carried state or use const_expr control flow
+EXIT_CODE=1
+=== while_return_after: form=while_return_after flag=1 flag_const=1 expected=2 expected_status=1 ===
+Traceback (most recent call last):
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 257, in <module>
+    main()
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 242, in main
+    launcher = build(args.form)
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 140, in build
+    def kernel(Out: fx.Tensor):
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/kernel_function.py", line 692, in kernel
+    return KernelFunction(func, name=name, known_block_size=known_block_size)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/kernel_function.py", line 484, in __init__
+    self._func = ASTRewriter.transform(func, function_kind="kernel")
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 284, in transform
+    func_node = rewriter.visit(func_node)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 442, in visit_FunctionDef
+    node = self.generic_visit(node)
+  File "/usr/lib/python3.10/ast.py", line 494, in generic_visit
+    value = self.visit(value)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 552, in visit_While
+    self.generic_visit(node)
+  File "/usr/lib/python3.10/ast.py", line 494, in generic_visit
+    value = self.visit(value)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 518, in visit_Return
+    self._reject(
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 504, in _reject
+    raise SyntaxError(
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 6
+    return
+          ^
+SyntaxError: FlyDSL does not support early return inside dynamic control flow; restructure the kernel to yield carried state or use const_expr control flow
+EXIT_CODE=1
+=== nested_if_return_after: form=nested_if_return_after flag=1 flag_const=1 expected=1 expected_status=1 ===
+Traceback (most recent call last):
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 257, in <module>
+    main()
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 242, in main
+    launcher = build(args.form)
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 159, in build
+    def kernel(Out: fx.Tensor, flag: fx.Int32):
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/kernel_function.py", line 692, in kernel
+    return KernelFunction(func, name=name, known_block_size=known_block_size)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/kernel_function.py", line 484, in __init__
+    self._func = ASTRewriter.transform(func, function_kind="kernel")
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 284, in transform
+    func_node = rewriter.visit(func_node)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 442, in visit_FunctionDef
+    node = self.generic_visit(node)
+  File "/usr/lib/python3.10/ast.py", line 494, in generic_visit
+    value = self.visit(value)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 530, in visit_If
+    self.generic_visit(node)
+  File "/usr/lib/python3.10/ast.py", line 494, in generic_visit
+    value = self.visit(value)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 530, in visit_If
+    self.generic_visit(node)
+  File "/usr/lib/python3.10/ast.py", line 494, in generic_visit
+    value = self.visit(value)
+  File "/usr/lib/python3.10/ast.py", line 418, in visit
+    return visitor(node)
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 518, in visit_Return
+    self._reject(
+  File "/job/build-cache/flydsl-build/python_packages/flydsl/compiler/ast_rewriter.py", line 504, in _reject
+    raise SyntaxError(
+  File "/job/work/FlyDSL/reports/j-bd24d07a80de/probe_early_return.py", line 6
+    return
+          ^
+SyntaxError: FlyDSL does not support early return inside dynamic control flow; restructure the kernel to yield carried state or use const_expr control flow
+EXIT_CODE=1
+=== constexpr_if_return_after_true: form=constexpr_if_return_after flag=1 flag_const=1 expected=1 expected_status=0 ===
+RESULT form=constexpr_if_return_after flag=1 flag_const=1 actual=1 expected=1
+EXIT_CODE=0
+=== constexpr_if_return_after_false: form=constexpr_if_return_after flag=0 flag_const=0 expected=2 expected_status=0 ===
+RESULT form=constexpr_if_return_after flag=0 flag_const=0 actual=2 expected=2
+EXIT_CODE=0
+=== constexpr_for_return_after: form=constexpr_for_return_after flag=1 flag_const=1 expected=10 expected_status=0 ===
+RESULT form=constexpr_for_return_after flag=1 flag_const=1 actual=10 expected=10
+EXIT_CODE=0
