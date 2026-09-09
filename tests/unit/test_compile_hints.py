@@ -207,7 +207,6 @@ class TestCompileHintsPropagation:
         from flydsl.runtime.device import get_warp_size
 
         backend = get_backend()
-        assert backend.gpu_module_targets() == []
 
         attach_target = next(
             fragment

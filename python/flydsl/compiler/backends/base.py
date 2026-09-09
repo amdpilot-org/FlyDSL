@@ -87,14 +87,6 @@ class BaseBackend(metaclass=ABCMeta):
         """
         raise NotImplementedError(f"{type(self).__name__} does not support external LLVM codegen")
 
-    def gpu_module_targets(self) -> List[str]:
-        """MLIR target attributes for ``create_gpu_module(..., targets=...)``.
-
-        A backend may return an empty list when its pipeline owns target
-        attachment and compile options.
-        """
-        return []
-
     # -- cache / fingerprint ---------------------------------------------
 
     def hash(self) -> str:
