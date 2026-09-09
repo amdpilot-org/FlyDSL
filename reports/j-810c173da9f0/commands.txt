@@ -1,0 +1,64 @@
+Environment and clone:
+  date -u +%Y-%m-%dT%H:%M:%SZ
+  rocm-smi --showproductname --csv
+  /opt/venv/bin/python --version
+  /opt/venv/bin/python -c 'import torch; print(torch.__version__); print(torch.version.hip); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else "no-gpu")'
+  git --version
+  gh --version
+  command -v hipcc
+  command -v ninja
+  git clone --depth 50 https://github.com/amdpilot-org/FlyDSL.git FlyDSL
+  git rev-parse HEAD
+  git branch --show-current
+  git remote -v
+  git status --short
+
+Read-only issue and candidate context:
+  gh issue view 324 --repo amdpilot-org/FlyDSL --json number,title,state,body,comments,url
+  curl -L --fail --max-time 20 -sS -H 'Accept: application/vnd.github+json' https://api.github.com/repos/ROCm/FlyDSL/issues/688
+  curl -L --fail --max-time 20 -sS -H 'Accept: application/vnd.github+json' https://api.github.com/repos/ROCm/FlyDSL/issues/688/comments
+  curl -L --fail --max-time 20 -sS -H 'Accept: application/vnd.github+json' https://api.github.com/repos/ROCm/FlyDSL/issues/688/timeline
+  gh pr list --repo amdpilot-org/FlyDSL --state all --search '324 OR 688 OR control flow OR AST' --json number,title,state,headRefName,baseRefName,url --limit 30
+  curl -L --fail --max-time 20 -sS -H 'Accept: application/vnd.github+json' https://api.github.com/repos/ROCm/FlyDSL/pulls/346
+  curl -L --fail --max-time 20 -sS https://github.com/ROCm/FlyDSL/pull/1003
+  git fetch --unshallow origin
+  git fetch https://github.com/ROCm/FlyDSL.git pull/1003/head:candidate-pr-1003
+  git log --all --oneline -S'scf_if_dispatch' -- python/flydsl/compiler/ast_rewriter.py
+  git blame -L 670,760 -- python/flydsl/compiler/ast_rewriter.py
+  git show -s --format='%H%n%P%n%an <%ae>%n%ad%n%s%n%b' 01d63f7
+
+Source/native setup:
+  /opt/venv/bin/python -m pip index versions flydsl
+  /opt/venv/bin/python -m pip download flydsl==0.3.2 --no-deps --no-build-isolation -d /tmp/flydsl-wheel-032-download
+  unzip /tmp/flydsl-wheel-032-download/flydsl-0.3.2-*.whl -d /tmp/flydsl-wheel-032-extract
+  ln -sfn /tmp/flydsl-wheel-032-extract/flydsl/_mlir python/flydsl/_mlir
+
+Validation:
+  FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j810c-cache \
+    /opt/venv/bin/python -m pytest tests/system/test_if_liveout_minimal.py -vv --tb=long
+  FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j810c-installed-cache \
+    /opt/venv/bin/python -m pytest tests/system/test_if_liveout_minimal.py -vv --tb=short
+  FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j810c-cache \
+    /opt/venv/bin/python -m pytest \
+      tests/system/test_if_liveout_minimal.py \
+      tests/system/test_ifexp_e2e.py \
+      tests/system/test_while_e2e.py \
+      tests/system/test_for_auto_iter_args_e2e.py \
+      tests/system/test_for_vector_carry_shape_e2e.py \
+      tests/system/test_dynamic_controlflow_list_carry_e2e.py \
+      tests/system/test_inline_compare_scf_if.py \
+      -vv --tb=short
+  FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j810c-cache \
+    /opt/venv/bin/python -m pytest tests/unit/test_dynamic_controlflow_list_carry.py -vv --tb=short
+  FLYDSL_NATIVE_MLIR_PACKAGE=/tmp/flydsl-wheel-032-extract/flydsl \
+    LD_LIBRARY_PATH=/tmp/flydsl-wheel-032-extract/flydsl/_mlir/_mlir_libs \
+    FLYDSL_SOURCE_COMMIT=$(git rev-parse HEAD) \
+    FLYDSL_GPU_ARCH=gfx942 \
+    FLYDSL_IMAGE_ID=sha256:dfc9419089c338b5712da4841768b38b1ab79f3da41f8c58c3cd4dfcc1147ff1 \
+    FLYDSL_RUNTIME_ENABLE_CACHE=0 \
+    FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j810c-cache \
+    /opt/venv/bin/python reports/j-810c173da9f0/control_flow_matrix.py \
+      --output reports/j-810c173da9f0/results.json
+
+Static checks:
+  /opt/venv/bin/python -m py_compile reports/j-810c173da9f0/control_flow_matrix.py
