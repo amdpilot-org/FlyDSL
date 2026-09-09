@@ -240,6 +240,27 @@ class TestCompileHintsPropagation:
         assert "fast" in binary_line
         assert "unsafe_math" in binary_line
 
+    def test_create_gpu_module_preserves_multiple_targets(self):
+        """Intentional multi-target construction remains supported."""
+        from flydsl._mlir import ir
+        from flydsl.compiler.kernel_function import create_gpu_module
+
+        with ir.Context() as ctx:
+            ctx.allow_unregistered_dialects = True
+            with ir.Location.unknown(ctx):
+                module = ir.Module.create()
+                with ir.InsertionPoint(module.body):
+                    create_gpu_module(
+                        "multi",
+                        targets=[
+                            '#rocdl.target<chip = "gfx942">',
+                            '#rocdl.target<chip = "gfx950">',
+                        ],
+                    )
+                ir_text = str(module)
+
+        assert ir_text.count("#rocdl.target") == 2
+
     def test_llvm_options_in_compile_hints(self):
         """Verify llvm_options key is accepted and doesn't crash."""
         _reset_jit_caches(_noop_launch)
