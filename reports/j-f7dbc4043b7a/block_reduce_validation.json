@@ -1,0 +1,371 @@
+{
+  "environment": {
+    "source_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+    "source_version": "0.3.3",
+    "source_path": "/job/FlyDSL",
+    "native_flydsl_path": "/job/task-artifacts/wheel-0.3.2/flydsl",
+    "native_version": "0.3.2",
+    "native_library_path": "/job/task-artifacts/wheel-0.3.2/flydsl/_mlir/_mlir_libs",
+    "python": "/opt/venv/bin/python",
+    "python_version": "3.10.12",
+    "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+    "torch_path": "/opt/venv/lib/python3.10/site-packages/torch/__init__.py",
+    "hip": "7.2.26015-fc0010cf6a",
+    "gpu": {
+      "name": "AMD Instinct MI300X",
+      "capability": "9.4",
+      "device": 0
+    },
+    "hipcc": "/opt/rocm/bin/hipcc",
+    "hipcc_version": "HIP version: 7.2.26015-fc0010cf6a\nAMD clang version 22.0.0git (https://github.com/RadeonOpenCompute/llvm-project roc-7.2.0 26014 7b800a19466229b8479a78de19143dc33c3ab9b5)\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /opt/rocm-7.2.0/lib/llvm/bin\nConfiguration file: /opt/rocm-7.2.0/lib/llvm/bin/clang++.cfg"
+  },
+  "tolerance": {
+    "float": {
+      "rtol": 2e-05,
+      "atol": 1e-05
+    },
+    "integer": "exact wraparound"
+  },
+  "summary": {
+    "passed": 49,
+    "failed": 0
+  },
+  "validation_elapsed_seconds": 2.0392573103308678,
+  "results": [
+    {
+      "case": "wave64-semantics",
+      "passed": true,
+      "target_wave": 64,
+      "specializations": {
+        "WARP_REDUCTIONS/block-32": {
+          "warp_threads": 32,
+          "num_warps": 1,
+          "passed": true
+        },
+        "WARP_REDUCTIONS/block-64": {
+          "warp_threads": 64,
+          "num_warps": 1,
+          "passed": true
+        },
+        "WARP_REDUCTIONS/block-128": {
+          "warp_threads": 64,
+          "num_warps": 2,
+          "passed": true
+        },
+        "WARP_REDUCTIONS/block-256": {
+          "warp_threads": 64,
+          "num_warps": 4,
+          "passed": true
+        },
+        "RAKING/block-32": {
+          "warp_threads": 32,
+          "num_warps": 1,
+          "passed": true
+        },
+        "RAKING/block-64": {
+          "warp_threads": 64,
+          "num_warps": 1,
+          "passed": true
+        },
+        "RAKING/block-128": {
+          "warp_threads": 64,
+          "num_warps": 2,
+          "passed": true
+        },
+        "RAKING/block-256": {
+          "warp_threads": 64,
+          "num_warps": 4,
+          "passed": true
+        }
+      }
+    },
+    {
+      "case": "full-tile/WARP_REDUCTIONS/block-64",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "full-tile/WARP_REDUCTIONS/block-128",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "full-tile/WARP_REDUCTIONS/block-256",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "full-tile/WARP_REDUCTIONS/block-1024",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "full-tile/RAKING/block-64",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "full-tile/RAKING/block-128",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "full-tile/RAKING/block-256",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "full-tile/RAKING/block-1024",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "tail/WARP_REDUCTIONS/block-64/length-65",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "tail/WARP_REDUCTIONS/block-64/length-133",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "tail/WARP_REDUCTIONS/block-64/length-1000",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "tail/WARP_REDUCTIONS/block-64/length-4097",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "tail/WARP_REDUCTIONS/block-256/length-65",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "tail/WARP_REDUCTIONS/block-256/length-133",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "tail/WARP_REDUCTIONS/block-256/length-1000",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "tail/WARP_REDUCTIONS/block-256/length-4097",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "tail/RAKING/block-64/length-65",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "tail/RAKING/block-64/length-133",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "tail/RAKING/block-64/length-1000",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "tail/RAKING/block-64/length-4097",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "tail/RAKING/block-256/length-65",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "tail/RAKING/block-256/length-133",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "tail/RAKING/block-256/length-1000",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "tail/RAKING/block-256/length-4097",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "adversarial-finite/WARP_REDUCTIONS/block-64",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "adversarial-wrap/WARP_REDUCTIONS/block-64",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "adversarial-finite/WARP_REDUCTIONS/block-256",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "adversarial-wrap/WARP_REDUCTIONS/block-256",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "adversarial-finite/RAKING/block-64",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "adversarial-wrap/RAKING/block-64",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "adversarial-finite/RAKING/block-256",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "adversarial-wrap/RAKING/block-256",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "barrier-reuse-a/WARP_REDUCTIONS/block-64",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "barrier-reuse-b/WARP_REDUCTIONS/block-64",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "barrier-reuse-a/WARP_REDUCTIONS/block-256",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "barrier-reuse-b/WARP_REDUCTIONS/block-256",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "barrier-reuse-a/RAKING/block-64",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "barrier-reuse-b/RAKING/block-64",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "barrier-reuse-a/RAKING/block-256",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "barrier-reuse-b/RAKING/block-256",
+      "passed": true,
+      "max_abs": 0.0,
+      "max_rel": 0.0
+    },
+    {
+      "case": "timing/WARP_REDUCTIONS/block-64",
+      "passed": true,
+      "iterations": 100,
+      "mean_us": 59.494690895080566
+    },
+    {
+      "case": "timing/WARP_REDUCTIONS/block-128",
+      "passed": true,
+      "iterations": 100,
+      "mean_us": 59.03323173522949
+    },
+    {
+      "case": "timing/WARP_REDUCTIONS/block-256",
+      "passed": true,
+      "iterations": 100,
+      "mean_us": 59.7753381729126
+    },
+    {
+      "case": "timing/WARP_REDUCTIONS/block-1024",
+      "passed": true,
+      "iterations": 100,
+      "mean_us": 59.06290054321289
+    },
+    {
+      "case": "timing/RAKING/block-64",
+      "passed": true,
+      "iterations": 100,
+      "mean_us": 57.878971099853516
+    },
+    {
+      "case": "timing/RAKING/block-128",
+      "passed": true,
+      "iterations": 100,
+      "mean_us": 61.454410552978516
+    },
+    {
+      "case": "timing/RAKING/block-256",
+      "passed": true,
+      "iterations": 100,
+      "mean_us": 57.0057487487793
+    },
+    {
+      "case": "timing/RAKING/block-1024",
+      "passed": true,
+      "iterations": 100,
+      "mean_us": 58.335628509521484
+    }
+  ]
+}

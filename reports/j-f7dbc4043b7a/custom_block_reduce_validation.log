@@ -1,0 +1,75 @@
+environment:
+{
+  "source_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+  "source_version": "0.3.3",
+  "source_path": "/job/FlyDSL",
+  "native_flydsl_path": "/job/task-artifacts/wheel-0.3.2/flydsl",
+  "native_version": "0.3.2",
+  "native_library_path": "/job/task-artifacts/wheel-0.3.2/flydsl/_mlir/_mlir_libs",
+  "python": "/opt/venv/bin/python",
+  "python_version": "3.10.12",
+  "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+  "torch_path": "/opt/venv/lib/python3.10/site-packages/torch/__init__.py",
+  "hip": "7.2.26015-fc0010cf6a",
+  "gpu": {
+    "name": "AMD Instinct MI300X",
+    "capability": "9.4",
+    "device": 0
+  },
+  "hipcc": "/opt/rocm/bin/hipcc",
+  "hipcc_version": "HIP version: 7.2.26015-fc0010cf6a\nAMD clang version 22.0.0git (https://github.com/RadeonOpenCompute/llvm-project roc-7.2.0 26014 7b800a19466229b8479a78de19143dc33c3ab9b5)\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /opt/rocm-7.2.0/lib/llvm/bin\nConfiguration file: /opt/rocm-7.2.0/lib/llvm/bin/clang++.cfg"
+}
+
+validation:
+wave64-semantics target=64 PASS
+full-tile/WARP_REDUCTIONS/block-64                   PASS abs=0 rel=0
+full-tile/WARP_REDUCTIONS/block-128                  PASS abs=0 rel=0
+full-tile/WARP_REDUCTIONS/block-256                  PASS abs=0 rel=0
+full-tile/WARP_REDUCTIONS/block-1024                 PASS abs=0 rel=0
+full-tile/RAKING/block-64                            PASS abs=0 rel=0
+full-tile/RAKING/block-128                           PASS abs=0 rel=0
+full-tile/RAKING/block-256                           PASS abs=0 rel=0
+full-tile/RAKING/block-1024                          PASS abs=0 rel=0
+tail/WARP_REDUCTIONS/block-64/length-65              PASS abs=0 rel=0
+tail/WARP_REDUCTIONS/block-64/length-133             PASS abs=0 rel=0
+tail/WARP_REDUCTIONS/block-64/length-1000            PASS abs=0 rel=0
+tail/WARP_REDUCTIONS/block-64/length-4097            PASS abs=0 rel=0
+tail/WARP_REDUCTIONS/block-256/length-65             PASS abs=0 rel=0
+tail/WARP_REDUCTIONS/block-256/length-133            PASS abs=0 rel=0
+tail/WARP_REDUCTIONS/block-256/length-1000           PASS abs=0 rel=0
+tail/WARP_REDUCTIONS/block-256/length-4097           PASS abs=0 rel=0
+tail/RAKING/block-64/length-65                       PASS abs=0 rel=0
+tail/RAKING/block-64/length-133                      PASS abs=0 rel=0
+tail/RAKING/block-64/length-1000                     PASS abs=0 rel=0
+tail/RAKING/block-64/length-4097                     PASS abs=0 rel=0
+tail/RAKING/block-256/length-65                      PASS abs=0 rel=0
+tail/RAKING/block-256/length-133                     PASS abs=0 rel=0
+tail/RAKING/block-256/length-1000                    PASS abs=0 rel=0
+tail/RAKING/block-256/length-4097                    PASS abs=0 rel=0
+adversarial-finite/WARP_REDUCTIONS/block-64          PASS abs=0 rel=0
+adversarial-wrap/WARP_REDUCTIONS/block-64            PASS abs=0 rel=0
+adversarial-finite/WARP_REDUCTIONS/block-256         PASS abs=0 rel=0
+adversarial-wrap/WARP_REDUCTIONS/block-256           PASS abs=0 rel=0
+adversarial-finite/RAKING/block-64                   PASS abs=0 rel=0
+adversarial-wrap/RAKING/block-64                     PASS abs=0 rel=0
+adversarial-finite/RAKING/block-256                  PASS abs=0 rel=0
+adversarial-wrap/RAKING/block-256                    PASS abs=0 rel=0
+barrier-reuse-a/WARP_REDUCTIONS/block-64             PASS abs=0 rel=0
+barrier-reuse-b/WARP_REDUCTIONS/block-64             PASS abs=0 rel=0
+barrier-reuse-a/WARP_REDUCTIONS/block-256            PASS abs=0 rel=0
+barrier-reuse-b/WARP_REDUCTIONS/block-256            PASS abs=0 rel=0
+barrier-reuse-a/RAKING/block-64                      PASS abs=0 rel=0
+barrier-reuse-b/RAKING/block-64                      PASS abs=0 rel=0
+barrier-reuse-a/RAKING/block-256                     PASS abs=0 rel=0
+barrier-reuse-b/RAKING/block-256                     PASS abs=0 rel=0
+timing/WARP_REDUCTIONS/block-64                      59.495 us/launch
+timing/WARP_REDUCTIONS/block-128                     59.033 us/launch
+timing/WARP_REDUCTIONS/block-256                     59.775 us/launch
+timing/WARP_REDUCTIONS/block-1024                    59.063 us/launch
+timing/RAKING/block-64                               57.879 us/launch
+timing/RAKING/block-128                              61.454 us/launch
+timing/RAKING/block-256                              57.006 us/launch
+timing/RAKING/block-1024                             58.336 us/launch
+
+summary: 49 passed, 0 failed
+raw results: reports/j-f7dbc4043b7a/block_reduce_validation.json
