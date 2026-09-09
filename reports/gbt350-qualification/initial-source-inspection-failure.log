@@ -1,0 +1,59 @@
+image_declaration: Ubuntu 24.04.3 LTS
+python_version: 3.12.3
+torch_version: 2.9.1+rocm7.2.0.git7e1940d4
+torch_hip_version: 7.2.26015-fc0010cf6a
+triton_version: 3.5.1+rocm7.2.0.gita272dfa8
+available_gpu_count: 1
+current_device: 0
+gpu_name: AMD Instinct MI350X
+gpu_capability: (9, 5)
+rocm_smi_command: rocm-smi --showproductname --showid
+
+
+============================ ROCm System Management Interface ============================
+=========================================== ID ===========================================
+GPU[0]		: Device Name: 		AMD Instinct MI350X
+GPU[0]		: Device ID: 		0x75a0
+GPU[0]		: Device Rev: 		0x00
+GPU[0]		: Subsystem ID: 	0x75a0
+GPU[0]		: GUID: 		11995
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI350X
+GPU[0]		: Card Model: 		0x75a0
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		N/A
+GPU[0]		: Subsystem ID: 	0x75a0
+GPU[0]		: Device Rev: 		0x00
+GPU[0]		: Node ID: 		6
+GPU[0]		: GUID: 		11995
+GPU[0]		: GFX Version: 		gfx950
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+rocm_smi_stderr: WARNING: AMD GPU device(s) is/are in a low-power state. Check power control/runtime_status
+Traceback (most recent call last):
+  File "/job/repo/reports/gbt350-qualification/qualify.py", line 119, in <module>
+    main()
+  File "/job/repo/reports/gbt350-qualification/qualify.py", line 113, in main
+    verify_triton_vector_add()
+  File "/job/repo/reports/gbt350-qualification/qualify.py", line 71, in verify_triton_vector_add
+    kernel_source = inspect.getsource(vector_add_kernel)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/inspect.py", line 1278, in getsource
+    lines, lnum = getsourcelines(object)
+                  ^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/inspect.py", line 1260, in getsourcelines
+    lines, lnum = findsource(object)
+                  ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/inspect.py", line 1071, in findsource
+    file = getsourcefile(object)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/inspect.py", line 948, in getsourcefile
+    filename = getfile(object)
+               ^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/package/package_importer.py", line 730, in _patched_getfile
+    return _orig_getfile(object)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/inspect.py", line 928, in getfile
+    raise TypeError('module, class, method, function, traceback, frame, or '
+TypeError: module, class, method, function, traceback, frame, or code object was expected, got JITFunction
