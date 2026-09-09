@@ -1,0 +1,332 @@
+{
+  "cache": {
+    "autotune": "/job/_cache/flydsl-autotune-validation-final-20260909T214117Z/autotune",
+    "root": "/job/_cache/flydsl-autotune-validation-final-20260909T214117Z",
+    "runtime": "/job/_cache/flydsl-autotune-validation-final-20260909T214117Z/runtime"
+  },
+  "flydsl": {
+    "native_bindings_path": "/opt/venv/lib/python3.10/site-packages/flydsl/_mlir/ir.py",
+    "python_path": "/opt/venv/lib/python3.10/site-packages/flydsl/__init__.py",
+    "version": "0.3.1"
+  },
+  "gpu": {
+    "arch": "gfx942",
+    "compute_capability": [
+      9,
+      4
+    ],
+    "compute_units": 304,
+    "device_count": 1,
+    "name": "AMD Instinct MI300X"
+  },
+  "pass": true,
+  "phases": {
+    "cache_hit": {
+      "cache_entry_count_after": 1,
+      "cache_entry_count_before": 1,
+      "expected": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "observation_count_after": 6,
+      "observation_count_before": 6,
+      "output": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "output_exact": true,
+      "pass": true,
+      "searched": false,
+      "selected_config": {
+        "block_dim": 128
+      },
+      "stdout": "",
+      "value": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ]
+    },
+    "declared_key_axis": {
+      "cache_entry_count": 2,
+      "expected": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "mode_3_config": {
+        "block_dim": 128
+      },
+      "observation_count": 12,
+      "output": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "output_exact": true,
+      "pass": true,
+      "separate_mode_5_searched": true,
+      "stdout": "[autotune] tuning 2 configs...\n  [1/2] Config(block_dim=64) -> 0.287 ms\n  [2/2] Config(block_dim=128) -> 0.351 ms\n[autotune] best: Config(block_dim=64) (0.287 ms)\n",
+      "value": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ]
+    },
+    "default_no_search": {
+      "default_config": {
+        "block_dim": 64
+      },
+      "expected": [
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ],
+      "observation_count": 0,
+      "output": [
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ],
+      "output_exact": true,
+      "pass": true,
+      "searched": false,
+      "stdout": "",
+      "value": [
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ]
+    },
+    "forced_search_final_execution": {
+      "candidate_count": 2,
+      "expected": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "expected_kernel_observations": 6,
+      "final_execution_exact": true,
+      "final_output": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "final_value": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "kernel_observation_count": 6,
+      "observations": [
+        {
+          "output": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "value": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        },
+        {
+          "output": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "value": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        },
+        {
+          "output": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "value": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        },
+        {
+          "output": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "value": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        },
+        {
+          "output": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "value": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        },
+        {
+          "output": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "value": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        }
+      ],
+      "pass": true,
+      "rep": 2,
+      "search_repetitions_exact": true,
+      "selected_config": {
+        "block_dim": 128
+      },
+      "stdout": "[autotune] tuning 2 configs...\n  [1/2] Config(block_dim=64) -> 0.409 ms\n  [2/2] Config(block_dim=128) -> 0.341 ms\n[autotune] best: Config(block_dim=128) (0.341 ms)\n",
+      "warmup": 1
+    }
+  },
+  "torch": {
+    "hip": "7.2.26015-fc0010cf6a",
+    "path": "/opt/venv/lib/python3.10/site-packages/torch/__init__.py",
+    "version": "2.9.1+rocm7.2.0.git7e1940d4"
+  }
+}

@@ -1,0 +1,22 @@
+Command:
+  PYTHONPATH=/job/FlyDSL/python /opt/venv/bin/python \
+    reports/j-0e184c94544b/validate_autotune_mutating_gfx942.py \
+    --cache-root /job/_cache/flydsl-autotune-source-probe-20260909T214110Z \
+    --output /job/_cache/source-probe-results.json
+
+Source Python package: FlyDSL 0.3.3 at /job/FlyDSL/python/flydsl
+Qualified installed package: FlyDSL 0.3.1 at /opt/venv/lib/python3.10/site-packages/flydsl
+Qualified native bindings: /opt/venv/lib/python3.10/site-packages/flydsl/_mlir
+
+Exit status: 1
+
+Both tiny candidates failed during source-tree compilation with:
+
+  MLIR Textual PassPipeline Parser:1:236: error:
+  'convert-rocdl-fastmath-ops' does not refer to a registered pass or pass pipeline
+
+The source tree requests that pass, but the qualified image's FlyDSL 0.3.1 native
+bindings do not register it. No source-native MLIR build or MLIR install prefix is
+present in the image, so the source 0.3.3 tree could not execute on the GPU with
+the preserved qualified stack. The GPU harness therefore reports the qualified
+installed 0.3.1 result, not a source 0.3.3 GPU result.
