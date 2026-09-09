@@ -1,0 +1,453 @@
+{
+  "gpu": "AMD Instinct MI350X",
+  "capability": [
+    9,
+    5
+  ],
+  "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+  "torch_hip": "7.2.26015-fc0010cf6a",
+  "results": [
+    {
+      "family": "float32",
+      "case": "finite_ascending",
+      "operation": "max",
+      "lhs_bits": "0xc0400000",
+      "rhs_bits": "0x40800000",
+      "expected": "0x40800000",
+      "actual": "0x40800000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "finite_ascending",
+      "operation": "min",
+      "lhs_bits": "0xc0400000",
+      "rhs_bits": "0x40800000",
+      "expected": "0xc0400000",
+      "actual": "0xc0400000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "finite_ascending",
+      "operation": "maxnumf",
+      "lhs_bits": "0xc0400000",
+      "rhs_bits": "0x40800000",
+      "expected": "0x40800000",
+      "actual": "0x40800000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "finite_ascending",
+      "operation": "minnumf",
+      "lhs_bits": "0xc0400000",
+      "rhs_bits": "0x40800000",
+      "expected": "0xc0400000",
+      "actual": "0xc0400000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "finite_ascending",
+      "operation": "maximumf",
+      "lhs_bits": "0xc0400000",
+      "rhs_bits": "0x40800000",
+      "expected": "0x40800000",
+      "actual": "0x40800000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "finite_ascending",
+      "operation": "minimumf",
+      "lhs_bits": "0xc0400000",
+      "rhs_bits": "0x40800000",
+      "expected": "0xc0400000",
+      "actual": "0xc0400000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "finite_descending",
+      "operation": "max",
+      "lhs_bits": "0x40800000",
+      "rhs_bits": "0xc0400000",
+      "expected": "0x40800000",
+      "actual": "0x40800000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "finite_descending",
+      "operation": "min",
+      "lhs_bits": "0x40800000",
+      "rhs_bits": "0xc0400000",
+      "expected": "0xc0400000",
+      "actual": "0xc0400000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "finite_descending",
+      "operation": "maxnumf",
+      "lhs_bits": "0x40800000",
+      "rhs_bits": "0xc0400000",
+      "expected": "0x40800000",
+      "actual": "0x40800000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "finite_descending",
+      "operation": "minnumf",
+      "lhs_bits": "0x40800000",
+      "rhs_bits": "0xc0400000",
+      "expected": "0xc0400000",
+      "actual": "0xc0400000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "finite_descending",
+      "operation": "maximumf",
+      "lhs_bits": "0x40800000",
+      "rhs_bits": "0xc0400000",
+      "expected": "0x40800000",
+      "actual": "0x40800000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "finite_descending",
+      "operation": "minimumf",
+      "lhs_bits": "0x40800000",
+      "rhs_bits": "0xc0400000",
+      "expected": "0xc0400000",
+      "actual": "0xc0400000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "nan_left",
+      "operation": "max",
+      "lhs_bits": "0x7fc00000",
+      "rhs_bits": "0x40e00000",
+      "expected": "NaN",
+      "actual": "NaN",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "nan_left",
+      "operation": "min",
+      "lhs_bits": "0x7fc00000",
+      "rhs_bits": "0x40e00000",
+      "expected": "NaN",
+      "actual": "NaN",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "nan_left",
+      "operation": "maxnumf",
+      "lhs_bits": "0x7fc00000",
+      "rhs_bits": "0x40e00000",
+      "expected": "0x40e00000",
+      "actual": "0x40e00000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "nan_left",
+      "operation": "minnumf",
+      "lhs_bits": "0x7fc00000",
+      "rhs_bits": "0x40e00000",
+      "expected": "0x40e00000",
+      "actual": "0x40e00000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "nan_left",
+      "operation": "maximumf",
+      "lhs_bits": "0x7fc00000",
+      "rhs_bits": "0x40e00000",
+      "expected": "NaN",
+      "actual": "NaN",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "nan_left",
+      "operation": "minimumf",
+      "lhs_bits": "0x7fc00000",
+      "rhs_bits": "0x40e00000",
+      "expected": "NaN",
+      "actual": "NaN",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "nan_right",
+      "operation": "max",
+      "lhs_bits": "0x40e00000",
+      "rhs_bits": "0x7fc00000",
+      "expected": "NaN",
+      "actual": "NaN",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "nan_right",
+      "operation": "min",
+      "lhs_bits": "0x40e00000",
+      "rhs_bits": "0x7fc00000",
+      "expected": "NaN",
+      "actual": "NaN",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "nan_right",
+      "operation": "maxnumf",
+      "lhs_bits": "0x40e00000",
+      "rhs_bits": "0x7fc00000",
+      "expected": "0x40e00000",
+      "actual": "0x40e00000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "nan_right",
+      "operation": "minnumf",
+      "lhs_bits": "0x40e00000",
+      "rhs_bits": "0x7fc00000",
+      "expected": "0x40e00000",
+      "actual": "0x40e00000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "nan_right",
+      "operation": "maximumf",
+      "lhs_bits": "0x40e00000",
+      "rhs_bits": "0x7fc00000",
+      "expected": "NaN",
+      "actual": "NaN",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "nan_right",
+      "operation": "minimumf",
+      "lhs_bits": "0x40e00000",
+      "rhs_bits": "0x7fc00000",
+      "expected": "NaN",
+      "actual": "NaN",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "negative_zero_left",
+      "operation": "max",
+      "lhs_bits": "0x80000000",
+      "rhs_bits": "0x00000000",
+      "expected": "+0.0",
+      "actual": "0x00000000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "negative_zero_left",
+      "operation": "min",
+      "lhs_bits": "0x80000000",
+      "rhs_bits": "0x00000000",
+      "expected": "-0.0",
+      "actual": "0x80000000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "negative_zero_left",
+      "operation": "maxnumf",
+      "lhs_bits": "0x80000000",
+      "rhs_bits": "0x00000000",
+      "expected": "either +0.0 or -0.0",
+      "actual": "0x00000000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "negative_zero_left",
+      "operation": "minnumf",
+      "lhs_bits": "0x80000000",
+      "rhs_bits": "0x00000000",
+      "expected": "either +0.0 or -0.0",
+      "actual": "0x80000000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "negative_zero_left",
+      "operation": "maximumf",
+      "lhs_bits": "0x80000000",
+      "rhs_bits": "0x00000000",
+      "expected": "+0.0",
+      "actual": "0x00000000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "negative_zero_left",
+      "operation": "minimumf",
+      "lhs_bits": "0x80000000",
+      "rhs_bits": "0x00000000",
+      "expected": "-0.0",
+      "actual": "0x80000000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "positive_zero_left",
+      "operation": "max",
+      "lhs_bits": "0x00000000",
+      "rhs_bits": "0x80000000",
+      "expected": "+0.0",
+      "actual": "0x00000000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "positive_zero_left",
+      "operation": "min",
+      "lhs_bits": "0x00000000",
+      "rhs_bits": "0x80000000",
+      "expected": "-0.0",
+      "actual": "0x80000000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "positive_zero_left",
+      "operation": "maxnumf",
+      "lhs_bits": "0x00000000",
+      "rhs_bits": "0x80000000",
+      "expected": "either +0.0 or -0.0",
+      "actual": "0x00000000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "positive_zero_left",
+      "operation": "minnumf",
+      "lhs_bits": "0x00000000",
+      "rhs_bits": "0x80000000",
+      "expected": "either +0.0 or -0.0",
+      "actual": "0x80000000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "positive_zero_left",
+      "operation": "maximumf",
+      "lhs_bits": "0x00000000",
+      "rhs_bits": "0x80000000",
+      "expected": "+0.0",
+      "actual": "0x00000000",
+      "pass": true
+    },
+    {
+      "family": "float32",
+      "case": "positive_zero_left",
+      "operation": "minimumf",
+      "lhs_bits": "0x00000000",
+      "rhs_bits": "0x80000000",
+      "expected": "-0.0",
+      "actual": "0x80000000",
+      "pass": true
+    },
+    {
+      "family": "int32",
+      "case": "signed",
+      "operation": "max",
+      "lhs": -1,
+      "rhs": 1,
+      "expected": 1,
+      "actual": 1,
+      "pass": true
+    },
+    {
+      "family": "int32",
+      "case": "signed",
+      "operation": "min",
+      "lhs": -1,
+      "rhs": 1,
+      "expected": -1,
+      "actual": -1,
+      "pass": true
+    },
+    {
+      "family": "int32_swapped",
+      "case": "signed",
+      "operation": "max",
+      "lhs": 1,
+      "rhs": -1,
+      "expected": 1,
+      "actual": 1,
+      "pass": true
+    },
+    {
+      "family": "int32_swapped",
+      "case": "signed",
+      "operation": "min",
+      "lhs": 1,
+      "rhs": -1,
+      "expected": -1,
+      "actual": -1,
+      "pass": true
+    },
+    {
+      "family": "uint32",
+      "case": "unsigned",
+      "operation": "max",
+      "lhs": 4294967295,
+      "rhs": 1,
+      "expected": 4294967295,
+      "actual": 4294967295,
+      "pass": true
+    },
+    {
+      "family": "uint32",
+      "case": "unsigned",
+      "operation": "min",
+      "lhs": 4294967295,
+      "rhs": 1,
+      "expected": 1,
+      "actual": 1,
+      "pass": true
+    },
+    {
+      "family": "uint32_swapped",
+      "case": "unsigned",
+      "operation": "max",
+      "lhs": 1,
+      "rhs": 4294967295,
+      "expected": 4294967295,
+      "actual": 4294967295,
+      "pass": true
+    },
+    {
+      "family": "uint32_swapped",
+      "case": "unsigned",
+      "operation": "min",
+      "lhs": 1,
+      "rhs": 4294967295,
+      "expected": 1,
+      "actual": 1,
+      "pass": true
+    }
+  ],
+  "passed": 44,
+  "failed": 0
+}
