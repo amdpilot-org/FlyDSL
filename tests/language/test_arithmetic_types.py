@@ -1043,6 +1043,31 @@ class TestReduction:
 
         assert "vector.reduction <add>" in source_ir(body)
 
+    def test_int_reduce_bitwise(self):
+        def body():
+            assert isinstance(vec(Int32).reduce(ReductionOp.AND), Int32)
+
+        assert "vector.reduction <and>" in source_ir(body)
+
+    def test_int_reduce_or(self):
+        def body():
+            assert isinstance(vec(Uint32).reduce(ReductionOp.OR), Uint32)
+
+        assert "vector.reduction <or>" in source_ir(body)
+
+    def test_int_reduce_xor(self):
+        def body():
+            assert isinstance(vec(Uint32).reduce(ReductionOp.XOR), Uint32)
+
+        assert "vector.reduction <xor>" in source_ir(body)
+
+    def test_bitwise_reduce_float_raises(self):
+        def body():
+            with pytest.raises(TypeError):
+                vec(Float32).reduce(ReductionOp.XOR)
+
+        run(body)
+
     def test_int_reduce_max_signed(self):
         """Int32 MAX should use maxsi, not maxnumf."""
 
