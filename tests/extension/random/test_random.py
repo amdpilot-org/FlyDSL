@@ -181,6 +181,48 @@ def test_randint4x_reference_vector_device():
 @pytest.mark.l2_device
 @pytest.mark.rocm_lower
 @pytest.mark.skipif(torch is None or not torch.cuda.is_available(), reason="requires GPU")
+def test_randint4x_fixed_seed_counter_mapping_device():
+    BLOCK = 8
+    SEED = 1234
+    LOW_OFFSETS = np.arange(BLOCK, dtype=np.uint64)
+    HIGH_OFFSETS = LOW_OFFSETS + np.uint64(2**32)
+
+    @flyc.kernel(known_block_size=[BLOCK, 1, 1])
+    def kernel(Out: fx.Tensor, seed: fx.Uint32, base: fx.Uint64):
+        tid = fx.thread_idx.x
+        words = fx.random.randint4x(seed, base + fx.Uint64(tid))
+        for i in fx.range_constexpr(4):
+            Out[tid * 4 + i] = words[i]
+
+    @flyc.jit
+    def launch(
+        Out: fx.Tensor,
+        seed: fx.Uint32,
+        base: fx.Uint64,
+        stream: fx.Stream = fx.Stream(None),
+    ):
+        kernel(Out, seed, base).launch(grid=(1, 1, 1), block=(BLOCK, 1, 1), stream=stream)
+
+    def run(base):
+        out = torch.zeros(BLOCK * 4, dtype=torch.int32, device="cuda")
+        launch(out, SEED, base, stream=torch.cuda.Stream())
+        torch.cuda.synchronize()
+        return out.cpu().numpy().reshape(BLOCK, 4).astype(np.uint32).astype(np.uint64)
+
+    low = run(0)
+    repeated_low = run(0)
+    high = run(2**32)
+
+    expected = np.stack(_philox_reference(SEED, np.concatenate([LOW_OFFSETS, HIGH_OFFSETS])), axis=1)
+    np.testing.assert_array_equal(low, expected[:BLOCK])
+    np.testing.assert_array_equal(repeated_low, low)
+    np.testing.assert_array_equal(high, expected[BLOCK:])
+    assert set(LOW_OFFSETS.tolist()).isdisjoint(HIGH_OFFSETS.tolist())
+
+
+@pytest.mark.l2_device
+@pytest.mark.rocm_lower
+@pytest.mark.skipif(torch is None or not torch.cuda.is_available(), reason="requires GPU")
 def test_philox_4x64_reference_vector_device():
     @flyc.kernel(known_block_size=[1, 1, 1])
     def kernel(Out: fx.Tensor, seed: fx.Uint64):
