@@ -10,9 +10,10 @@ less to gain, since LLVM's own rewrite already reaches pure DPP there.
 """
 
 from ....compiler.backends import current_target
-from ....expr.gpu import lane_id
-from ....expr.numeric import Int32, Numeric
+from ....expr.gpu import lane_id, num_warp_threads
+from ....expr.numeric import Boolean, Int32, Int64, Numeric
 from ....expr.rocdl import ds_swizzle, readlane, update_dpp
+from ....expr.rocdl import ballot as rocdl_ballot
 from .._common import combine, identity, resolve_warp_width, seed
 from . import scan as _universal_scan
 from .reduce import warp_reduce as _portable_warp_reduce
@@ -23,6 +24,9 @@ __all__ = [
     "warp_exclusive_scan",
     "warp_scan",
     "warp_scan_with_aggregate",
+    "warp_ballot",
+    "warp_all",
+    "warp_any",
 ]
 
 
@@ -102,6 +106,50 @@ def _dpp_applies(value):
     if not current_target().arch.startswith("gfx9"):
         return False
     return isinstance(value, Numeric) and value.dtype.width == 32
+
+
+def _mask_dtype():
+    """Return the lane-mask integer type for the target's wave."""
+    return Int64 if num_warp_threads() == 64 else Int32
+
+
+def _group_base(width):
+    """Return the first lane of the calling lane's *width*-lane group."""
+    return (lane_id() // width) * width
+
+
+def _group_mask(raw_mask, width):
+    """Extract one *width*-lane group's mask from a whole-wave ballot."""
+    dtype = _mask_dtype()
+    base = _group_base(width)
+    group_mask = dtype(raw_mask) >> base
+    return group_mask & dtype((1 << width) - 1)
+
+
+def warp_ballot(predicate, *, width=None):
+    """Return the ballot mask for *predicate* over one *width*-lane group."""
+    width = resolve_warp_width(width, "warp_ballot width")
+    dtype = _mask_dtype()
+    raw_mask = rocdl_ballot(dtype.ir_type, Boolean(predicate))
+    return _group_mask(raw_mask, width)
+
+
+def warp_all(predicate, *, width=None):
+    """Return whether every active lane in the group satisfies *predicate*."""
+    width = resolve_warp_width(width, "warp_all width")
+    dtype = _mask_dtype()
+    raw_active = rocdl_ballot(dtype.ir_type, Boolean(True))
+    raw_predicate = rocdl_ballot(dtype.ir_type, Boolean(predicate))
+    active = _group_mask(raw_active, width)
+    predicate_mask = _group_mask(raw_predicate, width)
+    return predicate_mask == active
+
+
+def warp_any(predicate, *, width=None):
+    """Return whether any active lane in the group satisfies *predicate*."""
+    width = resolve_warp_width(width, "warp_any width")
+    raw_predicate = warp_ballot(predicate, width=width)
+    return raw_predicate != 0
 
 
 # -- reduce -----------------------------------------------------------------
