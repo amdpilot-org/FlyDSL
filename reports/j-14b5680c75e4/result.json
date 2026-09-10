@@ -1,0 +1,104 @@
+{
+  "campaign": "repo-e2e-20260909",
+  "job_id": "j-14b5680c75e4",
+  "scope": "JIT source-change invalidation for issue 862",
+  "image": {
+    "qualified_name": "amdpilotv2/open-job:gbt350-20260909",
+    "local_image_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7"
+  },
+  "gpu": {
+    "device": "AMD Instinct MI350X",
+    "gfx": "gfx950",
+    "torch_capability": [9, 5]
+  },
+  "paths": {
+    "python": "/opt/venv/bin/python",
+    "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+    "triton": "/opt/venv/lib/python3.12/site-packages/triton/__init__.py",
+    "installed_flydsl": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+    "installed_flydsl_native": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so",
+    "checkout": "/job/FlyDSL",
+    "private_cache_root": "/tmp/flydsl-cache-j-14b5680c75e4"
+  },
+  "versions": {
+    "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+    "triton": "3.5.1+rocm7.2.0.gita272dfa8",
+    "installed_flydsl": "0.2.4",
+    "checkout_flydsl": "0.3.3"
+  },
+  "issue_context": {
+    "repo": "ROCm/FlyDSL",
+    "issue": 862,
+    "title": "[Issue]: reduce Flydsl compile time",
+    "state": "open",
+    "comments": 0,
+    "related_merged_pr": 964,
+    "related_pr_title": "[Build] Default CMAKE_BUILD_TYPE to RelWithDebInfo when unset",
+    "conclusion": "The existing build-time fix was preserved and not duplicated. This change adds a source-change invalidation regression test."
+  },
+  "checkout_identity": {
+    "base_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+    "branch": "amdpilot/j-14b5680c75e4"
+  },
+  "current_checkout_manager_key_control": {
+    "flydsl_source": "/tmp/flydsl-run-j-14b5680c75e4-2/flydsl/__init__.py",
+    "flydsl_version": "0.3.3",
+    "manager_keys": {
+      "add": "d78e4c01c388159d53a522f27cb27bd1",
+      "add_plus_two_b": "ee99aaa9e0914b7b428ac331108aa6f8"
+    },
+    "manager_keys_differ": true
+  },
+  "real_gpu_control": {
+    "flydsl_source": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+    "flydsl_version": "0.2.4",
+    "cache_root": "/tmp/flydsl-cache-j-14b5680c75e4/source-change-probe-1",
+    "call_signature": "vector_add(A: Tensor, B: Tensor, C: Tensor, stream: Stream = Stream(None))",
+    "revisions": [
+      {
+        "label": "add",
+        "arithmetic": "C = A + B",
+        "source_sha256": "393a1e820069c61319b0d15414b491cb3eaaa438fa2b38aa4bc1adbc5dfcbb32",
+        "manager_key": "83d560c85f93b70889ec2e85f5a4ac59",
+        "cache_file_name": "b105834fa6de4c03.pkl",
+        "cache_file_bytes": 34472,
+        "cache_file_sha256": "12b5b9c8216ea1b05bb03a5da659053fce524879c716265550c1e7e4d1cc288d",
+        "fresh_jit_s": 0.49250433780252934,
+        "warm_jit_s": 0.00031050294637680054,
+        "fresh_exact_equal": true,
+        "warm_exact_equal": true,
+        "fresh_max_abs_error": 0.0,
+        "warm_max_abs_error": 0.0
+      },
+      {
+        "label": "add_plus_two_b",
+        "arithmetic": "C = A + 2 * B",
+        "source_sha256": "ad0cfcc0d765380fcab39d9cc81d52464e31fc2f17c17c156e65744c4e5b03ba",
+        "manager_key": "00121a9b12779479b4b5a2ccb7716004",
+        "cache_file_name": "d319aed68cb8e531.pkl",
+        "cache_file_bytes": 35341,
+        "cache_file_sha256": "615d822a52205958bfb50516df62e23857e21502786e72f22aaf3cd7429db9f7",
+        "fresh_jit_s": 0.13417077530175447,
+        "warm_jit_s": 0.00024031195789575577,
+        "fresh_exact_equal": true,
+        "warm_exact_equal": true,
+        "fresh_max_abs_error": 0.0,
+        "warm_max_abs_error": 0.0
+      }
+    ],
+    "source_hashes_differ": true,
+    "manager_keys_differ": true,
+    "cache_dirs_differ": true,
+    "cache_hashes_differ": true
+  },
+  "current_checkout_gpu_blocker": {
+    "command": "PYTHONPATH=/tmp/flydsl-run-j-14b5680c75e4-2:/job/FlyDSL pytest -q tests/unit/test_jit_source_change_invalidation.py",
+    "error": "MLIR Textual PassPipeline Parser: 'convert-rocdl-fastmath-ops' does not refer to a registered pass or pass pipeline",
+    "cause": "The checkout Python source is 0.3.3, while the image's embedded native FlyDSL/MLIR libraries are 0.2.4. No prebuilt MLIR install was available for a bounded native rebuild.",
+    "mitigation": "The real GPU control used the image's matching installed 0.2.4 stack; current-checkout source identity was validated separately without compilation."
+  },
+  "validation_commands": [
+    "cd /tmp && env HOME=/tmp/flydsl-home-j-14b5680c75e4 XDG_CACHE_HOME=/tmp/flydsl-home-j-14b5680c75e4/.cache FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-cache-j-14b5680c75e4/source-change-installed-4 PYTEST_ADDOPTS='-p no:cacheprovider' /opt/venv/bin/python -m pytest -q /job/FlyDSL/tests/unit/test_jit_source_change_invalidation.py -s",
+    "cd /job/FlyDSL && git diff --check"
+  ]
+}
