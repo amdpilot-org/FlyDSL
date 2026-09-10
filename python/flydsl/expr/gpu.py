@@ -80,7 +80,8 @@ def shuffle(value, offset, width, mode="xor"):
     """Move ``value`` across lanes of a subgroup (warp) via ``gpu.shuffle``.
 
     ``width`` is the number of participating lanes and must be uniform across
-    the subgroup.
+    the subgroup. The MLIR ``valid`` result is intentionally discarded; lanes
+    whose source is outside ``[0, width)`` receive an unspecified value.
     """
     if mode not in ("xor", "up", "down", "idx"):
         raise ValueError(f"invalid shuffle mode {mode!r}; expected one of (xor, up, down, idx)")
