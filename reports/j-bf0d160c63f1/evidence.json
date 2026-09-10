@@ -1,0 +1,118 @@
+{
+  "campaign": "repo-e2e-20260909",
+  "tracker": "amdpilot-org/amdpilotv2 issue 402",
+  "upstream_reference": {
+    "repository": "ROCm/FlyDSL",
+    "issue": 621,
+    "title": "[Feature]: More robust AOT",
+    "state": "open",
+    "comments": 0,
+    "linked_relationships": "none",
+    "body_summary": "AOT is weakly checked and needs a schema; developer must use the same interface with full params.",
+    "upstream_writes": "none"
+  },
+  "delivery_base": {
+    "repository": "amdpilot-org/FlyDSL",
+    "branch": "main",
+    "commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111"
+  },
+  "environment": {
+    "python": "/opt/venv/bin/python",
+    "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+    "triton": "3.5.1+rocm7.2.0.gita272dfa8",
+    "installed_flydsl": "0.2.4",
+    "gpu": "AMD Instinct MI350X gfx950 serial 692517020513",
+    "qualified_image": "amdpilotv2/open-job:gbt350-20260909",
+    "qualified_image_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7"
+  },
+  "installed_source_baseline": {
+    "test": "/opt/aiter/op_tests/flydsl_tests/test_silu_and_mul_fq.py",
+    "result": "blocked before kernel execution",
+    "first_elapsed_seconds": 24.330898,
+    "first_error": "ModuleNotFoundError: No module named 'aiter.jit.module_aiter_core'",
+    "supported_cache_control_elapsed_seconds": 22.609541,
+    "native_build_seconds": 18.1,
+    "native_path": "/tmp/flydsl-baseline-j-bf0d160c63f1/aiter-jit/module_aiter_core.so",
+    "supported_cache_control_error": "RuntimeError: aiter gluon kernels require triton>=3.6.0, found 3.5.1+rocm7.2.0.gita272dfa8",
+    "torch_control": {
+      "shape": [64, 64],
+      "wall_seconds": 0.78791,
+      "cuda_event_ms": 787.529785,
+      "max_abs_error": 0.000011444091796875,
+      "relative_error": 0.000000368217208877,
+      "gate": "max_abs_error <= 1e-4",
+      "result": "pass"
+    }
+  },
+  "fixed_source_reproduction": {
+    "source_commit": "145a87651be9b278ea05a701c14b049eecae7db3",
+    "source_tag": "v0.2.4",
+    "kernel": "examples/01-vectorAdd.py::vector_add",
+    "shape": [100, 1000],
+    "compile_elapsed_seconds": 3.350342,
+    "artifact_bytes": 33837,
+    "artifact_sha256": "ac3d044a48c892ced6b14366706fb4b2522b2cb1e7c3cc102d70484b1c3ea739",
+    "entry_symbol": "vector_add",
+    "artifact_link_libs": [],
+    "uses_explicit_module": false,
+    "post_load_processors": [],
+    "reloads": [
+      {
+        "label": "A",
+        "cache_dir": "/tmp/flydsl-v024-artifact-A-j-bf0d160c63f1-run4",
+        "fresh_process": true,
+        "wall_seconds": 2.534041,
+        "kernel_elapsed_seconds": 0.9826485207304358,
+        "torch_allclose": true,
+        "max_abs_error": 0.0,
+        "relative_error": 0.0,
+        "engine_symbol_address": 139808462651840
+      },
+      {
+        "label": "B",
+        "cache_dir": "/tmp/flydsl-v024-artifact-B-j-bf0d160c63f1-run1",
+        "fresh_process": true,
+        "wall_seconds": 2.54926,
+        "kernel_elapsed_seconds": 0.9794014003127813,
+        "torch_allclose": true,
+        "max_abs_error": 0.0,
+        "relative_error": 0.0,
+        "engine_symbol_address": 140644669698496
+      }
+    ],
+    "numerical_gate": "torch.allclose(reference, output) and max_abs_error <= 1e-6",
+    "result": "pass"
+  },
+  "library_dependencies": {
+    "artifact_external_link_libs": [],
+    "runtime_libraries": [
+      {
+        "path": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so",
+        "sha256": "9fb44dfdb6f5735fe0c9290e27cbc4036885b98490a94758d9b29d605abe02ae",
+        "needed": ["libamdhip64.so.7", "libdl.so.2", "libstdc++.so.6", "libm.so.6", "libgcc_s.so.1", "libc.so.6", "ld-linux-x86-64.so.2"],
+        "resolved_amdhip64": "/opt/rocm/lib/libamdhip64.so.7"
+      },
+      {
+        "path": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libmlir_c_runner_utils.so",
+        "sha256": "7c75a90cf6998983809d8c7a2a13884534548f3d60e475433062fb76c0fe2eb7",
+        "needed": ["libmlir_apfloat_wrappers-7e65a422.so.23.0git", "libmlir_float16_utils.so.23.0git", "libstdc++.so.6", "libm.so.6", "libgcc_s.so.1", "libc.so.6"],
+        "resolved_wrappers": "/opt/venv/lib/python3.12/site-packages/flydsl.libs/libmlir_apfloat_wrappers-7e65a422.so.23.0git"
+      }
+    ]
+  },
+  "missing_artifact_control": {
+    "cache_dir": "/tmp/flydsl-v024-artifact-missing-j-bf0d160c63f1-run1",
+    "exit": 1,
+    "elapsed_seconds": 2.334925,
+    "diagnostic": "RuntimeError: FLYDSL_RUNTIME_RUN_ONLY=1 but no usable AOT cache for vector_add: manager_key=2481fecf4a6976d3b0f5cf8777735e1d, cache_key=..., cache_dir=... (exists=False)"
+  },
+  "current_main_probe": {
+    "source_version": "0.3.3",
+    "compile_result": "blocked before AOT execution",
+    "error": "ValueError: convert-rocdl-fastmath-ops does not refer to a registered pass or pass pipeline",
+    "cause": "mirror source requires newer native FlyDSL bindings than installed 0.2.4; no MLIR development tree is available",
+    "run_only_miss_diagnostic": "pass",
+    "run_only_miss_exit": 1
+  },
+  "portability_claim": "Results are for the fixed installed Torch/ROCm/FlyDSL 0.2.4 native stack on gfx950 only; no cross-version ABI portability is claimed."
+}
