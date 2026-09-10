@@ -1,0 +1,329 @@
+{
+  "label": "plain RMSNorm input-layout admission on gfx950",
+  "timestamp_utc": "2026-09-10T03:06:08Z",
+  "source": {
+    "repository": "https://github.com/amdpilot-org/FlyDSL.git",
+    "commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+    "workdir": "/job/FlyDSL"
+  },
+  "image": {
+    "expected_local_image_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7",
+    "container_id": "2651becd07b756ffd98c917189194c5f85146e10748a8e9dd007a48bf43d55d6"
+  },
+  "python": {
+    "executable": "/opt/venv/bin/python",
+    "version": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]",
+    "platform": "Linux-4.18.0-513.1.1.el8_9.g12b5.x86_64-x86_64-with-glibc2.39"
+  },
+  "native_paths": {
+    "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+    "torch_hip": "7.2.26015-fc0010cf6a",
+    "triton": "/opt/venv/lib/python3.12/site-packages/triton/__init__.py",
+    "flydsl": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+    "flydsl_native_modules": [
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFly.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFlyROCDL.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsGPU.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsLLVM.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirExecutionEngine.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirGPUPasses.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirRegisterEverything.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libMLIRPythonSupport-mlir.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libmlir_c_runner_utils.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libnanobind-mlir.so"
+    ]
+  },
+  "gpu": {
+    "torch_name": "AMD Instinct MI350X",
+    "capability": [
+      9,
+      5
+    ],
+    "device_count": 1,
+    "rocm_arch": "gfx950",
+    "rocm_smi": {
+      "card0": {
+        "Unique ID": "0x9c60d586afa84d50",
+        "Serial Number": "692517020509",
+        "Card Series": "AMD Instinct MI350X",
+        "Card Model": "0x75a0",
+        "Card Vendor": "Advanced Micro Devices, Inc. [AMD/ATI]",
+        "Card SKU": "N/A",
+        "Subsystem ID": "0x75a0",
+        "Device Rev": "0x00",
+        "Node ID": "3",
+        "GUID": "27295",
+        "GFX Version": "gfx950"
+      }
+    }
+  },
+  "commands": [
+    "PYTHONPATH=/tmp/flydsl-shim-j-8400c2d12044:/job/FlyDSL FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-cache-8400c2d12044 FLYDSL_GPU_ARCH=gfx950 /opt/venv/bin/python reports/j-8400c2d12044/validate_rmsnorm_layouts.py reports/j-8400c2d12044/results.json",
+    "PYTHONPATH=/tmp/flydsl-shim-j-8400c2d12044:/job/FlyDSL FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-cache-8400c2d12044 FLYDSL_GPU_ARCH=gfx950 /opt/venv/bin/python -m pytest -q tests/kernels/test_rmsnorm.py::test_rmsnorm_forward_layout_admission tests/kernels/test_rmsnorm.py::test_rmsnorm_row_strided_autograd_and_refusal"
+  ],
+  "numerical_gates": {
+    "forward_output_atol": 0.02,
+    "forward_rstd_atol": 0.001,
+    "autograd_rtol": 0.1,
+    "autograd_atol": 0.2,
+    "dweight_rtol": 0.1,
+    "dweight_atol": 0.5
+  },
+  "forward_results": [
+    {
+      "case": "contiguous_2d",
+      "rows": 37,
+      "hidden_size": 512,
+      "dtype": "bf16",
+      "weight_dtype": "bf16",
+      "eps": 1e-05,
+      "output_max_abs": 0.007782697677612305,
+      "rstd_max_abs": 1.1920928955078125e-07,
+      "output_atol": 0.02,
+      "rstd_atol": 0.001,
+      "passed": true,
+      "timing_method": "CUDA events; 20 timed calls",
+      "first_execution_seconds": 0.04780676309019327,
+      "timed_median_ms": 0.015320499893277884,
+      "timed_mean_ms": 0.0252123000100255,
+      "timed_samples_ms": [
+        0.2003220021724701,
+        0.028000999242067337,
+        0.01735999993979931,
+        0.018319999799132347,
+        0.01607999950647354,
+        0.01624000072479248,
+        0.01568000018596649,
+        0.015560000203549862,
+        0.014879999682307243,
+        0.015080999583005905,
+        0.01583999954164028,
+        0.013919999822974205,
+        0.014440000057220459,
+        0.014480999670922756,
+        0.014039999805390835,
+        0.014600000344216824,
+        0.014159999787807465,
+        0.01396000012755394,
+        0.014161000028252602,
+        0.01711999997496605
+      ],
+      "input_shape": [
+        37,
+        512
+      ],
+      "flat_shape": [
+        37,
+        512
+      ],
+      "flat_stride": [
+        512,
+        1
+      ],
+      "zero_copy_flatten": true,
+      "untouched_storage_sentinel": true
+    },
+    {
+      "case": "row_strided_2d",
+      "rows": 37,
+      "hidden_size": 4096,
+      "dtype": "bf16",
+      "weight_dtype": "bf16",
+      "eps": 1e-05,
+      "output_max_abs": 0.013709068298339844,
+      "rstd_max_abs": 1.1920928955078125e-07,
+      "output_atol": 0.02,
+      "rstd_atol": 0.001,
+      "passed": true,
+      "timing_method": "CUDA events; 20 timed calls",
+      "first_execution_seconds": 0.03823571838438511,
+      "timed_median_ms": 0.014940500259399414,
+      "timed_mean_ms": 0.01796614993363619,
+      "timed_samples_ms": [
+        0.063120998442173,
+        0.023879999294877052,
+        0.01720000058412552,
+        0.015440000221133232,
+        0.01875999942421913,
+        0.015200000256299973,
+        0.01940000057220459,
+        0.010359999723732471,
+        0.02104100026190281,
+        0.014639999717473984,
+        0.014399999752640724,
+        0.01336000021547079,
+        0.014681000262498856,
+        0.015599999576807022,
+        0.014639999717473984,
+        0.012079999782145023,
+        0.014000000432133675,
+        0.01375999953597784,
+        0.01600000075995922,
+        0.011760000139474869
+      ],
+      "input_shape": [
+        37,
+        4096
+      ],
+      "flat_shape": [
+        37,
+        4096
+      ],
+      "flat_stride": [
+        4224,
+        1
+      ],
+      "zero_copy_flatten": true,
+      "untouched_storage_sentinel": true
+    },
+    {
+      "case": "contiguous_3d",
+      "rows": 38,
+      "hidden_size": 512,
+      "dtype": "bf16",
+      "weight_dtype": "bf16",
+      "eps": 1e-05,
+      "output_max_abs": 0.007760047912597656,
+      "rstd_max_abs": 1.1920928955078125e-07,
+      "output_atol": 0.02,
+      "rstd_atol": 0.001,
+      "passed": true,
+      "timing_method": "CUDA events; 20 timed calls",
+      "first_execution_seconds": 5.0749629735946655e-05,
+      "timed_median_ms": 0.015780000016093254,
+      "timed_mean_ms": 0.015874200174584983,
+      "timed_samples_ms": [
+        0.027201000601053238,
+        0.01592000015079975,
+        0.01583999954164028,
+        0.01600000075995922,
+        0.021561000496149063,
+        0.009080000221729279,
+        0.017720000818371773,
+        0.014360000379383564,
+        0.014999999664723873,
+        0.015720000490546227,
+        0.01600000075995922,
+        0.012640000320971012,
+        0.014120000414550304,
+        0.01500099990516901,
+        0.01688000001013279,
+        0.016039999201893806,
+        0.01583999954164028,
+        0.014000999741256237,
+        0.01432000007480383,
+        0.014240000396966934
+      ],
+      "input_shape": [
+        2,
+        19,
+        512
+      ],
+      "flat_shape": [
+        38,
+        512
+      ],
+      "flat_stride": [
+        512,
+        1
+      ],
+      "zero_copy_flatten": true,
+      "untouched_storage_sentinel": true
+    },
+    {
+      "case": "row_strided_3d",
+      "rows": 38,
+      "hidden_size": 4096,
+      "dtype": "bf16",
+      "weight_dtype": "bf16",
+      "eps": 1e-05,
+      "output_max_abs": 0.01381683349609375,
+      "rstd_max_abs": 1.1920928955078125e-07,
+      "output_atol": 0.02,
+      "rstd_atol": 0.001,
+      "passed": true,
+      "timing_method": "CUDA events; 20 timed calls",
+      "first_execution_seconds": 3.568083047866821e-05,
+      "timed_median_ms": 0.015159999951720238,
+      "timed_mean_ms": 0.015260100038722158,
+      "timed_samples_ms": [
+        0.02404000051319599,
+        0.01664000004529953,
+        0.014960999600589275,
+        0.015479999594390392,
+        0.015119999647140503,
+        0.015479999594390392,
+        0.015200000256299973,
+        0.014919999986886978,
+        0.01696000061929226,
+        0.00860000029206276,
+        0.018160000443458557,
+        0.012880000285804272,
+        0.014960000291466713,
+        0.015639999881386757,
+        0.01711999997496605,
+        0.013400999829173088,
+        0.01607999950647354,
+        0.012040000408887863,
+        0.01363999955356121,
+        0.013880000449717045
+      ],
+      "input_shape": [
+        2,
+        19,
+        4096
+      ],
+      "flat_shape": [
+        38,
+        4096
+      ],
+      "flat_stride": [
+        4224,
+        1
+      ],
+      "zero_copy_flatten": true,
+      "untouched_storage_sentinel": true
+    }
+  ],
+  "autograd_result": {
+    "case": "row_strided_autograd",
+    "rows": 513,
+    "hidden_size": 512,
+    "dtype": "bf16",
+    "weight_dtype": "bf16",
+    "eps": 1e-05,
+    "output_max_abs": 0.0078122615814208984,
+    "dx_max_abs": 0.015430927276611328,
+    "dweight_max_abs": 0.1222991943359375,
+    "autograd_rtol": 0.1,
+    "autograd_atol": 0.2,
+    "dweight_rtol": 0.1,
+    "dweight_atol": 0.5,
+    "passed": true,
+    "first_execution_seconds": 0.33005097415298223,
+    "untouched_storage_sentinel": true
+  },
+  "refusal_results": [
+    {
+      "case": "transposed_last_dim",
+      "refused": true,
+      "exception": "ValueError",
+      "message": "rmsnorm expects a unit-stride last dimension",
+      "expected_message": "unit-stride last dimension",
+      "passed": true,
+      "elapsed_seconds": 2.137012779712677e-05
+    },
+    {
+      "case": "permuted_flatten_copy",
+      "refused": true,
+      "exception": "ValueError",
+      "message": "rmsnorm expects a flattenable row-contiguous view without copy",
+      "expected_message": "flattenable row-contiguous view",
+      "passed": true,
+      "elapsed_seconds": 6.627105176448822e-05
+    }
+  ],
+  "passed": true
+}
