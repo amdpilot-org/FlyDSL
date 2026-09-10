@@ -1,0 +1,124 @@
+{
+  "label": "gfx950 two-part K decomposition validation",
+  "campaign": "repo-e2e-20260909",
+  "coordination_tracker": "amdpilot-org/amdpilotv2 issue 402",
+  "recorded_at_utc": "2026-09-10T04:23:08Z",
+  "environment": {
+    "image_identity": "amdpilotv2/open-job:gbt350-20260909 local image ID sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7",
+    "gpu": {
+      "count": 1,
+      "name": "AMD Instinct MI350X",
+      "gfx": "gfx950",
+      "unique_id": "0xfa55ca8c650dfefb",
+      "serial": "692517020458",
+      "uuid": "66613535-6361-3833-3635-306466656662"
+    },
+    "python": "/opt/venv/bin/python",
+    "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+    "flydsl_python_package": "/tmp/flydsl-build-j-61dd24c5c8e7/python_packages/flydsl/__init__.py",
+    "flydsl_native_modules": [
+      "/tmp/flydsl-build-j-61dd24c5c8e7/python_packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFly.cpython-312-x86_64-linux-gnu.so",
+      "/tmp/flydsl-build-j-61dd24c5c8e7/python_packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFlyROCDL.cpython-312-x86_64-linux-gnu.so",
+      "/tmp/flydsl-build-j-61dd24c5c8e7/python_packages/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so"
+    ],
+    "mlir_install": "/tmp/flydsl-llvm-j-61dd24c5c8e7/mlir_install",
+    "tools_python": "/tmp/flydsl-tools-j-61dd24c5c8e7/python/bin/python",
+    "build_cache": "/tmp/flydsl-cache-j-61dd24c5c8e7"
+  },
+  "checkout": {
+    "repository": "https://github.com/amdpilot-org/FlyDSL",
+    "path": "/job/FlyDSL",
+    "base_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+    "base_branch": "main"
+  },
+  "source_evidence": {
+    "test": "tests/kernels/test_gfx950_gemm_accumulation.py",
+    "dispatch": "kernels/gemm/gemm_a16w16_gfx950.py:1303",
+    "dispatch_k_tail_check": "kernels/gemm/gemm_a16w16_gfx950.py:1425",
+    "dispatch_run_cached": "kernels/gemm/gemm_a16w16_gfx950.py:1449",
+    "kernel_split_k_argument": "kernels/gemm/gemm_a16w16_gfx950.py:457",
+    "kernel_split_k_protocol": "kernels/gemm/gemm_a16w16_gfx950.py:479",
+    "lowering_rank_1_gemm": "lib/Dialect/Fly/Transforms/LayoutLowering.cpp:2298",
+    "lowering_rank_3_accumulator": "lib/Dialect/Fly/Transforms/LayoutLowering.cpp:2432"
+  },
+  "validation": {
+    "command": "PYTHONPATH=/tmp/flydsl-build-j-61dd24c5c8e7/python_packages FLYDSL_RUNTIME_ENABLE_CACHE=0 timeout 600 /opt/venv/bin/python -m pytest -q tests/kernels/test_gfx950_gemm_accumulation.py --tb=short -p no:cacheprovider -s",
+    "selected_tests": 1,
+    "passed": 1,
+    "failed": 0,
+    "pytest_elapsed_seconds": 1.88,
+    "process_wall_seconds": 4.371,
+    "timing_method": "one bounded pytest invocation bracketed by the Bash TIMEFORMAT builtin; no warmup or timing loops",
+    "shape": [64, 128, 2048],
+    "input_dtype": "torch.bfloat16",
+    "output_dtype": "torch.float32",
+    "split_k": 2,
+    "finite_inputs": true,
+    "reference": "independent CPU torch.mm on float32 copies of both inputs",
+    "unchanged_gates": {
+      "atol": 0.1,
+      "rtol": 0.2,
+      "check_dtype": true
+    },
+    "max_abs_delta": 0.221897125,
+    "sentinel_bounds": {
+      "input_sentinel": -13.0,
+      "output_sentinel": 123.0,
+      "asserted_unchanged": true
+    }
+  },
+  "installed_source_baseline": {
+    "artifact": "/job/baseline-first.json",
+    "label": "installed-source baseline; not proof for later checkout changes",
+    "first_gpu_execution_elapsed_seconds_from_task_start": 109,
+    "relevant_aiter_case": "unsupported before dispatch because installed Triton 3.5.1 is below the AITER requirement 3.6.0",
+    "supported_torch_control": {
+      "passed": true,
+      "atol": 0.01,
+      "rtol": 0.01,
+      "pass_pct": 99.9,
+      "max_abs_delta": 0.0312347412109375,
+      "mean_us_per_launch": 39.01650011539459
+    }
+  },
+  "unsupported_accumulation_or_decomposition_modes": [
+    {
+      "mode": "direct fx.gemm FP8 16x16x32 rank-1 accumulation on gfx950",
+      "result": "compiler assertion before a valid numerical dispatch",
+      "raw_error": "Assertion `(R == 1 || filteredStride.IsStatic()) && \"stride must be static for complement\"' failed"
+    },
+    {
+      "mode": "native BF16 32x32x16 one-wave prototype on gfx950",
+      "result": "incorrect numerical results; the corrected raw MFMA control for the same geometry also failed, so this is not a valid gfx950 control",
+      "raw_example": "K=16 max=216.0 close=0.0029296875; K=32 max=327.0 close=0.005859375"
+    },
+    {
+      "mode": "BufferCopy128b with FP8 vector<8xi8>",
+      "result": "illegal copy-atom width mismatch",
+      "raw_error": "failed to legalize operation 'fly.copy_atom_call_ssa' ... vector<8xi8>"
+    },
+    {
+      "mode": "mixed-rank or dynamic-shape fx.gemm decomposition",
+      "result": "unsupported by the current static rank-1/rank-3 lowering branches"
+    }
+  ],
+  "upstream_context": {
+    "issue": "ROCm/FlyDSL issue 821",
+    "summary": "VGPR overhead plus FP8 BufferCopy fragment legalization failures",
+    "action": "read-only; no upstream issue, comment, PR, or branch was posted or changed",
+    "existing_mirror_fix_not_duplicated": {
+      "pr": "https://github.com/amdpilot-org/FlyDSL/pull/337",
+      "title": "Fix gfx942 BufferCopy global fragment lowering",
+      "state": "OPEN",
+      "head_commit": "e49231c907f62262359437ee194322b10455316f"
+    }
+  },
+  "bounds": {
+    "gpu_count": 1,
+    "timeout_seconds": 600,
+    "synthetic_burn": false,
+    "sleep_loop": false,
+    "full_model_weights": false,
+    "environment_replacement": false
+  }
+}
