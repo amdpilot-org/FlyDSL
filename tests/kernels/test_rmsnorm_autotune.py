@@ -3,10 +3,12 @@
 
 """GPU contracts for the direct RMSNorm autotune adopter."""
 
+import importlib
 import json
 import os
 import re
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -20,6 +22,7 @@ if torch is None or not torch.cuda.is_available():
     pytest.skip("CUDA/ROCm not available. Skipping GPU tests.", allow_module_level=True)
 
 import flydsl.compiler as flyc  # noqa: E402
+from flydsl import Config  # noqa: E402
 from kernels.norm.rmsnorm_autotune import _SEARCH_CONFIGS, _rmsnorm_tuner, rmsnorm_autotuned  # noqa: E402
 from kernels.norm.rmsnorm_kernel import rmsnorm_direct  # noqa: E402
 
@@ -188,6 +191,148 @@ def test_rmsnorm_autotuned_search_then_cache_hit(monkeypatch):
 
     assert completed == len(_SEARCH_CONFIGS)
     _assert_close(offline, ref)
+
+
+def test_rmsnorm_offline_artifact_metadata_and_failure_contracts(monkeypatch):
+    autotune_module = importlib.import_module("flydsl.autotune")
+    x, gamma, reference = _inputs(M=2, N=4096)
+    output = torch.empty_like(x)
+    stream = torch.cuda.Stream()
+    stream.wait_stream(torch.cuda.current_stream())
+    raw_stream = stream.cuda_stream
+    target = Config(BLOCK_THREADS=256, waves_per_eu=1)
+    completed = 0
+
+    def deterministic_bench(call, warmup, rep):
+        nonlocal completed
+        call()
+        stream.synchronize()
+        completed += 1
+        config = _SEARCH_CONFIGS[completed - 1]
+        is_target = (
+            config.kwargs["BLOCK_THREADS"] == target.kwargs["BLOCK_THREADS"]
+            and config.waves_per_eu == target.waves_per_eu
+        )
+        return 0.0 if is_target else float(completed)
+
+    monkeypatch.setattr(_rmsnorm_tuner, "_do_bench", deterministic_bench)
+    monkeypatch.setenv("FLYDSL_AUTOTUNE", "1")
+    rmsnorm_autotuned(x, gamma, output, x.shape[0], stream=raw_stream)
+    stream.synchronize()
+    _assert_close(output, reference)
+
+    artifacts = list(Path(os.environ["FLYDSL_AUTOTUNE_CONFIG_DIR"]).glob("*.json"))
+    assert len(artifacts) == 1
+    payload = json.loads(artifacts[0].read_text())
+    assert payload["config"] == target.to_dict()
+
+    _rmsnorm_tuner.cache.clear()
+    _rmsnorm_tuner._artifact_cache.clear()
+    monkeypatch.delenv("FLYDSL_AUTOTUNE")
+    with patch.object(
+        _rmsnorm_tuner,
+        "default",
+        lambda *_args, **_kwargs: pytest.fail("matching artifact should not use default"),
+    ), patch.object(
+        _rmsnorm_tuner,
+        "configs",
+        lambda *_args, **_kwargs: pytest.fail("matching artifact should not search"),
+    ):
+        offline = torch.empty_like(x)
+        rmsnorm_autotuned(x, gamma, offline, x.shape[0], stream=raw_stream)
+        stream.synchronize()
+    _assert_close(offline, reference)
+
+    call_kwargs = {
+        "N": x.shape[1],
+        "dtype_str": "bf16",
+        "weight_dtype_str": "bf16",
+        "stream": raw_stream,
+    }
+    matching_ref = _rmsnorm_tuner._artifact_ref(
+        (x, gamma, offline, x.shape[0]), call_kwargs, required=True
+    )
+    altered_key_ref = _rmsnorm_tuner._artifact_ref(
+        (x, gamma, offline, x.shape[0] + 1), call_kwargs, required=True
+    )
+    assert matching_ref != altered_key_ref
+
+    _, gamma_fp32, _ = _inputs(M=2, N=4096, weight_dtype=torch.float32)
+    mixed_kwargs = {
+        "N": x.shape[1],
+        "dtype_str": "bf16",
+        "weight_dtype_str": "f32",
+        "stream": raw_stream,
+    }
+    altered_dtype_ref = _rmsnorm_tuner._artifact_ref(
+        (x, gamma_fp32, offline, x.shape[0]), mixed_kwargs, required=True
+    )
+    assert matching_ref != altered_dtype_ref
+
+    fake_device = {"name": "Other GPU", "arch": "gfx-test", "compute_units": 2}
+    with patch.object(
+        autotune_module,
+        "_device_descriptor",
+        lambda _device=None: fake_device,
+    ):
+        altered_device_ref = _rmsnorm_tuner._artifact_ref(
+            (x, gamma, offline, x.shape[0]), call_kwargs, required=True
+        )
+        assert matching_ref != altered_device_ref
+
+        device_output = torch.empty_like(x)
+        rmsnorm_autotuned(x, gamma, device_output, x.shape[0], stream=raw_stream)
+        stream.synchronize()
+    _assert_close(device_output, reference)
+
+    monkeypatch.setenv(
+        "FLYDSL_AUTOTUNE_CONFIG_DIR", str(Path(os.environ["FLYDSL_AUTOTUNE_CONFIG_DIR"]).parent / "missing")
+    )
+    _rmsnorm_tuner.cache.clear()
+    _rmsnorm_tuner._artifact_cache.clear()
+    missing_output = torch.empty_like(x)
+    with patch.object(
+        _rmsnorm_tuner,
+        "_do_bench",
+        lambda *_args, **_kwargs: pytest.fail("missing artifact should not search"),
+    ):
+        rmsnorm_autotuned(x, gamma, missing_output, x.shape[0], stream=raw_stream)
+        stream.synchronize()
+    _assert_close(missing_output, reference)
+
+    invalid_dir = Path(os.environ["FLYDSL_AUTOTUNE_CONFIG_DIR"])
+    invalid_dir.mkdir(parents=True, exist_ok=True)
+    invalid_path, _ = _rmsnorm_tuner._artifact_ref(
+        (x, gamma, missing_output, x.shape[0]), call_kwargs, required=True
+    )
+    invalid_path.write_text("{")
+    _rmsnorm_tuner.cache.clear()
+    _rmsnorm_tuner._artifact_cache.clear()
+    invalid_output = torch.empty_like(x)
+    with patch.object(
+        _rmsnorm_tuner,
+        "_do_bench",
+        lambda *_args, **_kwargs: pytest.fail("invalid artifact should not search"),
+    ):
+        rmsnorm_autotuned(x, gamma, invalid_output, x.shape[0], stream=raw_stream)
+        stream.synchronize()
+    _assert_close(invalid_output, reference)
+
+    monkeypatch.setenv(
+        "FLYDSL_AUTOTUNE_CONFIG_DIR", str(Path(os.environ["FLYDSL_AUTOTUNE_CONFIG_DIR"]).parent / "artifacts")
+    )
+    _rmsnorm_tuner.cache.clear()
+    _rmsnorm_tuner._artifact_cache.clear()
+    payload["config"] = {"BLOCK_THREADS": 0}
+    artifacts[0].write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    failing_output = torch.empty_like(x)
+    with patch.object(
+        _rmsnorm_tuner,
+        "default",
+        lambda *_args, **_kwargs: pytest.fail("accepted artifact failure should not use default"),
+    ):
+        with pytest.raises(ZeroDivisionError, match="integer modulo by zero"):
+            rmsnorm_autotuned(x, gamma, failing_output, x.shape[0], stream=raw_stream)
 
 
 def test_rmsnorm_weight_dtype_has_distinct_tuning_identity():
