@@ -1,0 +1,638 @@
+{
+  "gpu": "AMD Instinct MI350X",
+  "capability": [
+    9,
+    5
+  ],
+  "dtype": "bfloat16",
+  "reference": "torch.nn.functional.conv3d",
+  "tolerance": {
+    "rtol": 0.02,
+    "atol": 0.02
+  },
+  "timing_method": "one call per case after warm JIT cache; wall time from perf_counter and separate CUDA start/end events; no warmup loops or repeated work",
+  "results": [
+    {
+      "case": {
+        "kind": "batch_layout_bias",
+        "n": 0,
+        "input_layout": "NCDHW",
+        "output_layout": "NCDHW"
+      },
+      "passed": true,
+      "max_abs_error": 0.0,
+      "wall_seconds": 0.018775862641632557,
+      "cuda_event_ms": 0.1886020004749298,
+      "output_shape": [
+        0,
+        16,
+        5,
+        7,
+        9
+      ],
+      "reference_shape": [
+        0,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "batch_layout_bias",
+        "n": 0,
+        "input_layout": "NCDHW",
+        "output_layout": "NDHWC"
+      },
+      "passed": true,
+      "max_abs_error": 0.0,
+      "wall_seconds": 0.0002554524689912796,
+      "cuda_event_ms": 0.061879999935626984,
+      "output_shape": [
+        0,
+        5,
+        7,
+        9,
+        16
+      ],
+      "reference_shape": [
+        0,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "batch_layout_bias",
+        "n": 0,
+        "input_layout": "NDHWC",
+        "output_layout": "NCDHW"
+      },
+      "passed": true,
+      "max_abs_error": 0.0,
+      "wall_seconds": 9.341072291135788e-05,
+      "cuda_event_ms": 0.03579999879002571,
+      "output_shape": [
+        0,
+        16,
+        5,
+        7,
+        9
+      ],
+      "reference_shape": [
+        0,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "batch_layout_bias",
+        "n": 0,
+        "input_layout": "NDHWC",
+        "output_layout": "NDHWC"
+      },
+      "passed": true,
+      "max_abs_error": 0.0,
+      "wall_seconds": 5.6900084018707275e-05,
+      "cuda_event_ms": 0.017240000888705254,
+      "output_shape": [
+        0,
+        5,
+        7,
+        9,
+        16
+      ],
+      "reference_shape": [
+        0,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "batch_layout_bias",
+        "n": 1,
+        "input_layout": "NCDHW",
+        "output_layout": "NCDHW"
+      },
+      "passed": true,
+      "max_abs_error": 0.25,
+      "wall_seconds": 1.5152619713917375,
+      "cuda_event_ms": 303.1785888671875,
+      "output_shape": [
+        1,
+        16,
+        5,
+        7,
+        9
+      ],
+      "reference_shape": [
+        1,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "batch_layout_bias",
+        "n": 1,
+        "input_layout": "NCDHW",
+        "output_layout": "NDHWC"
+      },
+      "passed": true,
+      "max_abs_error": 0.25,
+      "wall_seconds": 0.06568092666566372,
+      "cuda_event_ms": 65.01094055175781,
+      "output_shape": [
+        1,
+        5,
+        7,
+        9,
+        16
+      ],
+      "reference_shape": [
+        1,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "batch_layout_bias",
+        "n": 1,
+        "input_layout": "NDHWC",
+        "output_layout": "NCDHW"
+      },
+      "passed": true,
+      "max_abs_error": 0.25,
+      "wall_seconds": 0.0003504334017634392,
+      "cuda_event_ms": 0.15624099969863892,
+      "output_shape": [
+        1,
+        16,
+        5,
+        7,
+        9
+      ],
+      "reference_shape": [
+        1,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "batch_layout_bias",
+        "n": 1,
+        "input_layout": "NDHWC",
+        "output_layout": "NDHWC"
+      },
+      "passed": true,
+      "max_abs_error": 0.25,
+      "wall_seconds": 0.0002608625218272209,
+      "cuda_event_ms": 0.09160099923610687,
+      "output_shape": [
+        1,
+        5,
+        7,
+        9,
+        16
+      ],
+      "reference_shape": [
+        1,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "batch_layout_bias",
+        "n": 2,
+        "input_layout": "NCDHW",
+        "output_layout": "NCDHW"
+      },
+      "passed": true,
+      "max_abs_error": 0.25,
+      "wall_seconds": 0.11386123113334179,
+      "cuda_event_ms": 88.34481048583984,
+      "output_shape": [
+        2,
+        16,
+        5,
+        7,
+        9
+      ],
+      "reference_shape": [
+        2,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "batch_layout_bias",
+        "n": 2,
+        "input_layout": "NCDHW",
+        "output_layout": "NDHWC"
+      },
+      "passed": true,
+      "max_abs_error": 0.25,
+      "wall_seconds": 0.06442733388394117,
+      "cuda_event_ms": 64.04251098632812,
+      "output_shape": [
+        2,
+        5,
+        7,
+        9,
+        16
+      ],
+      "reference_shape": [
+        2,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "batch_layout_bias",
+        "n": 2,
+        "input_layout": "NDHWC",
+        "output_layout": "NCDHW"
+      },
+      "passed": true,
+      "max_abs_error": 0.25,
+      "wall_seconds": 0.00028180237859487534,
+      "cuda_event_ms": 0.1403219997882843,
+      "output_shape": [
+        2,
+        16,
+        5,
+        7,
+        9
+      ],
+      "reference_shape": [
+        2,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "batch_layout_bias",
+        "n": 2,
+        "input_layout": "NDHWC",
+        "output_layout": "NDHWC"
+      },
+      "passed": true,
+      "max_abs_error": 0.25,
+      "wall_seconds": 0.00028659217059612274,
+      "cuda_event_ms": 0.11236099898815155,
+      "output_shape": [
+        2,
+        5,
+        7,
+        9,
+        16
+      ],
+      "reference_shape": [
+        2,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "batch_layout_bias",
+        "n": 3,
+        "input_layout": "NCDHW",
+        "output_layout": "NCDHW"
+      },
+      "passed": true,
+      "max_abs_error": 0.25,
+      "wall_seconds": 0.09675786178559065,
+      "cuda_event_ms": 89.40658569335938,
+      "output_shape": [
+        3,
+        16,
+        5,
+        7,
+        9
+      ],
+      "reference_shape": [
+        3,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "batch_layout_bias",
+        "n": 3,
+        "input_layout": "NCDHW",
+        "output_layout": "NDHWC"
+      },
+      "passed": true,
+      "max_abs_error": 0.25,
+      "wall_seconds": 0.06677478644996881,
+      "cuda_event_ms": 66.31221008300781,
+      "output_shape": [
+        3,
+        5,
+        7,
+        9,
+        16
+      ],
+      "reference_shape": [
+        3,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "batch_layout_bias",
+        "n": 3,
+        "input_layout": "NDHWC",
+        "output_layout": "NCDHW"
+      },
+      "passed": true,
+      "max_abs_error": 0.25,
+      "wall_seconds": 0.00029186252504587173,
+      "cuda_event_ms": 0.14600099623203278,
+      "output_shape": [
+        3,
+        16,
+        5,
+        7,
+        9
+      ],
+      "reference_shape": [
+        3,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "batch_layout_bias",
+        "n": 3,
+        "input_layout": "NDHWC",
+        "output_layout": "NDHWC"
+      },
+      "passed": true,
+      "max_abs_error": 0.25,
+      "wall_seconds": 0.00020865164697170258,
+      "cuda_event_ms": 0.08696100115776062,
+      "output_shape": [
+        3,
+        5,
+        7,
+        9,
+        16
+      ],
+      "reference_shape": [
+        3,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "odd_kernel_spatial",
+        "kernel_shape": [
+          1,
+          1,
+          1
+        ],
+        "padding": [
+          0,
+          0,
+          0
+        ]
+      },
+      "passed": true,
+      "max_abs_error": 0.0,
+      "wall_seconds": 0.01701845694333315,
+      "cuda_event_ms": 1.0941330194473267,
+      "output_shape": [
+        2,
+        16,
+        5,
+        7,
+        9
+      ],
+      "reference_shape": [
+        2,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "odd_kernel_spatial",
+        "kernel_shape": [
+          1,
+          1,
+          3
+        ],
+        "padding": [
+          0,
+          0,
+          1
+        ]
+      },
+      "passed": true,
+      "max_abs_error": 0.125,
+      "wall_seconds": 0.06723551079630852,
+      "cuda_event_ms": 65.79517364501953,
+      "output_shape": [
+        2,
+        16,
+        5,
+        7,
+        9
+      ],
+      "reference_shape": [
+        2,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "odd_kernel_spatial",
+        "kernel_shape": [
+          1,
+          3,
+          1
+        ],
+        "padding": [
+          0,
+          1,
+          0
+        ]
+      },
+      "passed": true,
+      "max_abs_error": 0.125,
+      "wall_seconds": 0.06889403611421585,
+      "cuda_event_ms": 66.94547271728516,
+      "output_shape": [
+        2,
+        16,
+        5,
+        7,
+        9
+      ],
+      "reference_shape": [
+        2,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "odd_kernel_spatial",
+        "kernel_shape": [
+          3,
+          1,
+          1
+        ],
+        "padding": [
+          1,
+          0,
+          0
+        ]
+      },
+      "passed": true,
+      "max_abs_error": 0.125,
+      "wall_seconds": 0.06652400363236666,
+      "cuda_event_ms": 65.52552795410156,
+      "output_shape": [
+        2,
+        16,
+        5,
+        7,
+        9
+      ],
+      "reference_shape": [
+        2,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "odd_kernel_spatial",
+        "kernel_shape": [
+          3,
+          3,
+          3
+        ],
+        "padding": [
+          1,
+          1,
+          1
+        ]
+      },
+      "passed": true,
+      "max_abs_error": 0.25,
+      "wall_seconds": 0.00040005333721637726,
+      "cuda_event_ms": 0.21892300248146057,
+      "output_shape": [
+        2,
+        16,
+        5,
+        7,
+        9
+      ],
+      "reference_shape": [
+        2,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "odd_kernel_spatial",
+        "kernel_shape": [
+          5,
+          1,
+          1
+        ],
+        "padding": [
+          2,
+          0,
+          0
+        ]
+      },
+      "passed": true,
+      "max_abs_error": 0.125,
+      "wall_seconds": 0.06991502456367016,
+      "cuda_event_ms": 64.09416198730469,
+      "output_shape": [
+        2,
+        16,
+        5,
+        7,
+        9
+      ],
+      "reference_shape": [
+        2,
+        16,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "case": {
+        "kind": "empty_spatial_output_rejection"
+      },
+      "rejected": true,
+      "message": "dilated filter is larger than the padded input: output (-1, -1, -1)",
+      "wall_seconds": 6.704963743686676e-05
+    }
+  ]
+}
