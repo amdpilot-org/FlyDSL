@@ -1,0 +1,18 @@
+{
+  "elapsed_s": 0.8192241517826915,
+  "error": null,
+  "flydsl_import_path": "/tmp/flydsl-cache-j-ab4cde533ae7/candidate_python_overlay_v1/flydsl/__init__.py",
+  "flydsl_version": "0.3.0",
+  "gpu_capability": [
+    9,
+    5
+  ],
+  "gpu_name": "AMD Instinct MI350X",
+  "label": "upstream PR 920 Python source overlay with installed native bindings",
+  "mismatch_count": 0,
+  "mismatches": [],
+  "passed": true,
+  "python": "/opt/venv/lib/python3.12/site-packages/bin/python",
+  "source_commit": "de526e0aeafdf4d42896bbf635d2dc14fa599233",
+  "timing_method": "time.perf_counter around one JIT dispatch and synchronization"
+}
