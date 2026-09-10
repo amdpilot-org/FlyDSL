@@ -1,0 +1,148 @@
+{
+  "label": "installed-source operand-layout parity investigation",
+  "not_proof_for_later_checkout_changes": true,
+  "scope": "FP8 operand-layout parity; distinct from BF16 tails and the fixed FP8 VGPR/BufferCopy case",
+  "environment": {
+    "image_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7",
+    "container_hostname_is_not_image_identity": true,
+    "python": "/opt/venv/bin/python",
+    "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+    "flydsl_python_source": "/tmp/flydsl-v024/python/flydsl",
+    "flydsl_source_commit": "145a87651be9b278ea05a701c14b049eecae7db3",
+    "flydsl_source_tag": "v0.2.4",
+    "flydsl_native_mlir": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir",
+    "gpu": {
+      "product": "AMD Instinct MI350X",
+      "gfx": "gfx950",
+      "unique_id": "0x6e4208b780600d88",
+      "serial": "692517020434",
+      "torch_gcn_arch_name": "gfx950:sramecc+:xnack-"
+    }
+  },
+  "scale_format": "per-tensor float32 scale_a=0.017 and scale_b=0.019 applied after raw FP8 MFMA",
+  "reference": "independent dequantized Torch float32 matmul of the exact FP8 operands",
+  "numerical_gate": {
+    "atol": 0.00002,
+    "rtol": 0.0001,
+    "unchanged": true
+  },
+  "timing_method": {
+    "conversion": "CUDA events around explicit t().contiguous().t() layout conversion",
+    "kernel": "CUDA events around launch; 2 warmups and 5 timed repeats",
+    "separate": true
+  },
+  "commands": [
+    "git clone --depth 1 https://github.com/amdpilot-org/FlyDSL.git /job/FlyDSL",
+    "git fetch --depth 1 https://github.com/ROCm/FlyDSL.git refs/tags/v0.2.4:refs/tags/v0.2.4",
+    "git worktree add --detach /tmp/flydsl-v024 145a87651be9b278ea05a701c14b049eecae7db3",
+    "PYTHONPATH=/tmp/flydsl-v024/python FLYDSL_RUNTIME_ENABLE_CACHE=0 /opt/venv/bin/python -m pytest -s -q --tb=short tests/kernels/test_gemm_operand_layout_gfx950.py"
+  ],
+  "pytest_summary": "2 passed, 6 xfailed in 5.13 seconds",
+  "cases": [
+    {
+      "shape": [64, 32, 32],
+      "layout": "nn",
+      "a_stride": [32, 1],
+      "b_stride": [32, 1],
+      "conversion_seconds": 0.0,
+      "kernel_seconds_mean": 0.0000635283999145031,
+      "kernel_seconds_min": 0.0000559599956130981,
+      "kernel_seconds_max": 0.0000825200063575761,
+      "max_abs_error": 0.0000000493018878793706894,
+      "relative_to_reference_max": 0.0000146259975294303,
+      "passed": true
+    },
+    {
+      "shape": [96, 64, 64],
+      "layout": "nn",
+      "a_stride": [64, 1],
+      "b_stride": [64, 1],
+      "conversion_seconds": 0.0,
+      "kernel_seconds_mean": 0.0000646247997879982,
+      "kernel_seconds_min": 0.0000547210015354075,
+      "kernel_seconds_max": 0.00007644009742174148,
+      "max_abs_error": 0.00000009115319699048996,
+      "relative_to_reference_max": 0.000020966482547210735,
+      "passed": true
+    },
+    {
+      "shape": [64, 32, 32],
+      "layout": "nt",
+      "a_stride": [32, 1],
+      "b_stride": [1, 32],
+      "conversion_seconds": 0.00010672099888324738,
+      "kernel_seconds_mean": 0.000058439999818801875,
+      "kernel_seconds_min": 0.0000486400015652197,
+      "kernel_seconds_max": 0.0000766799971437961,
+      "max_abs_error": 0.004544869065284729,
+      "relative_to_reference_max": 1.3482900015852026,
+      "passed": false
+    },
+    {
+      "shape": [96, 64, 64],
+      "layout": "nt",
+      "a_stride": [64, 1],
+      "b_stride": [1, 64],
+      "conversion_seconds": 0.0000808399902009964,
+      "kernel_seconds_mean": 0.0000590799947671225,
+      "kernel_seconds_min": 0.0000511200018215304,
+      "kernel_seconds_max": 0.000077359996734964966,
+      "max_abs_error": 0.006685098633170128,
+      "relative_to_reference_max": 1.5376641571152692,
+      "passed": false
+    },
+    {
+      "shape": [64, 32, 32],
+      "layout": "tn",
+      "a_stride": [1, 64],
+      "b_stride": [32, 1],
+      "conversion_seconds": 0.00005536098958349226,
+      "kernel_seconds_mean": 0.000059904599931481636,
+      "kernel_seconds_min": 0.00004772999852619506,
+      "kernel_seconds_max": 0.0000748799967855759,
+      "max_abs_error": 0.004891999065876007,
+      "relative_to_reference_max": 1.4512702860168212,
+      "passed": false
+    },
+    {
+      "shape": [96, 64, 64],
+      "layout": "tn",
+      "a_stride": [1, 96],
+      "b_stride": [64, 1],
+      "conversion_seconds": 0.00007096099853515625,
+      "kernel_seconds_mean": 0.00005510400012135504,
+      "kernel_seconds_min": 0.000049639998664846,
+      "kernel_seconds_max": 0.0000647599951235956,
+      "max_abs_error": 0.006477112416177988,
+      "relative_to_reference_max": 1.4898244813540225,
+      "passed": false
+    },
+    {
+      "shape": [64, 32, 32],
+      "layout": "tt",
+      "a_stride": [1, 64],
+      "b_stride": [1, 32],
+      "conversion_seconds": 0.00006424100138247013,
+      "kernel_seconds_mean": 0.00006016819924116135,
+      "kernel_seconds_min": 0.00005024100095334646,
+      "kernel_seconds_max": 0.00008147999664789548,
+      "max_abs_error": 0.0041518681682646275,
+      "relative_to_reference_max": 1.2317015647227156,
+      "passed": false
+    },
+    {
+      "shape": [96, 64, 64],
+      "layout": "tt",
+      "a_stride": [1, 96],
+      "b_stride": [1, 64],
+      "conversion_seconds": 0.0000848000030964613,
+      "kernel_seconds_mean": 0.00005628840029239655,
+      "kernel_seconds_min": 0.00004996100682924346,
+      "kernel_seconds_max": 0.0000672800193834305,
+      "max_abs_error": 0.006167124025523663,
+      "relative_to_reference_max": 1.418522909965693,
+      "passed": false
+    }
+  ],
+  "conclusion": "Contiguous nn operands match the independent dequantized reference. Admitted nt, tn, and tt transposed-storage operands compile and launch but silently fail the unchanged numerical gate on both rectangular shapes."
+}
