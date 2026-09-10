@@ -1,0 +1,2167 @@
+{
+  "metadata": {
+    "campaign": "repo-e2e-20260909",
+    "job_id": "j-8291668ade13",
+    "issue": "ROCm/FlyDSL issue 862",
+    "base_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+    "gpu": "AMD Instinct MI350X gfx950",
+    "image": "amdpilotv2/open-job:gbt350-20260909",
+    "local_image_id_sha256": "bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7",
+    "python": "/opt/venv/bin/python3",
+    "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+    "installed_native": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs",
+    "compatibility": "current checkout Python 0.3.3 with installed FlyDSL 0.2.4 native libraries; in-memory only remove convert-rocdl-fastmath-ops",
+    "cache_policy": "all caches under /tmp outside /job; no shared-cache edits; no compiler rebuild",
+    "timing": "one perf_counter interval around one dispatch and final synchronize; no burn or repeated work"
+  },
+  "base": {
+    "arch-gfx942-mismatch": {
+      "cold": {
+        "case": "arch-gfx942-mismatch",
+        "mode": "cold",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "2",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "0",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "1",
+          "ARCH": "gfx942"
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.04348643030971289
+        },
+        "identity": {
+          "manager_key": "7ca37d6b11c7cc8649f50515ee634fab",
+          "cache_key": "(('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '2'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '0'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx942', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/arch-gfx942-mismatch",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/arch-gfx942-mismatch/int_vec_add_7ca37d6b11c7cc8649f50515ee634fab/cf0f4c1a5ced83b1.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "71a3cefcedcd64210c95e280543ecca0af6f97bc082ee71b3da6a5096db969b5",
+          "compiled_ir_sha256": "ce984efb172d97a3d97f10f9ffd53082a4058f9c8644950e6f2f1027e5880856",
+          "source_ir_sha256": "54c331b9921ac0a1168ed3d51237789822cce377dda38ab96cc0a7a71541fe9e"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": false,
+          "max_abs_diff": 2147483640,
+          "output_min": -2147483648,
+          "output_max": -2147483648,
+          "first_16": [
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648
+          ],
+          "last_16": [
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648
+          ]
+        },
+        "error": null
+      }
+    },
+    "opt0-debug0-verifier1": {
+      "cold": {
+        "case": "opt0-debug0-verifier1",
+        "mode": "cold",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "0",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "0",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "1",
+          "FLYDSL_COMPILE_ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.2083835583180189
+        },
+        "identity": {
+          "manager_key": "8aad3056a67c5b254415116696fcb02a",
+          "cache_key": "(('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '0'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '0'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt0-debug0-verifier1",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt0-debug0-verifier1/int_vec_add_8aad3056a67c5b254415116696fcb02a/6ad85f2867931e64.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "2addf2c27f6afcf671ef80acc89ecb8f1b88dc482bd2fe60c34aef74c23b7161",
+          "compiled_ir_sha256": "b22e3d51288b21c06ce0ffd97801f4a4f5bad1b41afe8763ae86c5c86732a0ce",
+          "source_ir_sha256": "bb2718193c5da853eaa4e459a815250258fa4d09314df80765e4ba786c1fde39"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      },
+      "warm": {
+        "case": "opt0-debug0-verifier1",
+        "mode": "warm",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "0",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "0",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "1",
+          "FLYDSL_COMPILE_ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.04354699049144983
+        },
+        "identity": {
+          "manager_key": "8aad3056a67c5b254415116696fcb02a",
+          "cache_key": "(('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '0'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '0'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt0-debug0-verifier1",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt0-debug0-verifier1/int_vec_add_8aad3056a67c5b254415116696fcb02a/6ad85f2867931e64.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "2addf2c27f6afcf671ef80acc89ecb8f1b88dc482bd2fe60c34aef74c23b7161",
+          "compiled_ir_sha256": "b22e3d51288b21c06ce0ffd97801f4a4f5bad1b41afe8763ae86c5c86732a0ce",
+          "source_ir_sha256": "bb2718193c5da853eaa4e459a815250258fa4d09314df80765e4ba786c1fde39"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      }
+    },
+    "opt2-debug0-verifier0": {
+      "cold": {
+        "case": "opt2-debug0-verifier0",
+        "mode": "cold",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "2",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "0",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "0",
+          "FLYDSL_COMPILE_ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.25158446561545134
+        },
+        "identity": {
+          "manager_key": "8aad3056a67c5b254415116696fcb02a",
+          "cache_key": "(('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '2'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '0'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt2-debug0-verifier0",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt2-debug0-verifier0/int_vec_add_8aad3056a67c5b254415116696fcb02a/cbb56ff99a8abbc7.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "2addf2c27f6afcf671ef80acc89ecb8f1b88dc482bd2fe60c34aef74c23b7161",
+          "compiled_ir_sha256": "b22e3d51288b21c06ce0ffd97801f4a4f5bad1b41afe8763ae86c5c86732a0ce",
+          "source_ir_sha256": "bb2718193c5da853eaa4e459a815250258fa4d09314df80765e4ba786c1fde39"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      },
+      "warm": {
+        "case": "opt2-debug0-verifier0",
+        "mode": "warm",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "2",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "0",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "0",
+          "FLYDSL_COMPILE_ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.04472249187529087
+        },
+        "identity": {
+          "manager_key": "8aad3056a67c5b254415116696fcb02a",
+          "cache_key": "(('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '2'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '0'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt2-debug0-verifier0",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt2-debug0-verifier0/int_vec_add_8aad3056a67c5b254415116696fcb02a/cbb56ff99a8abbc7.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "2addf2c27f6afcf671ef80acc89ecb8f1b88dc482bd2fe60c34aef74c23b7161",
+          "compiled_ir_sha256": "b22e3d51288b21c06ce0ffd97801f4a4f5bad1b41afe8763ae86c5c86732a0ce",
+          "source_ir_sha256": "bb2718193c5da853eaa4e459a815250258fa4d09314df80765e4ba786c1fde39"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      }
+    },
+    "opt2-debug0-verifier1": {
+      "cold": {
+        "case": "opt2-debug0-verifier1",
+        "mode": "cold",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "2",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "0",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "1",
+          "FLYDSL_COMPILE_ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.2252231789752841
+        },
+        "identity": {
+          "manager_key": "8aad3056a67c5b254415116696fcb02a",
+          "cache_key": "(('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '2'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '0'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt2-debug0-verifier1",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt2-debug0-verifier1/int_vec_add_8aad3056a67c5b254415116696fcb02a/cbb56ff99a8abbc7.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "2addf2c27f6afcf671ef80acc89ecb8f1b88dc482bd2fe60c34aef74c23b7161",
+          "compiled_ir_sha256": "b22e3d51288b21c06ce0ffd97801f4a4f5bad1b41afe8763ae86c5c86732a0ce",
+          "source_ir_sha256": "bb2718193c5da853eaa4e459a815250258fa4d09314df80765e4ba786c1fde39"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      },
+      "warm": {
+        "case": "opt2-debug0-verifier1",
+        "mode": "warm",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "2",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "0",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "1",
+          "FLYDSL_COMPILE_ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.051456780172884464
+        },
+        "identity": {
+          "manager_key": "8aad3056a67c5b254415116696fcb02a",
+          "cache_key": "(('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '2'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '0'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt2-debug0-verifier1",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt2-debug0-verifier1/int_vec_add_8aad3056a67c5b254415116696fcb02a/cbb56ff99a8abbc7.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "2addf2c27f6afcf671ef80acc89ecb8f1b88dc482bd2fe60c34aef74c23b7161",
+          "compiled_ir_sha256": "b22e3d51288b21c06ce0ffd97801f4a4f5bad1b41afe8763ae86c5c86732a0ce",
+          "source_ir_sha256": "bb2718193c5da853eaa4e459a815250258fa4d09314df80765e4ba786c1fde39"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      }
+    },
+    "opt2-debug1-verifier1": {
+      "cold": {
+        "case": "opt2-debug1-verifier1",
+        "mode": "cold",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "2",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "1",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "1",
+          "FLYDSL_COMPILE_ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.21500945650041103
+        },
+        "identity": {
+          "manager_key": "8aad3056a67c5b254415116696fcb02a",
+          "cache_key": "(('_globals_', ((('_flydsl_loc', '__main__'), ('callable', 'flydsl.compiler.ast_rewriter', 'FallbackLocations._flydsl_loc')),)), ('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '2'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '1'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt2-debug1-verifier1",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt2-debug1-verifier1/int_vec_add_8aad3056a67c5b254415116696fcb02a/8c32318e9a4bd55c.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "2ee812f93eb4ad62a6262bdcaa6252a6ac6dc07e436c1a8e28c6cde61314b5b3",
+          "compiled_ir_sha256": "f57c6e14f63a7959cd9db3a826bb6b821778af66384269f70caa2639ce5cfa39",
+          "source_ir_sha256": "46a025e67c13164f95e4e5a3c164535808e80a797bc61b09e2ca5eda44d9c66b"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      },
+      "warm": {
+        "case": "opt2-debug1-verifier1",
+        "mode": "warm",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "2",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "1",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "1",
+          "FLYDSL_COMPILE_ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.044978522695600986
+        },
+        "identity": {
+          "manager_key": "8aad3056a67c5b254415116696fcb02a",
+          "cache_key": "(('_globals_', ((('_flydsl_loc', '__main__'), ('callable', 'flydsl.compiler.ast_rewriter', 'FallbackLocations._flydsl_loc')),)), ('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '2'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '1'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt2-debug1-verifier1",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt2-debug1-verifier1/int_vec_add_8aad3056a67c5b254415116696fcb02a/8c32318e9a4bd55c.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "2ee812f93eb4ad62a6262bdcaa6252a6ac6dc07e436c1a8e28c6cde61314b5b3",
+          "compiled_ir_sha256": "f57c6e14f63a7959cd9db3a826bb6b821778af66384269f70caa2639ce5cfa39",
+          "source_ir_sha256": "46a025e67c13164f95e4e5a3c164535808e80a797bc61b09e2ca5eda44d9c66b"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      }
+    },
+    "opt3-debug0-verifier1": {
+      "cold": {
+        "case": "opt3-debug0-verifier1",
+        "mode": "cold",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "3",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "0",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "1",
+          "FLYDSL_COMPILE_ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.21196625009179115
+        },
+        "identity": {
+          "manager_key": "8aad3056a67c5b254415116696fcb02a",
+          "cache_key": "(('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '3'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '0'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt3-debug0-verifier1",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt3-debug0-verifier1/int_vec_add_8aad3056a67c5b254415116696fcb02a/5f2ac6a3e09a62e2.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "2addf2c27f6afcf671ef80acc89ecb8f1b88dc482bd2fe60c34aef74c23b7161",
+          "compiled_ir_sha256": "b22e3d51288b21c06ce0ffd97801f4a4f5bad1b41afe8763ae86c5c86732a0ce",
+          "source_ir_sha256": "bb2718193c5da853eaa4e459a815250258fa4d09314df80765e4ba786c1fde39"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      },
+      "warm": {
+        "case": "opt3-debug0-verifier1",
+        "mode": "warm",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "3",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "0",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "1",
+          "FLYDSL_COMPILE_ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-base/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.04352064989507198
+        },
+        "identity": {
+          "manager_key": "8aad3056a67c5b254415116696fcb02a",
+          "cache_key": "(('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '3'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '0'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt3-debug0-verifier1",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-base-matrix/opt3-debug0-verifier1/int_vec_add_8aad3056a67c5b254415116696fcb02a/5f2ac6a3e09a62e2.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "2addf2c27f6afcf671ef80acc89ecb8f1b88dc482bd2fe60c34aef74c23b7161",
+          "compiled_ir_sha256": "b22e3d51288b21c06ce0ffd97801f4a4f5bad1b41afe8763ae86c5c86732a0ce",
+          "source_ir_sha256": "bb2718193c5da853eaa4e459a815250258fa4d09314df80765e4ba786c1fde39"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      }
+    }
+  },
+  "fix": {
+    "arch-gfx942-mismatch": {
+      "cold": {
+        "case": "arch-gfx942-mismatch",
+        "mode": "cold",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "2",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "0",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "1",
+          "ARCH": "gfx942"
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.2258173543959856
+        },
+        "identity": {
+          "manager_key": "dd0f64e690640cd5a9b9b48bcae23ff5",
+          "cache_key": "(('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '2'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '0'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx942', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/arch-gfx942-mismatch",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/arch-gfx942-mismatch/int_vec_add_dd0f64e690640cd5a9b9b48bcae23ff5/cf0f4c1a5ced83b1.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "4e2a8597daf88a6351c76af53acc05dbf74caa1ca287c4ba82ebb8334391c703",
+          "compiled_ir_sha256": "ce984efb172d97a3d97f10f9ffd53082a4058f9c8644950e6f2f1027e5880856",
+          "source_ir_sha256": "34b93ba429f8dfcaaec7d6f5a75bede16d5b5ac38e35b95d1a15df086d13e106"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": false,
+          "max_abs_diff": 2147483640,
+          "output_min": -2147483648,
+          "output_max": -2147483648,
+          "first_16": [
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648
+          ],
+          "last_16": [
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648,
+            -2147483648
+          ]
+        },
+        "error": null
+      }
+    },
+    "opt0-debug0-verifier1": {
+      "cold": {
+        "case": "opt0-debug0-verifier1",
+        "mode": "cold",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "0",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "0",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "1",
+          "ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.31045294273644686
+        },
+        "identity": {
+          "manager_key": "3374d322ea034bab920caac2357282f7",
+          "cache_key": "(('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '0'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '0'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt0-debug0-verifier1",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt0-debug0-verifier1/int_vec_add_3374d322ea034bab920caac2357282f7/6ad85f2867931e64.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "d18ad598a25aadaf50cf4cc2a45b0eeb7d089242a03b1ab0c49ba18b71ac50f5",
+          "compiled_ir_sha256": "dabb173d01d56121f4e358c359336594e5b891d1d9bb7a2a4b2ede5d61ec87a8",
+          "source_ir_sha256": "3e39678f4cf1149db5bcd0b470716df6914b90f35cc3af6344b30347028e0516"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      },
+      "warm": {
+        "case": "opt0-debug0-verifier1",
+        "mode": "warm",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "0",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "0",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "1",
+          "ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.0503950621932745
+        },
+        "identity": {
+          "manager_key": "3374d322ea034bab920caac2357282f7",
+          "cache_key": "(('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '0'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '0'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt0-debug0-verifier1",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt0-debug0-verifier1/int_vec_add_3374d322ea034bab920caac2357282f7/6ad85f2867931e64.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "d18ad598a25aadaf50cf4cc2a45b0eeb7d089242a03b1ab0c49ba18b71ac50f5",
+          "compiled_ir_sha256": "dabb173d01d56121f4e358c359336594e5b891d1d9bb7a2a4b2ede5d61ec87a8",
+          "source_ir_sha256": "3e39678f4cf1149db5bcd0b470716df6914b90f35cc3af6344b30347028e0516"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      }
+    },
+    "opt2-debug0-verifier0": {
+      "cold": {
+        "case": "opt2-debug0-verifier0",
+        "mode": "cold",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "2",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "0",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "0",
+          "ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.22457795310765505
+        },
+        "identity": {
+          "manager_key": "3374d322ea034bab920caac2357282f7",
+          "cache_key": "(('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '2'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '0'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt2-debug0-verifier0",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt2-debug0-verifier0/int_vec_add_3374d322ea034bab920caac2357282f7/cbb56ff99a8abbc7.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "186c0b08c528fcefb8e57b2dde80de15edf1ca031adad760ce19e79965e34c01",
+          "compiled_ir_sha256": "b22e3d51288b21c06ce0ffd97801f4a4f5bad1b41afe8763ae86c5c86732a0ce",
+          "source_ir_sha256": "3e39678f4cf1149db5bcd0b470716df6914b90f35cc3af6344b30347028e0516"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      },
+      "warm": {
+        "case": "opt2-debug0-verifier0",
+        "mode": "warm",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "2",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "0",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "0",
+          "ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.04387397412210703
+        },
+        "identity": {
+          "manager_key": "3374d322ea034bab920caac2357282f7",
+          "cache_key": "(('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '2'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '0'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt2-debug0-verifier0",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt2-debug0-verifier0/int_vec_add_3374d322ea034bab920caac2357282f7/cbb56ff99a8abbc7.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "186c0b08c528fcefb8e57b2dde80de15edf1ca031adad760ce19e79965e34c01",
+          "compiled_ir_sha256": "b22e3d51288b21c06ce0ffd97801f4a4f5bad1b41afe8763ae86c5c86732a0ce",
+          "source_ir_sha256": "3e39678f4cf1149db5bcd0b470716df6914b90f35cc3af6344b30347028e0516"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      }
+    },
+    "opt2-debug0-verifier1": {
+      "cold": {
+        "case": "opt2-debug0-verifier1",
+        "mode": "cold",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "2",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "0",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "1",
+          "ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.22196745872497559
+        },
+        "identity": {
+          "manager_key": "3374d322ea034bab920caac2357282f7",
+          "cache_key": "(('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '2'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '0'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt2-debug0-verifier1",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt2-debug0-verifier1/int_vec_add_3374d322ea034bab920caac2357282f7/cbb56ff99a8abbc7.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "186c0b08c528fcefb8e57b2dde80de15edf1ca031adad760ce19e79965e34c01",
+          "compiled_ir_sha256": "b22e3d51288b21c06ce0ffd97801f4a4f5bad1b41afe8763ae86c5c86732a0ce",
+          "source_ir_sha256": "3e39678f4cf1149db5bcd0b470716df6914b90f35cc3af6344b30347028e0516"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      },
+      "warm": {
+        "case": "opt2-debug0-verifier1",
+        "mode": "warm",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "2",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "0",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "1",
+          "ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.04905107989907265
+        },
+        "identity": {
+          "manager_key": "3374d322ea034bab920caac2357282f7",
+          "cache_key": "(('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '2'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '0'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt2-debug0-verifier1",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt2-debug0-verifier1/int_vec_add_3374d322ea034bab920caac2357282f7/cbb56ff99a8abbc7.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "186c0b08c528fcefb8e57b2dde80de15edf1ca031adad760ce19e79965e34c01",
+          "compiled_ir_sha256": "b22e3d51288b21c06ce0ffd97801f4a4f5bad1b41afe8763ae86c5c86732a0ce",
+          "source_ir_sha256": "3e39678f4cf1149db5bcd0b470716df6914b90f35cc3af6344b30347028e0516"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      }
+    },
+    "opt2-debug1-verifier1": {
+      "cold": {
+        "case": "opt2-debug1-verifier1",
+        "mode": "cold",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "2",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "1",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "1",
+          "ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.2625678237527609
+        },
+        "identity": {
+          "manager_key": "3374d322ea034bab920caac2357282f7",
+          "cache_key": "(('_globals_', ((('_flydsl_loc', '__main__'), ('callable', 'flydsl.compiler.ast_rewriter', 'FallbackLocations._flydsl_loc')),)), ('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '2'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '1'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt2-debug1-verifier1",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt2-debug1-verifier1/int_vec_add_3374d322ea034bab920caac2357282f7/8c32318e9a4bd55c.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "f6f80118d0bf505fa75e858bd921eaa0531f3d475539a9686e6ff0814b66a6c4",
+          "compiled_ir_sha256": "ed28e0ece874b4978d53619008e35d15c6a8568f9b0724fea1788139f511f159",
+          "source_ir_sha256": "b37d11e330f8fe68f8589f479efc3b2e04f48dceea4699d07234c784bd4c670f"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      },
+      "warm": {
+        "case": "opt2-debug1-verifier1",
+        "mode": "warm",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "2",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "1",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "1",
+          "ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.049527544528245926
+        },
+        "identity": {
+          "manager_key": "3374d322ea034bab920caac2357282f7",
+          "cache_key": "(('_globals_', ((('_flydsl_loc', '__main__'), ('callable', 'flydsl.compiler.ast_rewriter', 'FallbackLocations._flydsl_loc')),)), ('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '2'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '1'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt2-debug1-verifier1",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt2-debug1-verifier1/int_vec_add_3374d322ea034bab920caac2357282f7/8c32318e9a4bd55c.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "f6f80118d0bf505fa75e858bd921eaa0531f3d475539a9686e6ff0814b66a6c4",
+          "compiled_ir_sha256": "ed28e0ece874b4978d53619008e35d15c6a8568f9b0724fea1788139f511f159",
+          "source_ir_sha256": "b37d11e330f8fe68f8589f479efc3b2e04f48dceea4699d07234c784bd4c670f"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      }
+    },
+    "opt3-debug0-verifier1": {
+      "cold": {
+        "case": "opt3-debug0-verifier1",
+        "mode": "cold",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "3",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "0",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "1",
+          "ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.26907924097031355
+        },
+        "identity": {
+          "manager_key": "3374d322ea034bab920caac2357282f7",
+          "cache_key": "(('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '3'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '0'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt3-debug0-verifier1",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt3-debug0-verifier1/int_vec_add_3374d322ea034bab920caac2357282f7/5f2ac6a3e09a62e2.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "e64a46c92c4499afbc3b8f6cd4539b1ff1b6c0e74f493346569d90c570fd461f",
+          "compiled_ir_sha256": "950b4c3302e9beae4bbe5d2767e688c8e73438a8a25b6498455a9c9817ee57f2",
+          "source_ir_sha256": "3e39678f4cf1149db5bcd0b470716df6914b90f35cc3af6344b30347028e0516"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      },
+      "warm": {
+        "case": "opt3-debug0-verifier1",
+        "mode": "warm",
+        "options": {
+          "FLYDSL_COMPILE_OPT_LEVEL": "3",
+          "FLYDSL_DEBUG_ENABLE_DEBUG_INFO": "0",
+          "FLYDSL_DEBUG_ENABLE_VERIFIER": "1",
+          "ARCH": ""
+        },
+        "environment": {
+          "python": "/opt/venv/bin/python3",
+          "flydsl_python": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/__init__.py",
+          "flydsl_version": "0.3.3",
+          "flydsl_native_root": "/tmp/flydsl-src-j-8291668ade13-fix/flydsl/_mlir/_mlir_libs",
+          "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+          "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+          "gpu": "AMD Instinct MI350X",
+          "gpu_capability": [
+            9,
+            5
+          ]
+        },
+        "source": {
+          "probe": "/job/FlyDSL/reports/j-8291668ade13/compile_option_probe.py",
+          "kernel": "    @flyc.kernel\n    def int_vec_add_kernel(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n    ):\n        idx = fx.block_idx.x * fx.block_dim.x + fx.thread_idx.x\n        if idx < n:\n            C[idx] = A[idx] + B[idx]\n",
+          "launcher": "    @flyc.jit\n    def int_vec_add(\n        A: fx.Pointer,\n        B: fx.Pointer,\n        C: fx.Pointer,\n        n: fx.Int32,\n        stream: fx.Stream = fx.Stream(None),\n    ):\n        block_dim = 64\n        grid_x = (n + block_dim - 1) // block_dim\n        int_vec_add_kernel(A, B, C, n).launch(\n            grid=(grid_x, 1, 1), block=[block_dim, 1, 1], stream=stream\n        )\n",
+          "kernel_sha256": "704df11d2815aeb7c318a3e6d29f6ffd5369513aa2f310c0bb55354f034ab822",
+          "launcher_sha256": "558b1b28afb7ba51bc457639f79f4465d5ebf117ed9a262cc501252b724a6ff8"
+        },
+        "sentinels": {
+          "size": 257,
+          "input_min": 0,
+          "input_max": 99,
+          "expected_min": 0,
+          "expected_max": 198,
+          "initial_output": -2147483648
+        },
+        "timing": {
+          "method": "one perf_counter interval around one dispatch and final synchronize",
+          "elapsed_seconds": 0.04897158779203892
+        },
+        "identity": {
+          "manager_key": "3374d322ea034bab920caac2357282f7",
+          "cache_key": "(('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', '3'), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', '0'), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Int32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+          "cache_root": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt3-debug0-verifier1",
+          "cache_file": "/tmp/flydsl-cache-j-8291668ade13-fix-matrix/opt3-debug0-verifier1/int_vec_add_3374d322ea034bab920caac2357282f7/5f2ac6a3e09a62e2.pkl",
+          "cache_file_exists": true,
+          "cache_file_sha256": "e64a46c92c4499afbc3b8f6cd4539b1ff1b6c0e74f493346569d90c570fd461f",
+          "compiled_ir_sha256": "950b4c3302e9beae4bbe5d2767e688c8e73438a8a25b6498455a9c9817ee57f2",
+          "source_ir_sha256": "3e39678f4cf1149db5bcd0b470716df6914b90f35cc3af6344b30347028e0516"
+        },
+        "comparison": {
+          "reference": "independent CPU torch.add before GPU dispatch",
+          "torch_equal": true,
+          "max_abs_diff": 0,
+          "output_min": 8,
+          "output_max": 196,
+          "first_16": [
+            111,
+            173,
+            95,
+            140,
+            96,
+            140,
+            189,
+            156,
+            104,
+            149,
+            68,
+            108,
+            110,
+            97,
+            45,
+            167
+          ],
+          "last_16": [
+            74,
+            126,
+            45,
+            115,
+            37,
+            108,
+            85,
+            105,
+            75,
+            149,
+            100,
+            158,
+            40,
+            35,
+            109,
+            159
+          ]
+        },
+        "error": null
+      }
+    }
+  },
+  "gfx942_mismatch_stderr": [
+    "'hipModuleLoadData(&module, data)' failed with 'hipErrorNoBinaryForGpu'",
+    "'hipModuleGetFunction(&function, module, name)' failed with 'hipErrorInvalidHandle'",
+    "'hipModuleLaunchKernel(function, gridX, gridY, gridZ, blockX, blockY, blockZ, smem, stream, params, extra)' failed with 'hipErrorInvalidHandle'",
+    "'hipModuleUnload(module)' failed with 'hipErrorInvalidHandle'",
+    "{",
+    "  \"case\": \"arch-gfx942-mismatch\",",
+    "  \"mode\": \"cold\",",
+    "  \"options\": {"
+  ]
+}

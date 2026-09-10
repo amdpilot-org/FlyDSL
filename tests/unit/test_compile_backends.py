@@ -38,6 +38,16 @@ def test_default_compile_backend_stays_rocm(monkeypatch):
     assert backend.target.arch == "gfx942"
 
 
+def test_opt_level_reaches_rocm_target_options(monkeypatch):
+    backends = _load_backends(monkeypatch)
+    monkeypatch.setenv("FLYDSL_COMPILE_OPT_LEVEL", "0")
+
+    fragments, _ = backends.get_backend(arch="gfx942")._pipeline_parts(compile_hints={})
+    attach_target = next(fragment for fragment in fragments if fragment.startswith("rocdl-attach-target"))
+
+    assert "O=0" in attach_target
+
+
 def test_registering_extra_backend_does_not_change_default(monkeypatch):
     backends = _load_backends(monkeypatch)
     monkeypatch.delenv("FLYDSL_COMPILE_BACKEND", raising=False)

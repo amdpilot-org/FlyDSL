@@ -61,7 +61,7 @@ class RocmBackend(BaseBackend):
             bin_cli_opts.append(f"--amdgpu-num-vgpr={maxnreg}")
 
         rocdl_opts = {
-            "O": 2,
+            "O": env.compile.opt_level,
             "abi": 600,
             "chip": chip,
             "correct-sqrt": "true",
