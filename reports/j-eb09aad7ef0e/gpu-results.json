@@ -1,0 +1,95 @@
+{
+  "campaign": "repo-e2e-20260909",
+  "job_id": "j-eb09aad7ef0e",
+  "upstream_context": {
+    "issue": "ROCm/FlyDSL issue 1016",
+    "issue_state": "open",
+    "issue_comments": 0,
+    "related_pr": "ROCm/FlyDSL PR 1031",
+    "related_merge_commit": "c3bd004",
+    "upstream_repository_modified": false
+  },
+  "delivery": {
+    "repository": "amdpilot-org/FlyDSL",
+    "branch": "amdpilot/j-eb09aad7ef0e",
+    "base": "main",
+    "base_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111"
+  },
+  "environment": {
+    "image_identity": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7",
+    "python": "/opt/venv/bin/python",
+    "python_version": "3.12.3",
+    "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+    "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+    "rocm_hip": "7.2.26015-fc0010cf6a",
+    "triton": "/opt/venv/lib/python3.12/site-packages/triton/__init__.py",
+    "triton_version": "3.5.1+rocm7.2.0.gita272dfa8",
+    "installed_flydsl": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+    "installed_flydsl_version": "0.2.4",
+    "checkout_source": "/job/FlyDSL/python/flydsl",
+    "native_flydsl": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs",
+    "native_torch": "/opt/venv/lib/python3.12/site-packages/torch/lib",
+    "gpu_name": "AMD Instinct MI350X",
+    "gpu_arch": "gfx950",
+    "gpu_capability": [
+      9,
+      5
+    ],
+    "gpu_count": 1,
+    "wavefront_size": 64
+  },
+  "installed_source_baseline": {
+    "label": "installed-source baseline; not proof for later checkout changes",
+    "artifact": "/job/baseline-first.json",
+    "command": "/opt/venv/bin/python /tmp/flydsl_baseline_first.py",
+    "operation": "torch.cumsum(input_gpu, dim=0)",
+    "dtype": "int64",
+    "input_size": 1048576,
+    "reference": "torch.cumsum(input_cpu, dim=0)",
+    "reference_exact_equal": true,
+    "max_abs_difference": 0.0,
+    "timing_method": "one synchronized CUDA-event measurement plus time.perf_counter wall time",
+    "first_gpu_execution_cuda_ms": 65.4851303100586,
+    "first_gpu_execution_wall_seconds": 0.06561272498220205,
+    "prior_float32_attempt": {
+      "result": "not exact",
+      "reason": "GPU/CPU floating-point accumulation order differs",
+      "max_abs_difference": 294912.0
+    }
+  },
+  "gpu_validation": {
+    "test_source": "tests/extension/coop/test_block_segmented_scan.py",
+    "segmented_command": "PYTHONPATH=/tmp/flydsl-cache-j-eb09aad7ef0e/source-v6/python /opt/venv/bin/python -m pytest -q tests/extension/coop/test_block_segmented_scan.py tests/extension/coop/test_block_spec.py",
+    "segmented_cases": [
+      "one-wave reset-at-boundary",
+      "one-wave carry-across-boundary",
+      "two-wave reset-at-boundary",
+      "two-wave carry-across-boundary"
+    ],
+    "segmented_result": "4 passed",
+    "spec_result": "12 passed",
+    "combined_result": "16 passed in 1.43s",
+    "reference": "independent scalar CPU loop with explicit reset flags",
+    "dtype": "int32",
+    "comparison": "torch.equal",
+    "output_sentinel": -123456789,
+    "sentinel_check": "no sentinel remains",
+    "universal_ordinary_scan_command": "PYTHONPATH=/tmp/flydsl-cache-j-eb09aad7ef0e/source-v5/python:/job/FlyDSL/tests/extension/coop /opt/venv/bin/python",
+    "universal_ordinary_scan_result": "block sizes 64 and 128; inclusive and exclusive; all exact",
+    "universal_ordinary_scan_comparison": "check_scan against CPU cumsum with int32 wrapping",
+    "style_command": "PYTHONPATH=/tmp/flydsl-cache-j-eb09aad7ef0e/style /opt/venv/bin/python -m black --check ...; PYTHONPATH=/tmp/flydsl-cache-j-eb09aad7ef0e/style /opt/venv/bin/python -m ruff check ...",
+    "style_result": "passed"
+  },
+  "environment_caveat": {
+    "issue": "checkout main requires native convert-rocdl-fastmath-ops and CDNA4 op absent from installed FlyDSL 0.2.4",
+    "workaround": "job-private source copy linked installed _mlir and removed only the unsupported fastmath pass for real GPU execution",
+    "dispatched_ordinary_scan_result": "unsupported in this mixed source/native environment: ImportError for CopyOpCDNA4BufferLoadAsyncLDSType",
+    "segmented_path_result": "supported and passed; segmented scan does not dispatch through the incompatible ROCDL warp override"
+  },
+  "scope": {
+    "general_primitive_library_added": false,
+    "segmented_api": "BlockScan.segmented_inclusive",
+    "supported_shape": "one scalar value and one explicit start flag per thread",
+    "vector_segmented_scan_added": false
+  }
+}
