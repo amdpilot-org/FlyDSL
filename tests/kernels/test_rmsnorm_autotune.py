@@ -102,6 +102,30 @@ def test_rmsnorm_autotuned_default_uses_current_stream_and_skips_search(monkeypa
     _assert_close(out, ref)
 
 
+def test_rmsnorm_empty_pruned_candidates_fallback_then_refuse_search(monkeypatch):
+    monkeypatch.setattr(_rmsnorm_tuner, "prune_configs_by", lambda configs, sig_args: [])
+    monkeypatch.setattr(
+        _rmsnorm_tuner,
+        "_bench_one",
+        lambda *_args, **_kwargs: pytest.fail("no candidate should be benchmarked"),
+    )
+    x, g, ref = _inputs(M=8)
+    out = torch.full_like(x, 123.0)
+
+    rmsnorm_autotuned(x, g, out, x.shape[0])
+    torch.cuda.synchronize()
+    _assert_close(out, ref)
+
+    out.fill_(123.0)
+    monkeypatch.setenv("FLYDSL_AUTOTUNE", "1")
+    with pytest.raises(RuntimeError, match="pruning removed all candidate configs"):
+        rmsnorm_autotuned(x, g, out, x.shape[0])
+    torch.cuda.synchronize()
+
+    assert torch.all(out == 123.0)
+    assert torch.isfinite(ref).all()
+
+
 def test_rmsnorm_autotuned_search_then_cache_hit(monkeypatch):
     completed = 0
     target = next(

@@ -475,6 +475,23 @@ def test_prune_configs_by():
     assert [c.kwargs["BLOCK"] for c in pruned] == [64, 128]
 
 
+def test_empty_pruned_search_refuses_precisely(monkeypatch):
+    monkeypatch.setenv("FLYDSL_AUTOTUNE", "1")
+
+    tuner = _make_tuner(
+        fn=lambda a, out, **kw: None,
+        configs=[Config(BLOCK=64), Config(BLOCK=128)],
+        prune_configs_by=lambda configs, sig_args: [],
+        do_bench_fn=lambda *_args, **_kwargs: pytest.fail("no candidate benchmarked"),
+    )
+
+    with pytest.raises(RuntimeError, match="pruning removed all candidate configs"):
+        tuner(FakeTensor((8,)), FakeTensor((8,)))
+
+    assert tuner.cache == {}
+    assert not tuner._cache_file.exists()
+
+
 # ── disk cache ───────────────────────────────────────────────────────────
 def test_disk_cache_roundtrip(tmp_path, monkeypatch):
     monkeypatch.setenv("FLYDSL_AUTOTUNE_CACHE_DIR", str(tmp_path))
