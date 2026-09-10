@@ -1,0 +1,48 @@
+WARNING: AMD GPU device(s) is/are in a low-power state. Check power control/runtime_status
+
+
+
+============================ ROCm System Management Interface ============================
+===================================== KFD Processes ======================================
+KFD process information:
+PID    	PROCESS NAME	GPU(s)	VRAM USED	SDMA USED	CU OCCUPANCY	
+2848144	UNKNOWN     	0     	0        	0        	0           	
+3009880	UNKNOWN     	0     	0        	0        	0           	
+2926815	UNKNOWN     	0     	0        	0        	0           	
+2848145	UNKNOWN     	0     	0        	0        	0           	
+2848141	UNKNOWN     	0     	0        	0        	0           	
+==========================================================================================
+================================== GPUs Indexed by PID ===================================
+PID 2848144 is using 0 DRM device(s)
+PID 3009880 is using 0 DRM device(s)
+PID 2926815 is using 0 DRM device(s)
+PID 2848145 is using 0 DRM device(s)
+PID 2848141 is using 0 DRM device(s)
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+WARNING: AMD GPU device(s) is/are in a low-power state. Check power control/runtime_status
+
+
+
+============================ ROCm System Management Interface ============================
+============================== Version of System Component ===============================
+Driver version: 7.1.1.31500000
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 270566162432
+GPU[0]		: VRAM Total Used Memory (B): 298110976
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI350X
+GPU[0]		: Card Model: 		0x75a0
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		N/A
+GPU[0]		: Subsystem ID: 	0x75a0
+GPU[0]		: Device Rev: 		0x00
+GPU[0]		: Node ID: 		5
+GPU[0]		: GUID: 		42642
+GPU[0]		: GFX Version: 		gfx950
+==========================================================================================
+================================== Voltage Curve Points ==================================
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
