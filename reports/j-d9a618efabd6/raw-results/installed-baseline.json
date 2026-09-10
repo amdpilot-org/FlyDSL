@@ -1,0 +1,21 @@
+{
+  "label": "installed-source baseline; not proof for later checkout changes",
+  "source_test": "/opt/aiter/op_tests/flydsl_tests/test_silu_and_mul_fq.py",
+  "aiter_commit": "d9e5ef7ce08ee7045d583aed768cff41aa9210fe",
+  "flydsl_version": "0.2.4",
+  "python": "/opt/venv/bin/python",
+  "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+  "triton": "3.5.1+rocm7.2.0.gita272dfa8",
+  "gpu": "AMD Instinct MI350X gfx950",
+  "initial_result": {
+    "wall_seconds": 22.14646,
+    "error": "ModuleNotFoundError: No module named 'aiter.jit.module_aiter_core'"
+  },
+  "neighboring_control": {
+    "wall_seconds": 7.249918,
+    "gpu_execution_reached": false,
+    "error": "MLIRError: PtrToIntOp: expected PointerType, got '!fly.memref<bf16, global, (?,?):(?{i64},1)>'",
+    "reference_comparison": "not reached"
+  },
+  "full_record": "/job/baseline-first.json"
+}
