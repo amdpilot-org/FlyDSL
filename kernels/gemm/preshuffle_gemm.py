@@ -128,6 +128,8 @@ def compile_preshuffle_gemm(
     """
     if in_dtype not in ("fp8", "int8", "fp16", "bf16"):
         raise ValueError(f"in_dtype must be fp8/int8/fp16/bf16, got {in_dtype!r}")
+    if N <= 0 or N % tile_n != 0:
+        raise ValueError(f"tile_n must be a positive divisor of N; got tile_n={tile_n}, N={N}")
     if tile_k <= 0 or K % tile_k != 0:
         raise ValueError(f"tile_k must be a positive divisor of K; got tile_k={tile_k}, K={K}")
     if epilogue not in ("none", "bias", "bias_relu", "bias_silu", "bias_gelu"):
