@@ -1,0 +1,64 @@
+Date: 2026-09-10
+GPU: AMD Instinct MI350X, gfx950
+Image: amdpilotv2/open-job:gbt350-20260909
+Local image ID: sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7
+ROCm root: /opt/rocm -> /opt/rocm-7.2.0
+Exact lld: /opt/rocm/llvm/bin/ld.lld -> /opt/rocm-7.2.0/lib/llvm/bin/lld
+lld version: AMD LLD 22.0.0 (LLVM commit 7b800a19466229b8479a78de19143dc33c3ab9b5)
+
+BASELINE DEFAULT
+============================= test session starts ==============================
+tests/kernels/test_vec_add.py .
+============================== 1 passed in 1.34s ===============================
+Correctness: max error = 0.00e+00
+
+BASELINE ROCM_PATH=/opt/rocm
+tests/kernels/test_vec_add.py .
+============================== 1 passed in 1.36s ===============================
+
+BASELINE INVALID ROCM_PATH
+tests/kernels/test_vec_add.py .
+============================== 1 passed in 1.40s ===============================
+Resolution: /opt/rocm (invalid override ignored by installed code)
+
+PR568 COMMIT 1e7a7b99e4b1b7e08663f1ad16810a5516a6f490
+DEFAULT
+tests/kernels/test_vec_add.py .
+============================== 1 passed in 1.66s ===============================
+Resolution: /opt/rocm
+
+PR568 FLYDSL_ROCM_TOOLKIT_PATH=/opt/rocm
+tests/kernels/test_vec_add.py .
+============================== 1 passed in 1.38s ===============================
+Resolution: /opt/rocm
+
+PR568 INVALID FLYDSL_ROCM_TOOLKIT_PATH
+tests/kernels/test_vec_add.py .
+============================== 1 passed in 1.37s ===============================
+Resolution: /opt/rocm (invalid explicit path rejected as not well-formed)
+
+PR568 ROCM_PATH=/opt/rocm
+tests/kernels/test_vec_add.py .
+============================== 1 passed in 1.42s ===============================
+Resolution: /opt/rocm
+
+PR568 INVALID ROCM_PATH
+tests/kernels/test_vec_add.py .
+============================== 1 passed in 1.51s ===============================
+Resolution: /opt/rocm (invalid explicit path rejected as not well-formed)
+
+PR568 NUMERIC DEFAULT
+Correctness: max error = 0.00e+00
+============================== 1 passed in 1.36s ===============================
+
+EXTERNAL LLVM INVALID PATH
+tests/kernels/test_vec_add.py F
+ExternalLLVMError: External LLVM tool 'mlir-opt' not found. Tried:
+/tmp/flydsl-cache-j-0ee706f2c47c/invalid-llvm/bin/mlir-opt
+============================== 1 failed in 1.32s ===============================
+
+Host preservation:
+/opt/rocm -> /opt/rocm-7.2.0
+/opt/rocm/llvm/bin/ld.lld -> /opt/rocm-7.2.0/lib/llvm/bin/lld
+lld sha256: d088c46031665db7985be41360fcf3f8e80e2536fa608b7a3d64223fd13cfebb
+No host path or binary replacement was performed.
