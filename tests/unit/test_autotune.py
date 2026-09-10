@@ -23,10 +23,8 @@ import pytest
 from flydsl.autotune import (
     Autotuner,
     Config,
-    _bench_batch_sizes,
     _normalize_strides,
     autotune,
-    do_bench,
 )
 
 
@@ -89,132 +87,6 @@ def _make_tuner(fn=None, **kw):
         rep=kw.pop("rep", 2),
         **kw,
     )
-
-
-class _FakeBenchEvent:
-    def __init__(self, cuda, enable_timing):
-        assert enable_timing
-        self.cuda = cuda
-        self.timestamp = None
-
-    def record(self):
-        self.timestamp = self.cuda.clock
-        self.cuda.operations.append("event")
-
-    def synchronize(self):
-        self.cuda.event_synchronizes += 1
-
-    def elapsed_time(self, other):
-        return other.timestamp - self.timestamp
-
-
-class _FakeBenchCuda:
-    def __init__(self):
-        self.clock = 0.0
-        self.operations = []
-        self.device_synchronizes = 0
-        self.event_synchronizes = 0
-
-    def is_available(self):
-        return True
-
-    def synchronize(self):
-        self.device_synchronizes += 1
-
-    def _sleep(self, cycles):
-        assert cycles > 0
-        self.operations.append("backlog")
-        self.clock += 100.0
-
-    def Event(self, enable_timing):
-        return _FakeBenchEvent(self, enable_timing)
-
-
-class _FakeBenchTorch:
-    def __init__(self):
-        self.cuda = _FakeBenchCuda()
-
-
-# ── device benchmark timing ─────────────────────────────────────────────
-def test_bench_batch_sizes_preserve_the_requested_call_count():
-    assert _bench_batch_sizes(1) == [1]
-    assert _bench_batch_sizes(7) == [2, 2, 1, 1, 1]
-    assert sum(_bench_batch_sizes(25)) == 25
-    with pytest.raises(ValueError, match="positive integer"):
-        _bench_batch_sizes(0)
-
-
-def test_do_bench_uses_a_backlogged_batched_event_window(monkeypatch):
-    """The timer must enqueue a GPU backlog before each event window and must
-    synchronize per batch, not per kernel launch."""
-    import importlib
-
-    at = importlib.import_module("flydsl.autotune")
-    fake_torch = _FakeBenchTorch()
-    monkeypatch.setattr(at, "torch", fake_torch)
-    calls = 0
-
-    def fn():
-        nonlocal calls
-        calls += 1
-        fake_torch.cuda.operations.append("kernel")
-        fake_torch.cuda.clock += 2.0
-
-    assert do_bench(fn, warmup=3, rep=7) == 2.0
-    assert calls == 10
-    assert fake_torch.cuda.device_synchronizes == 1
-    assert fake_torch.cuda.event_synchronizes == 5
-
-    timed = fake_torch.cuda.operations[3:]
-    assert timed == [
-        "backlog",
-        "event",
-        "kernel",
-        "kernel",
-        "event",
-        "backlog",
-        "event",
-        "kernel",
-        "kernel",
-        "event",
-        "backlog",
-        "event",
-        "kernel",
-        "event",
-        "backlog",
-        "event",
-        "kernel",
-        "event",
-        "backlog",
-        "event",
-        "kernel",
-        "event",
-    ]
-
-
-def test_do_bench_quantiles_summarize_batch_averages(monkeypatch):
-    import importlib
-
-    at = importlib.import_module("flydsl.autotune")
-    fake_torch = _FakeBenchTorch()
-    monkeypatch.setattr(at, "torch", fake_torch)
-
-    def fn():
-        fake_torch.cuda.clock += 3.0
-
-    assert do_bench(fn, warmup=0, rep=5, quantiles=[0.0, 0.5, 0.9]) == [3.0, 3.0, 3.0]
-
-
-def test_do_bench_fails_closed_without_a_gpu_backlog(monkeypatch):
-    import importlib
-
-    at = importlib.import_module("flydsl.autotune")
-    fake_torch = _FakeBenchTorch()
-    fake_torch.cuda._sleep = None
-    monkeypatch.setattr(at, "torch", fake_torch)
-
-    with pytest.raises(RuntimeError, match="GPU-side backlog"):
-        do_bench(lambda: None)
 
 
 # ── Config ───────────────────────────────────────────────────────────────

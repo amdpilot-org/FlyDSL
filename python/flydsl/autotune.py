@@ -7,23 +7,15 @@ import hashlib
 import inspect
 import json
 import os
-import statistics
 from contextlib import nullcontext
 from pathlib import Path
 from typing import Callable, Dict, List
 
+from .profiling import do_bench as do_bench
 from .utils import env, log
 from .utils.file import atomic_write
 
-try:
-    import torch
-except ImportError:
-    torch = None
-
-
 _ARTIFACT_VERSION = 1
-_BENCH_MAX_BATCHES = 5
-_BENCH_BACKLOG_CYCLES = 20_000_000
 
 
 def _tuning_enabled() -> bool:
@@ -72,8 +64,18 @@ def _device_fingerprint() -> str:
         return ""
 
 
+def _get_torch():
+    """Import PyTorch lazily so importing FlyDSL does not initialize a GPU."""
+    try:
+        import torch
+    except ImportError:
+        return None
+    return torch
+
+
 def _device_descriptor(device=None):
     """Portable identity for the device that will run the call."""
+    torch = _get_torch()
     if torch is None:
         return None
     try:
@@ -188,66 +190,6 @@ class Config:
             maxnreg=d.pop("maxnreg", None),
             **d,
         )
-
-
-def _bench_batch_sizes(rep: int) -> List[int]:
-    """Split ``rep`` calls into a few non-empty timing windows.
-
-    Each window is long enough to amortize event granularity, while multiple
-    windows retain a median that rejects an occasional clock or system outlier.
-    """
-    if type(rep) is not int or rep <= 0:
-        raise ValueError(f"rep must be a positive integer, got {rep!r}")
-    batches = min(_BENCH_MAX_BATCHES, rep)
-    base, extra = divmod(rep, batches)
-    return [base + (index < extra) for index in range(batches)]
-
-
-def do_bench(fn, warmup=5, rep=25, quantiles=None):
-    """Benchmark GPU work without timing a host-starved launch.
-
-    A fresh event pair around every launch on an empty stream over-reads short
-    kernels: the GPU can execute the start event before the host has submitted
-    the kernel. Queue a same-stream GPU sleep first, then submit a batch of
-    launches between one event pair while that backlog is executing. The sleep
-    is outside the timed interval, but gives the host time to enqueue the whole
-    interval. Several batch averages are summarized by their median.
-
-    ``fn`` must only enqueue asynchronous work on the current stream; a callable
-    that synchronizes internally cannot be measured as device-only work.
-
-    """
-    if torch is None or not torch.cuda.is_available():
-        raise RuntimeError("GPU benchmarking requires torch with CUDA/ROCm support")
-    if type(warmup) is not int or warmup < 0:
-        raise ValueError(f"warmup must be a non-negative integer, got {warmup!r}")
-    sleep = getattr(torch.cuda, "_sleep", None)
-    if not callable(sleep):
-        raise RuntimeError("accurate short-kernel benchmarking requires torch.cuda._sleep for a GPU-side backlog")
-
-    for _ in range(warmup):
-        fn()
-    torch.cuda.synchronize()
-
-    times = []
-    for calls in _bench_batch_sizes(rep):
-        # The sleep is ordered on the current stream. Events and calls are
-        # submitted while it runs, so the GPU cannot catch the host between the
-        # start event and the first (or any later) launch in this batch.
-        sleep(_BENCH_BACKLOG_CYCLES)
-        start = torch.cuda.Event(enable_timing=True)
-        end = torch.cuda.Event(enable_timing=True)
-        start.record()
-        for _ in range(calls):
-            fn()
-        end.record()
-        end.synchronize()
-        times.append(start.elapsed_time(end) / calls)
-
-    times.sort()
-    if quantiles:
-        return [times[min(int(q * len(times)), len(times) - 1)] for q in quantiles]
-    return statistics.median(times)
 
 
 class Autotuner:
@@ -419,6 +361,7 @@ class Autotuner:
 
     def _stream_context(self, args, kwargs):
         """Use an explicit torch/raw stream for benchmark events and setup ops."""
+        torch = _get_torch()
         if torch is None:
             return nullcontext()
         sig_args = dict(zip(self.arg_names, args))
@@ -502,6 +445,7 @@ class Autotuner:
             return self._run_with_hints(config.compiler_opts(), args, merged)
 
     def _call_device(self, args, kwargs):
+        torch = _get_torch()
         if torch is None:
             return None
         sig_args = dict(zip(self.arg_names, args))

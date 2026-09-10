@@ -71,12 +71,12 @@ answer, and hold every candidate to the same tolerance as the default.
 
 ## Device timing contract
 
-The shared `do_bench` timer queues a GPU-side backlog before batched event
-windows. This is required for sub-100 µs kernels: a fresh event pair on an empty
-stream can time the host enqueue gap instead of the kernel. Each window averages
-several launches, and the reported value is the median across windows. The
-callable must enqueue asynchronous work on the current stream and must not
-synchronize internally.
+The shared `flydsl.profiling.do_bench` timer queues a GPU-side backlog before
+batched event windows. This is required for sub-100 µs kernels: a fresh event
+pair on an empty stream can time the host enqueue gap instead of the kernel.
+Each window averages several launches, and the reported value is the median
+across windows. The callable must enqueue asynchronous work on the current stream
+and must not synchronize internally.
 
 For Softmax results within 2% of the measured minimum, selection prefers the
 compatibility default, then a config without an explicit occupancy override,
