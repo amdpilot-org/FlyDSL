@@ -89,6 +89,60 @@ corrected fresh-cache rerun before delivery.
 
 ## Checkout validation
 
+### Matching native build
+
+The delivery commit was checked out in a detached Git worktree at
+`/tmp/flydsl-native-j-01b838b8b223/FlyDSL`. LLVM/MLIR and FlyDSL build caches
+remained entirely outside `/job`.
+
+Bounded build commands:
+
+```bash
+export PIP_CACHE_DIR=/tmp/flydsl-pip-cache-j-01b838b8b223
+export PIP_TARGET=/tmp/flydsl-python-deps-j-01b838b8b223
+export PYTHONPATH=/tmp/flydsl-python-deps-j-01b838b8b223
+export PATH=/tmp/flydsl-python-deps-j-01b838b8b223/bin:$PATH
+export LLVM_BUILD_PROFILE=amd-minimal
+export LLVM_PACKAGE_INSTALL=1
+bash scripts/build_llvm.sh -j32
+
+export MLIR_PATH=/tmp/flydsl-native-j-01b838b8b223/llvm-project/mlir_install
+export FLY_BUILD_DIR=/tmp/flydsl-native-j-01b838b8b223/FlyDSL/build-fly
+bash scripts/build.sh -j32
+```
+
+The LLVM commit was `e2a39f504fee836e4def9581bed817ecc327b9dc`. The first
+FlyDSL build reached the final copy step but stopped because `patchelf` was
+not installed. Installing that tool into the same private prefix and resuming
+completed the build successfully.
+
+Matching source and native paths:
+
+- Python: `/tmp/flydsl-native-j-01b838b8b223/FlyDSL/build-fly/python_packages/flydsl/__init__.py`
+- Native modules: `/tmp/flydsl-native-j-01b838b8b223/FlyDSL/build-fly/python_packages/flydsl/_mlir/_mlir_libs`
+- MLIR install: `/tmp/flydsl-native-j-01b838b8b223/llvm-project/mlir_install`
+
+### Matching-source test run
+
+```bash
+cd /tmp/flydsl-native-j-01b838b8b223/FlyDSL
+export PYTHONPATH=/tmp/flydsl-native-j-01b838b8b223/FlyDSL/build-fly/python_packages
+export LD_LIBRARY_PATH=/tmp/flydsl-native-j-01b838b8b223/FlyDSL/build-fly/python_packages/flydsl/_mlir/_mlir_libs:/tmp/flydsl-native-j-01b838b8b223/llvm-project/mlir_install/lib
+export FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-cache-matching-j-01b838b8b223
+python -m pytest -c tests/pytest.ini tests/kernels/test_vector_reduce_semantics.py -q
+python -m pytest -c tests/pytest.ini tests/unit/test_vector.py -q
+python -m pytest -c tests/pytest.ini tests/language/test_arithmetic_types.py -q -k reduce
+```
+
+Results against FlyDSL `0.3.3` source and matching native modules:
+
+- New GPU contract test: 16 passed.
+- Existing `tests/unit/test_vector.py`: 85 passed.
+- Existing reduction tests in `tests/language/test_arithmetic_types.py`:
+  17 passed, 378 deselected.
+
+### Installed-native control
+
 Commands:
 
 ```bash
@@ -111,12 +165,11 @@ Results:
 A private source overlay of checkout Python `0.3.3` over installed native
 `0.2.4` failed before GPU execution because the checkout pipeline requests
 `convert-rocdl-fastmath-ops`, which is not registered by the installed native
-stack. The image has no MLIR CMake development tree, so a full checkout build
-was not attempted within this bounded job. The supported control executes the
-checkout test file unchanged with the qualified installed FlyDSL native stack.
+stack. This control executes the checkout test file unchanged with the
+qualified installed FlyDSL native stack; the matching build above removes the
+version-mismatch caveat.
 
 ## Left undone
 
-- No full source build of checkout `0.3.3` was run.
 - No reduction behavior or kernel call sites were changed.
 - No upstream issue, pull request, or comment was posted or modified.
