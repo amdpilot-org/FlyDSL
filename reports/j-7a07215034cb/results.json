@@ -1,0 +1,881 @@
+{
+  "baseline_results": [
+    {
+      "accuracy": {
+        "actual_default_full_ncdhw_pass": true,
+        "actual_default_full_ndhwc_pass": true,
+        "full_ncdhw_pass": true,
+        "full_ndhwc_pass": true,
+        "gate": "torch.allclose(rtol=2e-2, atol=2e-2)",
+        "layout_conversion_exact": true,
+        "max_abs_difference": 0.0
+      },
+      "actual_default_tile": [
+        32,
+        32,
+        1,
+        2
+      ],
+      "bytes": {
+        "actual_input": 2457600,
+        "gemm_logical": 69697536,
+        "output": 2457600,
+        "weight": 884736
+      },
+      "cold_compilation": {
+        "actual_default_tile_convolution_seconds": 5.08822784665972,
+        "convolution_seconds": 7.38236041367054,
+        "transpose_seconds": 0.15204308927059174
+      },
+      "gemm_max_abs_difference": 0.644439697265625,
+      "implicit_gemm": {
+        "flops": 8493465600,
+        "matrix_columns": 128,
+        "matrix_inner": 3456,
+        "matrix_rows": 9600
+      },
+      "seed": 4242,
+      "shape": {
+        "batch": 1,
+        "channels": 128,
+        "depth": 6,
+        "dilation": [
+          1,
+          1,
+          1
+        ],
+        "height": 40,
+        "kernel": [
+          3,
+          3,
+          3
+        ],
+        "name": "3d_autotune_test",
+        "output_channels": 128,
+        "padding": [
+          1,
+          1,
+          1
+        ],
+        "source_test": "tests/kernels/test_conv3d_implicit.py::test_conv3d_autotune",
+        "stride": [
+          1,
+          1,
+          1
+        ],
+        "width": 40
+      },
+      "tflops": {
+        "full_ndhwc_public_call": 138.9637702324993,
+        "kernel_only": 172.76837109050913,
+        "torch_conv3d": 84.79728485302185,
+        "torch_mm_equivalent_gemm": 227.58482810173732
+      },
+      "timings": {
+        "actual_default_full_ncdhw_public_call": {
+          "max_ms": 0.071601003408432,
+          "mean_ms": 0.062196229994297025,
+          "median_ms": 0.061581000685691833,
+          "min_ms": 0.06028100103139877,
+          "p10_ms": 0.06084100157022476,
+          "p90_ms": 0.06412100046873093,
+          "repetitions": 100,
+          "stddev_ms": 0.0019212398570278978
+        },
+        "actual_default_full_ndhwc_public_call": {
+          "max_ms": 0.06076100096106529,
+          "mean_ms": 0.05080454997718334,
+          "median_ms": 0.050321001559495926,
+          "min_ms": 0.04876000061631203,
+          "p10_ms": 0.049800001084804535,
+          "p90_ms": 0.05204100161790848,
+          "repetitions": 100,
+          "stddev_ms": 0.0017057136714046864
+        },
+        "actual_default_tile_kernel_only": {
+          "max_ms": 0.03932100161910057,
+          "mean_ms": 0.035211599916219714,
+          "median_ms": 0.0350204985588789,
+          "min_ms": 0.03412000089883804,
+          "p10_ms": 0.03471999987959862,
+          "p90_ms": 0.035521000623703,
+          "repetitions": 100,
+          "stddev_ms": 0.0008033137932392314
+        },
+        "full_input_conversion": {
+          "max_ms": 0.016760999336838722,
+          "mean_ms": 0.009030479965731501,
+          "median_ms": 0.00863999966531992,
+          "min_ms": 0.00839999970048666,
+          "p10_ms": 0.00851999968290329,
+          "p90_ms": 0.010400000028312206,
+          "repetitions": 100,
+          "stddev_ms": 0.0013390291181255298
+        },
+        "full_ncdhw_public_call": {
+          "max_ms": 0.08760099858045578,
+          "mean_ms": 0.08039809010922909,
+          "median_ms": 0.08000099658966064,
+          "min_ms": 0.07728099822998047,
+          "p10_ms": 0.07940100133419037,
+          "p90_ms": 0.0822800025343895,
+          "repetitions": 100,
+          "stddev_ms": 0.001357427198612997
+        },
+        "full_ndhwc_public_call": {
+          "max_ms": 0.08020000159740448,
+          "mean_ms": 0.06149747010320425,
+          "median_ms": 0.06111999973654747,
+          "min_ms": 0.059241000562906265,
+          "p10_ms": 0.06056100130081177,
+          "p90_ms": 0.062160998582839966,
+          "repetitions": 100,
+          "stddev_ms": 0.0021239881315502475
+        },
+        "kernel_only": {
+          "max_ms": 0.053321000188589096,
+          "mean_ms": 0.04932932995259762,
+          "median_ms": 0.049160998314619064,
+          "min_ms": 0.047880999743938446,
+          "p10_ms": 0.048760998994112015,
+          "p90_ms": 0.04988100007176399,
+          "repetitions": 100,
+          "stddev_ms": 0.0007699442824667919
+        },
+        "layout_transpose_kernel": {
+          "max_ms": 0.04440100118517876,
+          "mean_ms": 0.008877280042506755,
+          "median_ms": 0.00788000039756298,
+          "min_ms": 0.007400000002235174,
+          "p10_ms": 0.007600000128149986,
+          "p90_ms": 0.009320000186562538,
+          "repetitions": 100,
+          "stddev_ms": 0.004532813036731552
+        },
+        "torch_conv3d": {
+          "max_ms": 0.11292099952697754,
+          "mean_ms": 0.10061468012630939,
+          "median_ms": 0.10016199946403503,
+          "min_ms": 0.0963210016489029,
+          "p10_ms": 0.09972099959850311,
+          "p90_ms": 0.10168100148439407,
+          "repetitions": 100,
+          "stddev_ms": 0.002097711418334277
+        },
+        "torch_mm_equivalent_gemm": {
+          "max_ms": 0.051600001752376556,
+          "mean_ms": 0.03775881018489599,
+          "median_ms": 0.03731999918818474,
+          "min_ms": 0.036320000886917114,
+          "p10_ms": 0.03680099919438362,
+          "p90_ms": 0.03888000175356865,
+          "repetitions": 100,
+          "stddev_ms": 0.001822688596371326
+        }
+      }
+    },
+    {
+      "accuracy": {
+        "actual_default_full_ncdhw_pass": true,
+        "actual_default_full_ndhwc_pass": true,
+        "full_ncdhw_pass": true,
+        "full_ndhwc_pass": true,
+        "gate": "torch.allclose(rtol=2e-2, atol=2e-2)",
+        "layout_conversion_exact": true,
+        "max_abs_difference": 0.5
+      },
+      "actual_default_tile": [
+        32,
+        32,
+        1,
+        2
+      ],
+      "bytes": {
+        "actual_input": 497664,
+        "gemm_logical": 15593472,
+        "output": 1492992,
+        "weight": 663552
+      },
+      "cold_compilation": {
+        "actual_default_tile_convolution_seconds": 2.584354114718735,
+        "convolution_seconds": 3.919272445142269,
+        "transpose_seconds": 0.15288315992802382
+      },
+      "gemm_max_abs_difference": 0.49993896484375,
+      "implicit_gemm": {
+        "flops": 2579890176,
+        "matrix_columns": 192,
+        "matrix_inner": 1728,
+        "matrix_rows": 3888
+      },
+      "seed": 4243,
+      "shape": {
+        "batch": 2,
+        "channels": 64,
+        "depth": 6,
+        "dilation": [
+          1,
+          1,
+          1
+        ],
+        "height": 18,
+        "kernel": [
+          3,
+          3,
+          3
+        ],
+        "name": "3d_tile_test",
+        "output_channels": 192,
+        "padding": [
+          1,
+          1,
+          1
+        ],
+        "source_test": "tests/kernels/test_conv3d_implicit.py::test_conv3d_tile_configs",
+        "stride": [
+          1,
+          1,
+          1
+        ],
+        "width": 18
+      },
+      "tflops": {
+        "full_ndhwc_public_call": 54.634960786802665,
+        "kernel_only": 73.62700570046839,
+        "torch_conv3d": 24.701772249086375,
+        "torch_mm_equivalent_gemm": 97.49967437051988
+      },
+      "timings": {
+        "actual_default_full_ncdhw_public_call": {
+          "max_ms": 0.06323999911546707,
+          "mean_ms": 0.04580812007188797,
+          "median_ms": 0.0451005008071661,
+          "min_ms": 0.0405610017478466,
+          "p10_ms": 0.04424099996685982,
+          "p90_ms": 0.04824100062251091,
+          "repetitions": 100,
+          "stddev_ms": 0.002763462727356578
+        },
+        "actual_default_full_ndhwc_public_call": {
+          "max_ms": 0.04383999854326248,
+          "mean_ms": 0.03281114999204874,
+          "median_ms": 0.032200999557971954,
+          "min_ms": 0.029200000688433647,
+          "p10_ms": 0.03152099996805191,
+          "p90_ms": 0.03488000109791756,
+          "repetitions": 100,
+          "stddev_ms": 0.0020275492506662764
+        },
+        "actual_default_tile_kernel_only": {
+          "max_ms": 0.023159999400377274,
+          "mean_ms": 0.01689416985027492,
+          "median_ms": 0.016519999131560326,
+          "min_ms": 0.015320000238716602,
+          "p10_ms": 0.016279999166727066,
+          "p90_ms": 0.01899999938905239,
+          "repetitions": 100,
+          "stddev_ms": 0.001194610303853816
+        },
+        "full_input_conversion": {
+          "max_ms": 0.01679999940097332,
+          "mean_ms": 0.008931329986080528,
+          "median_ms": 0.008320500142872334,
+          "min_ms": 0.00803999975323677,
+          "p10_ms": 0.00812000036239624,
+          "p90_ms": 0.010759999975562096,
+          "repetitions": 100,
+          "stddev_ms": 0.0014491427657992773
+        },
+        "full_ncdhw_public_call": {
+          "max_ms": 0.06732100248336792,
+          "mean_ms": 0.05964505013078451,
+          "median_ms": 0.05912050046026707,
+          "min_ms": 0.05492100119590759,
+          "p10_ms": 0.05848100036382675,
+          "p90_ms": 0.06224000081419945,
+          "repetitions": 100,
+          "stddev_ms": 0.0018882577001129682
+        },
+        "full_ndhwc_public_call": {
+          "max_ms": 0.053240999579429626,
+          "mean_ms": 0.047602930031716825,
+          "median_ms": 0.0472205001860857,
+          "min_ms": 0.04468100145459175,
+          "p10_ms": 0.04667999967932701,
+          "p90_ms": 0.04908100143074989,
+          "repetitions": 100,
+          "stddev_ms": 0.0012986450860010986
+        },
+        "kernel_only": {
+          "max_ms": 0.03968000039458275,
+          "mean_ms": 0.03520798992365599,
+          "median_ms": 0.0350399985909462,
+          "min_ms": 0.03412099927663803,
+          "p10_ms": 0.0347599983215332,
+          "p90_ms": 0.03576099872589111,
+          "repetitions": 100,
+          "stddev_ms": 0.0008403502887169719
+        },
+        "layout_transpose_kernel": {
+          "max_ms": 0.018719999119639397,
+          "mean_ms": 0.007987689962610602,
+          "median_ms": 0.007540500024333596,
+          "min_ms": 0.006719999946653843,
+          "p10_ms": 0.007199999876320362,
+          "p90_ms": 0.00860000029206276,
+          "repetitions": 100,
+          "stddev_ms": 0.0018454710350077601
+        },
+        "torch_conv3d": {
+          "max_ms": 0.12800200283527374,
+          "mean_ms": 0.1051575394719839,
+          "median_ms": 0.10444150120019913,
+          "min_ms": 0.10100100189447403,
+          "p10_ms": 0.10396099835634232,
+          "p90_ms": 0.10724099725484848,
+          "repetitions": 100,
+          "stddev_ms": 0.002819285600289719
+        },
+        "torch_mm_equivalent_gemm": {
+          "max_ms": 0.035360001027584076,
+          "mean_ms": 0.026748719923198223,
+          "median_ms": 0.026460500434041023,
+          "min_ms": 0.023479999974370003,
+          "p10_ms": 0.02608099952340126,
+          "p90_ms": 0.02812100015580654,
+          "repetitions": 100,
+          "stddev_ms": 0.0012105488367521533
+        }
+      }
+    },
+    {
+      "accuracy": {
+        "actual_default_full_ncdhw_pass": true,
+        "actual_default_full_ndhwc_pass": true,
+        "full_ncdhw_pass": true,
+        "full_ndhwc_pass": true,
+        "gate": "torch.allclose(rtol=2e-2, atol=2e-2)",
+        "layout_conversion_exact": true,
+        "max_abs_difference": 0.25
+      },
+      "actual_default_tile": [
+        32,
+        32,
+        1,
+        2
+      ],
+      "bytes": {
+        "actual_input": 172032,
+        "gemm_logical": 2039808,
+        "output": 344064,
+        "weight": 147456
+      },
+      "cold_compilation": {
+        "actual_default_tile_convolution_seconds": 0.965105477720499,
+        "convolution_seconds": 1.5326258465647697,
+        "transpose_seconds": 0.15230309590697289
+      },
+      "gemm_max_abs_difference": 0.24974822998046875,
+      "implicit_gemm": {
+        "flops": 198180864,
+        "matrix_columns": 128,
+        "matrix_inner": 576,
+        "matrix_rows": 1344
+      },
+      "seed": 4244,
+      "shape": {
+        "batch": 2,
+        "channels": 64,
+        "depth": 1,
+        "dilation": [
+          1,
+          1,
+          1
+        ],
+        "height": 24,
+        "kernel": [
+          1,
+          3,
+          3
+        ],
+        "name": "2d_degenerate_test",
+        "output_channels": 128,
+        "padding": [
+          0,
+          1,
+          1
+        ],
+        "source_test": "tests/kernels/test_conv3d_implicit.py::test_conv2d_vs_torch",
+        "stride": [
+          1,
+          1,
+          1
+        ],
+        "width": 28
+      },
+      "tflops": {
+        "full_ndhwc_public_call": 5.5481767663179085,
+        "kernel_only": 8.36894770176644,
+        "torch_conv3d": 3.9939312312717914,
+        "torch_mm_equivalent_gemm": 11.575985063656113
+      },
+      "timings": {
+        "actual_default_full_ncdhw_public_call": {
+          "max_ms": 0.05780100077390671,
+          "mean_ms": 0.036718020103871825,
+          "median_ms": 0.03602050058543682,
+          "min_ms": 0.03452000021934509,
+          "p10_ms": 0.03523999825119972,
+          "p90_ms": 0.03852099925279617,
+          "repetitions": 100,
+          "stddev_ms": 0.002616830786599938
+        },
+        "actual_default_full_ndhwc_public_call": {
+          "max_ms": 0.06884100288152695,
+          "mean_ms": 0.0258151600882411,
+          "median_ms": 0.024800000712275505,
+          "min_ms": 0.02143999934196472,
+          "p10_ms": 0.02419999986886978,
+          "p90_ms": 0.02855999954044819,
+          "repetitions": 100,
+          "stddev_ms": 0.004723172976870006
+        },
+        "actual_default_tile_kernel_only": {
+          "max_ms": 0.033240001648664474,
+          "mean_ms": 0.009586509885266423,
+          "median_ms": 0.00887999963015318,
+          "min_ms": 0.00863999966531992,
+          "p10_ms": 0.00875999964773655,
+          "p90_ms": 0.011119999922811985,
+          "repetitions": 100,
+          "stddev_ms": 0.0027911993076669777
+        },
+        "full_input_conversion": {
+          "max_ms": 0.01995999924838543,
+          "mean_ms": 0.00883971001021564,
+          "median_ms": 0.00824000034481287,
+          "min_ms": 0.00791999977082014,
+          "p10_ms": 0.00800000037997961,
+          "p90_ms": 0.010599999688565731,
+          "repetitions": 100,
+          "stddev_ms": 0.0016417775075025266
+        },
+        "full_ncdhw_public_call": {
+          "max_ms": 0.0875609964132309,
+          "mean_ms": 0.04868172995746136,
+          "median_ms": 0.047759998589754105,
+          "min_ms": 0.04572099819779396,
+          "p10_ms": 0.047279998660087585,
+          "p90_ms": 0.05052100121974945,
+          "repetitions": 100,
+          "stddev_ms": 0.004411390199873382
+        },
+        "full_ndhwc_public_call": {
+          "max_ms": 0.04211999848484993,
+          "mean_ms": 0.03592039991170168,
+          "median_ms": 0.03571999818086624,
+          "min_ms": 0.03328000009059906,
+          "p10_ms": 0.03539999946951866,
+          "p90_ms": 0.036761000752449036,
+          "repetitions": 100,
+          "stddev_ms": 0.0009977391326164737
+        },
+        "kernel_only": {
+          "max_ms": 0.02712099999189377,
+          "mean_ms": 0.023798250034451483,
+          "median_ms": 0.023680499754846096,
+          "min_ms": 0.022840000689029694,
+          "p10_ms": 0.02348100021481514,
+          "p90_ms": 0.024000000208616257,
+          "repetitions": 100,
+          "stddev_ms": 0.0006019398635091117
+        },
+        "layout_transpose_kernel": {
+          "max_ms": 0.024320000782608986,
+          "mean_ms": 0.007953659975901245,
+          "median_ms": 0.007459999993443489,
+          "min_ms": 0.006920000072568655,
+          "p10_ms": 0.007199999876320362,
+          "p90_ms": 0.008840000256896019,
+          "repetitions": 100,
+          "stddev_ms": 0.0019944661867620406
+        },
+        "torch_conv3d": {
+          "max_ms": 0.07052099704742432,
+          "mean_ms": 0.05086336996406317,
+          "median_ms": 0.0496204998344183,
+          "min_ms": 0.047919999808073044,
+          "p10_ms": 0.04912099987268448,
+          "p90_ms": 0.053679998964071274,
+          "repetitions": 100,
+          "stddev_ms": 0.0036750467568300387
+        },
+        "torch_mm_equivalent_gemm": {
+          "max_ms": 0.03240000084042549,
+          "mean_ms": 0.017673410130664705,
+          "median_ms": 0.01711999997496605,
+          "min_ms": 0.014120000414550304,
+          "p10_ms": 0.016920000314712524,
+          "p90_ms": 0.018841000273823738,
+          "repetitions": 100,
+          "stddev_ms": 0.002128386243137714
+        }
+      }
+    }
+  ],
+  "bottleneck": {
+    "best_candidate": {
+      "accuracy_pass": true,
+      "candidate_index": 4,
+      "cold_compilation_seconds": 5.692609935998917,
+      "kernel_only": {
+        "max_ms": 0.05108100175857544,
+        "mean_ms": 0.03261197999119759,
+        "median_ms": 0.03202049992978573,
+        "min_ms": 0.031401000916957855,
+        "p10_ms": 0.03167999908328056,
+        "p90_ms": 0.03288000077009201,
+        "repetitions": 100,
+        "stddev_ms": 0.002566593534039483
+      },
+      "max_abs_difference": 0.0,
+      "tflops": 265.250874240702,
+      "tile": [
+        64,
+        64,
+        2,
+        2
+      ],
+      "wgm": 1
+    },
+    "candidate_results": [
+      {
+        "accuracy_pass": true,
+        "candidate_index": 0,
+        "cold_compilation_cached_from_baseline": true,
+        "kernel_only": {
+          "max_ms": 0.057760998606681824,
+          "mean_ms": 0.04943173993378878,
+          "median_ms": 0.04912000149488449,
+          "min_ms": 0.04760099947452545,
+          "p10_ms": 0.048760998994112015,
+          "p90_ms": 0.05000099912285805,
+          "repetitions": 100,
+          "stddev_ms": 0.0012438742868065963
+        },
+        "max_abs_difference": 0.0,
+        "tflops": 172.91256802759943,
+        "tile": [
+          128,
+          128,
+          2,
+          4
+        ],
+        "wgm": 1
+      },
+      {
+        "accuracy_pass": true,
+        "candidate_index": 1,
+        "cold_compilation_seconds": 6.437245089560747,
+        "kernel_only": {
+          "max_ms": 0.05588100105524063,
+          "mean_ms": 0.04963455006480217,
+          "median_ms": 0.049600500613451004,
+          "min_ms": 0.04840100184082985,
+          "p10_ms": 0.04912099987268448,
+          "p90_ms": 0.04996100068092346,
+          "repetitions": 100,
+          "stddev_ms": 0.0007505453378153782
+        },
+        "max_abs_difference": 0.0,
+        "tflops": 171.2374975041418,
+        "tile": [
+          128,
+          128,
+          2,
+          4
+        ],
+        "wgm": 4
+      },
+      {
+        "accuracy_pass": true,
+        "candidate_index": 2,
+        "cold_compilation_seconds": 6.434924930334091,
+        "kernel_only": {
+          "max_ms": 0.06096100062131882,
+          "mean_ms": 0.04997897014021874,
+          "median_ms": 0.049680499359965324,
+          "min_ms": 0.04828000068664551,
+          "p10_ms": 0.049240000545978546,
+          "p90_ms": 0.05071999877691269,
+          "repetitions": 100,
+          "stddev_ms": 0.0014950247171539451
+        },
+        "max_abs_difference": 0.0,
+        "tflops": 170.96175983376688,
+        "tile": [
+          128,
+          128,
+          2,
+          4
+        ],
+        "wgm": 8
+      },
+      {
+        "accuracy_pass": true,
+        "candidate_index": 3,
+        "cold_compilation_seconds": 8.141590304672718,
+        "kernel_only": {
+          "max_ms": 0.04432100057601929,
+          "mean_ms": 0.04062042005360127,
+          "median_ms": 0.04050050117075443,
+          "min_ms": 0.039080001413822174,
+          "p10_ms": 0.04020100086927414,
+          "p90_ms": 0.04095999896526337,
+          "repetitions": 100,
+          "stddev_ms": 0.0006876182688428327
+        },
+        "max_abs_difference": 0.0,
+        "tflops": 209.71260489322447,
+        "tile": [
+          64,
+          128,
+          1,
+          4
+        ],
+        "wgm": 1
+      },
+      {
+        "accuracy_pass": true,
+        "candidate_index": 4,
+        "cold_compilation_seconds": 5.692609935998917,
+        "kernel_only": {
+          "max_ms": 0.05108100175857544,
+          "mean_ms": 0.03261197999119759,
+          "median_ms": 0.03202049992978573,
+          "min_ms": 0.031401000916957855,
+          "p10_ms": 0.03167999908328056,
+          "p90_ms": 0.03288000077009201,
+          "repetitions": 100,
+          "stddev_ms": 0.002566593534039483
+        },
+        "max_abs_difference": 0.0,
+        "tflops": 265.250874240702,
+        "tile": [
+          64,
+          64,
+          2,
+          2
+        ],
+        "wgm": 1
+      },
+      {
+        "accuracy_pass": true,
+        "candidate_index": 5,
+        "cold_compilation_seconds": 12.690505324862897,
+        "kernel_only": {
+          "max_ms": 0.08856099843978882,
+          "mean_ms": 0.07928169965744018,
+          "median_ms": 0.0790409967303276,
+          "min_ms": 0.07808099687099457,
+          "p10_ms": 0.07864099740982056,
+          "p90_ms": 0.07964099943637848,
+          "repetitions": 100,
+          "stddev_ms": 0.0012091858971763538
+        },
+        "max_abs_difference": 0.0,
+        "tflops": 107.45645869039382,
+        "tile": [
+          256,
+          128,
+          2,
+          4
+        ],
+        "wgm": 1
+      }
+    ],
+    "selection": "maximum measured kernel-only median time among the three baseline shapes",
+    "shape": {
+      "batch": 1,
+      "channels": 128,
+      "depth": 6,
+      "dilation": [
+        1,
+        1,
+        1
+      ],
+      "height": 40,
+      "kernel": [
+        3,
+        3,
+        3
+      ],
+      "name": "3d_autotune_test",
+      "output_channels": 128,
+      "padding": [
+        1,
+        1,
+        1
+      ],
+      "source_test": "tests/kernels/test_conv3d_implicit.py::test_conv3d_autotune",
+      "stride": [
+        1,
+        1,
+        1
+      ],
+      "width": 40
+    },
+    "winner_full_ncdhw_public_call": {
+      "max_ms": 0.07076100260019302,
+      "mean_ms": 0.05873144999146462,
+      "median_ms": 0.058300500735640526,
+      "min_ms": 0.05628100037574768,
+      "p10_ms": 0.05784099921584129,
+      "p90_ms": 0.059801001101732254,
+      "repetitions": 100,
+      "stddev_ms": 0.0018031316858937811
+    },
+    "winner_full_ndhwc_public_call": {
+      "max_ms": 0.059321001172065735,
+      "mean_ms": 0.04542168017476797,
+      "median_ms": 0.04495999962091446,
+      "min_ms": 0.04232100024819374,
+      "p10_ms": 0.044319998472929,
+      "p90_ms": 0.0466810017824173,
+      "repetitions": 100,
+      "stddev_ms": 0.0020007508497932214
+    }
+  },
+  "campaign": "repo-e2e-20260909",
+  "environment": {
+    "automatic_splitk_limitation": "The source get_buffer_rsrc op is absent from installed FlyDSL 0.2.4; all measured paths force splitk=1.",
+    "cache_directories": {
+      "flydsl_autotune": "/tmp/flydsl-cache-j-7a07215034cb/autotune-cold-7",
+      "flydsl_runtime": "/tmp/flydsl-cache-j-7a07215034cb/runtime-cold-7",
+      "torch_inductor": "/tmp/flydsl-cache-j-7a07215034cb/inductor-cold-7",
+      "triton": "/tmp/flydsl-cache-j-7a07215034cb/triton-cold-7"
+    },
+    "flydsl_path": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+    "flydsl_version": "0.2.4",
+    "gpu_multiprocessor_count": 256,
+    "gpu_name": "AMD Instinct MI350X",
+    "gpu_total_memory_bytes": 270566162432,
+    "gpu_uuid": "39633630-6435-3836-6166-613834643530",
+    "image_identity": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7",
+    "image_identity_source": "operator-provided qualified local image ID",
+    "native_library_paths": [
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFly.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFlyROCDL.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsGPU.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsLLVM.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirExecutionEngine.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirGPUPasses.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirRegisterEverything.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libFlyPythonCAPI.so.23.0git",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libMLIRPythonSupport-mlir.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libmlir_c_runner_utils.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libmlir_float16_utils.so.23.0git",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libnanobind-mlir.so"
+    ],
+    "python": "/opt/venv/bin/python3",
+    "rocm_arch": "gfx950",
+    "runtime_compatibility_shims": {
+      "get_buffer_rsrc": false,
+      "make_buffer_ptr": true,
+      "s_waitcnt_named_counters": true
+    },
+    "torch_path": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+    "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+    "triton_path": "/opt/venv/lib/python3.12/site-packages/triton/__init__.py",
+    "triton_version": "3.5.1+rocm7.2.0.gita272dfa8"
+  },
+  "finished_at_utc": "2026-09-10T01:41:16.987757+00:00",
+  "gpu_snapshots": {
+    "after": {
+      "--showproductname --showserial --showuniqueid": "\n\n============================ ROCm System Management Interface ============================\n======================================= Unique ID ========================================\nGPU[0]\t\t: Unique ID: 0x9c60d586afa84d50\n==========================================================================================\n===================================== Serial Number ======================================\nGPU[0]\t\t: Serial Number: 692517020509\n==========================================================================================\n====================================== Product Info ======================================\nGPU[0]\t\t: Card Series: \t\tAMD Instinct MI350X\nGPU[0]\t\t: Card Model: \t\t0x75a0\nGPU[0]\t\t: Card Vendor: \t\tAdvanced Micro Devices, Inc. [AMD/ATI]\nGPU[0]\t\t: Card SKU: \t\tN/A\nGPU[0]\t\t: Subsystem ID: \t0x75a0\nGPU[0]\t\t: Device Rev: \t\t0x00\nGPU[0]\t\t: Node ID: \t\t3\nGPU[0]\t\t: GUID: \t\t27295\nGPU[0]\t\t: GFX Version: \t\tgfx950\n==========================================================================================\n================================== End of ROCm SMI Log ===================================\n",
+      "--showuse --showmemuse": "\n\n============================ ROCm System Management Interface ============================\n=================================== % time GPU is busy ===================================\nGPU[0]\t\t: GPU use (%): 0\n==========================================================================================\n=================================== Current Memory Use ===================================\nGPU[0]\t\t: GPU Memory Allocated (VRAM%): 0\nGPU[0]\t\t: GPU Memory Read/Write Activity (%): 0\nGPU[0]\t\t: Memory Activity: N/A\nGPU[0]\t\t: Not supported on the given system\n==========================================================================================\n================================== End of ROCm SMI Log ===================================\n"
+    },
+    "before": {
+      "--showproductname --showserial --showuniqueid": "\n\n============================ ROCm System Management Interface ============================\n======================================= Unique ID ========================================\nGPU[0]\t\t: Unique ID: 0x9c60d586afa84d50\n==========================================================================================\n===================================== Serial Number ======================================\nGPU[0]\t\t: Serial Number: 692517020509\n==========================================================================================\n====================================== Product Info ======================================\nGPU[0]\t\t: Card Series: \t\tAMD Instinct MI350X\nGPU[0]\t\t: Card Model: \t\t0x75a0\nGPU[0]\t\t: Card Vendor: \t\tAdvanced Micro Devices, Inc. [AMD/ATI]\nGPU[0]\t\t: Card SKU: \t\tN/A\nGPU[0]\t\t: Subsystem ID: \t0x75a0\nGPU[0]\t\t: Device Rev: \t\t0x00\nGPU[0]\t\t: Node ID: \t\t3\nGPU[0]\t\t: GUID: \t\t27295\nGPU[0]\t\t: GFX Version: \t\tgfx950\n==========================================================================================\n================================== End of ROCm SMI Log ===================================\n",
+      "--showuse --showmemuse": "\n\n============================ ROCm System Management Interface ============================\n=================================== % time GPU is busy ===================================\nGPU[0]\t\t: GPU use (%): 0\n==========================================================================================\n=================================== Current Memory Use ===================================\nGPU[0]\t\t: GPU Memory Allocated (VRAM%): 0\nGPU[0]\t\t: GPU Memory Read/Write Activity (%): 0\nGPU[0]\t\t: Memory Activity: N/A\nGPU[0]\t\t: Not supported on the given system\n==========================================================================================\n================================== End of ROCm SMI Log ===================================\n"
+    }
+  },
+  "job": "j-7a07215034cb",
+  "methodology": {
+    "accuracy_gate": "torch.allclose(rtol=2e-2, atol=2e-2)",
+    "candidate_cap": 6,
+    "candidate_count": 6,
+    "candidates": [
+      {
+        "tile": [
+          128,
+          128,
+          2,
+          4
+        ],
+        "wgm": 1
+      },
+      {
+        "tile": [
+          128,
+          128,
+          2,
+          4
+        ],
+        "wgm": 4
+      },
+      {
+        "tile": [
+          128,
+          128,
+          2,
+          4
+        ],
+        "wgm": 8
+      },
+      {
+        "tile": [
+          64,
+          128,
+          1,
+          4
+        ],
+        "wgm": 1
+      },
+      {
+        "tile": [
+          64,
+          64,
+          2,
+          2
+        ],
+        "wgm": 1
+      },
+      {
+        "tile": [
+          256,
+          128,
+          2,
+          4
+        ],
+        "wgm": 1
+      }
+    ],
+    "cold_compilation": "Wall time for FlyDSL executable compile, separated from warm CUDA-event kernel dispatch",
+    "gemm_estimate": "Torch mm on (implicit-GEMM M, output K, reduced C*K) with preallocated BF16 output",
+    "timed_repetitions": 100,
+    "warmup_iterations": 10
+  },
+  "schema_version": 1,
+  "started_at_utc": "2026-09-10T01:40:12.512978+00:00",
+  "upstream_context": {
+    "issue": "https://github.com/ROCm/FlyDSL/issues/861",
+    "issue_resolution_claim": "https://github.com/ROCm/FlyDSL/pull/820",
+    "issue_state": "open",
+    "mirror_base_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+    "pr820_head": "cb5074880aecfab5a0f85078051829eb3935c900",
+    "pr820_merged": true
+  }
+}
