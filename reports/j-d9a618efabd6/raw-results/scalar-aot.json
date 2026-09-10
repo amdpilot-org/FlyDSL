@@ -1,0 +1,116 @@
+{
+  "campaign": "repo-e2e-20260909",
+  "scope": "valid scalar-parameter specialization and launch; not invalid-schema or artifact-relocation coverage",
+  "gpu": {
+    "name": "AMD Instinct MI350X",
+    "arch": "gfx950",
+    "capability": [
+      9,
+      5
+    ],
+    "serial": "692517019400",
+    "unique_id": "0xcdce14c4ed97e350"
+  },
+  "image": {
+    "qualified_image": "amdpilotv2/open-job:gbt350-20260909",
+    "local_image_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7"
+  },
+  "delivery_checkout": {
+    "repository": "https://github.com/amdpilot-org/FlyDSL",
+    "branch": "amdpilot/j-d9a618efabd6",
+    "base_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+    "probe": "reports/j-d9a618efabd6/aot_scalar_probe.py"
+  },
+  "stack": {
+    "python": "/opt/venv/bin/python",
+    "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+    "triton": "3.5.1+rocm7.2.0.gita272dfa8"
+  },
+  "numerical_gate": "torch.allclose(actual, a + scale*b, rtol=1e-6, atol=1e-6)",
+  "argument_signature": "a=float32[1024], b=float32[1024], out=float32[1024], n=int32, block_dim=64, vec_width=4, scale=constexpr[float], stream=fx.Stream",
+  "function_signature": "(a: Tensor, b: Tensor, out: Tensor, n: Int32, block_dim: Constexpr[int], vec_width: Constexpr[int], scale: Constexpr[float], stream: Stream)",
+  "installed_wheel_0_2_4": {
+    "flydsl_version": "0.2.4",
+    "python_source": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+    "native_modules": [
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFly.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libFlyPythonCAPI.so.23.0git",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so"
+    ],
+    "cache_dir": "/tmp/flydsl-cache-j-d9a618efabd6/scalar-installed-0.2.4-v5",
+    "compile_wall_seconds": 2.704027,
+    "run_only_wall_seconds": 2.493629,
+    "cases": [
+      {
+        "scale": 2.0,
+        "cache_key_suffix": "('scale', (<class 'float'>, 2.0))",
+        "artifact_sha256": "47b74e4fdab5e472011f0d45466f602f4322a739ecf42d136afc59fe2812cb89",
+        "artifact_size": 28760,
+        "run_only_event_ms": 351.044677734375,
+        "allclose": true,
+        "max_abs_error": 0.0,
+        "output_sha256": "726d6c0782daf312c8b04c467582ed53cbd19c615f4f048f21394869328f4b6d"
+      },
+      {
+        "scale": 3.0,
+        "cache_key_suffix": "('scale', (<class 'float'>, 3.0))",
+        "artifact_sha256": "4acd18f706e8a6302cfceb8c20fbe2ef3687efc306d94244844fd3c6a39bfa04",
+        "artifact_size": 28756,
+        "run_only_event_ms": 19.2525634765625,
+        "allclose": true,
+        "max_abs_error": 0.0,
+        "output_sha256": "0bf3553cf7a38f081a00091321e5d7e146bbad280bda039eaca98d98c4eef430"
+      }
+    ]
+  },
+  "private_wheel_0_3_2": {
+    "flydsl_version": "0.3.2",
+    "python_source": "/tmp/flydsl-cache-j-d9a618efabd6/wheel-0.3.2/flydsl/__init__.py",
+    "native_modules": [
+      "/tmp/flydsl-cache-j-d9a618efabd6/wheel-0.3.2/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so",
+      "/tmp/flydsl-cache-j-d9a618efabd6/wheel-0.3.2/flydsl/_mlir/_mlir_libs/_mlirDialectsFly.cpython-312-x86_64-linux-gnu.so",
+      "/tmp/flydsl-cache-j-d9a618efabd6/wheel-0.3.2/flydsl/_mlir/_mlir_libs/libFlyPythonCAPI.so.23.0git",
+      "/tmp/flydsl-cache-j-d9a618efabd6/wheel-0.3.2/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so"
+    ],
+    "cache_dir": "/tmp/flydsl-cache-j-d9a618efabd6/scalar-wheel-0.3.2",
+    "compile_wall_seconds": 2.471609,
+    "run_only_wall_seconds": 2.522839,
+    "cases": [
+      {
+        "scale": 2.0,
+        "cache_key_suffix": "('scale', (<class 'float'>, 2.0))",
+        "artifact_sha256": "b42d29af92f5f9737b494c8d2ed305a31f5496554cbf711b1bab0a5397d43cd1",
+        "artifact_size": 27674,
+        "run_only_event_ms": 328.040283203125,
+        "allclose": true,
+        "max_abs_error": 0.0,
+        "output_sha256": "726d6c0782daf312c8b04c467582ed53cbd19c615f4f048f21394869328f4b6d"
+      },
+      {
+        "scale": 3.0,
+        "cache_key_suffix": "('scale', (<class 'float'>, 3.0))",
+        "artifact_sha256": "97c03eb54d80f4e22574d39e86fb0363d5a928424d6448e8531446b08c4ccc65",
+        "artifact_size": 27670,
+        "run_only_event_ms": 19.379724502563477,
+        "allclose": true,
+        "max_abs_error": 0.0,
+        "output_sha256": "0bf3553cf7a38f081a00091321e5d7e146bbad280bda039eaca98d98c4eef430"
+      }
+    ]
+  },
+  "commands": [
+    "/opt/venv/bin/python reports/j-d9a618efabd6/aot_scalar_probe.py compile /tmp/flydsl-cache-j-d9a618efabd6/scalar-installed-0.2.4-v5 /tmp/flydsl-cache-j-d9a618efabd6/logs/scalar-installed-0.2.4-compile.json",
+    "/opt/venv/bin/python reports/j-d9a618efabd6/aot_scalar_probe.py run /tmp/flydsl-cache-j-d9a618efabd6/scalar-installed-0.2.4-v5 /tmp/flydsl-cache-j-d9a618efabd6/logs/scalar-installed-0.2.4-run.json",
+    "/opt/venv/bin/python -m pip install --no-deps --target /tmp/flydsl-cache-j-d9a618efabd6/wheel-0.3.2 flydsl==0.3.2",
+    "PYTHONPATH=/tmp/flydsl-cache-j-d9a618efabd6/wheel-0.3.2 /opt/venv/bin/python reports/j-d9a618efabd6/aot_scalar_probe.py compile /tmp/flydsl-cache-j-d9a618efabd6/scalar-wheel-0.3.2 /tmp/flydsl-cache-j-d9a618efabd6/logs/scalar-wheel-0.3.2-compile.json",
+    "PYTHONPATH=/tmp/flydsl-cache-j-d9a618efabd6/wheel-0.3.2 /opt/venv/bin/python reports/j-d9a618efabd6/aot_scalar_probe.py run /tmp/flydsl-cache-j-d9a618efabd6/scalar-wheel-0.3.2 /tmp/flydsl-cache-j-d9a618efabd6/logs/scalar-wheel-0.3.2-run.json"
+  ],
+  "diagnostic_boundaries": {
+    "compile_only": "COMPILE_ONLY=1 persists one artifact per scalar value but does not execute; allclose is null in compile results.",
+    "run_only": "FLYDSL_RUNTIME_RUN_ONLY=1 in a fresh process loads the matching artifact and launches it; both scalar cases pass the unchanged Torch gate.",
+    "specialization": "The cache key contains the exact float value and each scalar value has a distinct artifact SHA-256.",
+    "not_tested": "Invalid argument schemas, artifact relocation, cross-version ABI portability, and the unbuilt main Python/native pair.",
+    "main_source_boundary": "The delivery checkout supplies the probe, but its main Python tree was not paired with a matching freshly built native tree; no main-source or cross-version ABI claim is made."
+  }
+}
