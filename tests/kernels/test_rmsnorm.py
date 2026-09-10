@@ -1853,6 +1853,28 @@ def test_rmsnorm_large_shape():
         assert ok
 
 
+@pytest.mark.large_shape
+@pytest.mark.parametrize("hidden_size", (8192, 8193, 10240, 12288, 14336, 16384))
+def test_rmsnorm_forward_large_hidden_sizes(hidden_size):
+    """Validate forward-only hidden sizes without claiming backward support."""
+    device = torch.device("cuda", torch.cuda.current_device())
+    rows = 128
+    x = torch.randn((rows, hidden_size), device=device, dtype=DTYPE_BF16)
+    weight = torch.rand((hidden_size,), device=device, dtype=DTYPE_BF16)
+
+    with torch.no_grad():
+        output, rstd = rmsnorm_kernel_impl.rmsnorm_fwd(x, weight, eps=EPS, store_rstd=True)
+
+    x_reference = x.to(DTYPE_FP32)
+    weight_reference = weight.to(DTYPE_FP32)
+    rstd_reference = torch.rsqrt(x_reference.square().mean(dim=1) + EPS)
+    reference = x_reference * rstd_reference[:, None] * weight_reference
+
+    torch.testing.assert_close(output.to(DTYPE_FP32), reference, rtol=0.0, atol=2e-2)
+    torch.testing.assert_close(rstd, rstd_reference, rtol=0.0, atol=1e-3)
+    print(f"  M={rows} N={hidden_size}: forward output and rstd match reference")
+
+
 @pytest.mark.skipif(
     GPU_ARCH == "gfx1201",
     reason="RMSNorm DynamicQuant is temporarily quarantined on gfx1201 pending correctness investigation",
