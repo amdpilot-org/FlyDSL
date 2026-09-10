@@ -1,0 +1,149 @@
+{
+  "campaign": "repo-e2e-20260909",
+  "tracker": "amdpilot-org/amdpilotv2 issue 402",
+  "upstream_context": {
+    "issue": "ROCm/FlyDSL issue 770",
+    "title": "[Feature] Make autotune a safe, adopted path",
+    "comments": 0,
+    "related_changes": [
+      "ROCm/FlyDSL PR 783 merged: cache identity and restore/reset behavior",
+      "ROCm/FlyDSL PR 785 merged: opt-in search and RMSNorm adopter",
+      "ROCm/FlyDSL PR 786 open: offline config artifacts",
+      "ROCm/FlyDSL PR 788 open: CI search opt-in guard"
+    ]
+  },
+  "environment": {
+    "image": "amdpilotv2/open-job:gbt350-20260909",
+    "local_image_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7",
+    "gpu": {
+      "name": "AMD Instinct MI350X",
+      "architecture": "gfx950",
+      "unique_id": "0xfa55ca8c650dfefb",
+      "serial": "692517020458",
+      "guid": "11995"
+    },
+    "source_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+    "source_path": "/job/flydsl",
+    "python": "/opt/venv/bin/python",
+    "flydsl_source_path": "/job/flydsl/python/flydsl",
+    "flydsl_source_version": "0.3.3",
+    "native_bindings": "/tmp/flydsl-cache-j-ecc4ca69df23/venv/lib/python3.12/site-packages/flydsl/_mlir",
+    "native_bindings_version": "0.3.2",
+    "torch_path": "/opt/venv/lib/python3.12/site-packages/torch",
+    "torch_version": "2.9.1+rocm7.2.0.git7e1940d4"
+  },
+  "installed_source_baseline": {
+    "label": "installed-source baseline; not proof for later checkout changes",
+    "operation": "one-config FlyDSL vector-add autotuner",
+    "search_disabled": true,
+    "candidate_count": 1,
+    "shape": [1024],
+    "dtype": "torch.float32",
+    "reference": "torch.add(A, B)",
+    "exact_match": true,
+    "max_abs_error": 0.0,
+    "first_gpu_execution_elapsed_seconds": 0.836700,
+    "autotune_event_median_ms": 0.282,
+    "command": "FLYDSL_AUTOTUNE_CACHE_DIR=/tmp/flydsl-cache-j-ecc4ca69df23/installed-autotune FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-cache-j-ecc4ca69df23/installed-runtime /opt/venv/bin/python /job/baseline_installed.py"
+  },
+  "validation": {
+    "candidate_count": 1,
+    "forced_searches": 3,
+    "distinct_tuner_keys": 3,
+    "distinct_artifacts": 3,
+    "distinct_dynamic_jit_keys": 3,
+    "numerical_gate": "torch.testing.assert_close(output.float(), reference, rtol=0, atol=2e-2)",
+    "test_command": "FLYDSL_AUTOTUNE_CACHE_DIR=/tmp/flydsl-cache-j-ecc4ca69df23/image-autotune FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-cache-j-ecc4ca69df23/image-runtime PYTHONPATH=/job/flydsl/python:/job/flydsl /opt/venv/bin/python -m pytest -q tests/kernels/test_rmsnorm_autotune.py",
+    "result": "6 passed in 3.71 seconds",
+    "formatting": "black --check passed; ruff check passed"
+  },
+  "cases": [
+    {
+      "case": "contiguous",
+      "shape": [4, 4096],
+      "strides": [4096, 1],
+      "dtype": "bf16",
+      "weight_dtype": "bf16",
+      "forced_search": true,
+      "tuner_key_sha256": "8219310c85f0644ba3c76ca096d43be6a1bbe4e34397032847cdcc4c8173a27d",
+      "artifact": "rmsnorm-29324be8c6ecbdf0b6a841c91234c91fbf4799ea6eee3a3a9f5fde592d342e15.json",
+      "jit_key_sha256": "e2a17d8b4693cd1c339c497854ea6c72d24320154beb130757e870a53d78a274",
+      "compiled_launcher_id": 140003863492176,
+      "output_data_ptr": 140003820740608,
+      "output_bytes_sha256": "f6c3b2eedbc736edce2b95caf44224e4b2fff38987824ee39548d4c9370978b0",
+      "reference_bytes_sha256": "292c3b6f08b3f863eae67be51aca93abd63b0f945bd09c2ed2916f4e23899ed8",
+      "max_abs_error": 0.012212753295898438
+    },
+    {
+      "case": "stride-2",
+      "shape": [4, 4096],
+      "strides": [8192, 1],
+      "dtype": "bf16",
+      "weight_dtype": "bf16",
+      "forced_search": false,
+      "tuner_key_sha256": "8219310c85f0644ba3c76ca096d43be6a1bbe4e34397032847cdcc4c8173a27d",
+      "artifact": "rmsnorm-29324be8c6ecbdf0b6a841c91234c91fbf4799ea6eee3a3a9f5fde592d342e15.json",
+      "jit_key_sha256": "e2a17d8b4693cd1c339c497854ea6c72d24320154beb130757e870a53d78a274",
+      "compiled_launcher_id": 140003863492176,
+      "output_data_ptr": 140003820847104,
+      "output_bytes_sha256": "633c3584448592d81b59e3ef8b085bf602bba53b81af211ba85be8e65926d84d",
+      "reference_bytes_sha256": "e0b4bac289fe8b56b442fec1563b5b0b976248aee256aaf8cca1306fc01aeb50",
+      "max_abs_error": 0.007521867752075195
+    },
+    {
+      "case": "stride-3",
+      "shape": [4, 4096],
+      "strides": [12288, 1],
+      "dtype": "bf16",
+      "weight_dtype": "bf16",
+      "forced_search": false,
+      "tuner_key_sha256": "8219310c85f0644ba3c76ca096d43be6a1bbe4e34397032847cdcc4c8173a27d",
+      "artifact": "rmsnorm-29324be8c6ecbdf0b6a841c91234c91fbf4799ea6eee3a3a9f5fde592d342e15.json",
+      "jit_key_sha256": "e2a17d8b4693cd1c339c497854ea6c72d24320154beb130757e870a53d78a274",
+      "compiled_launcher_id": 140003863492176,
+      "output_data_ptr": 140003821010944,
+      "output_bytes_sha256": "c21d90d0776c2e1ee082ed516c0a69911d1c8873d5ecb8dcb02f7c5c29b81db7",
+      "reference_bytes_sha256": "d1653af80ee5bf3a70db9bb827eaa0cf03456b9ed94918437d4b08489ff77399",
+      "max_abs_error": 0.007753133773803711
+    },
+    {
+      "case": "f16",
+      "shape": [4, 4096],
+      "strides": [4096, 1],
+      "dtype": "f16",
+      "weight_dtype": "f16",
+      "forced_search": true,
+      "tuner_key_sha256": "526e3481e81fe6955e38941cd2f89c2925b1eb06eb82f652eec471101396e429",
+      "artifact": "rmsnorm-08efffb034ff23ca5dea1269897e133e042ede9d897982f28187b7f08b20b8c6.json",
+      "jit_key_sha256": "ea58ab9a733a707a2abe31bf2b58196d5e093a2efe1c2846d4f8e6b8b822bfcc",
+      "compiled_launcher_id": 140003862395408,
+      "output_data_ptr": 140003821150208,
+      "output_bytes_sha256": "589dc58e03f989a62a4c7c0fdcc5837f3e854927aaddc0f9d78e42eabd2dcffd",
+      "reference_bytes_sha256": "9690b9a4ed0c0099a536d0c390b4e5201b301bdb54224bf5fb74eba940b26d53",
+      "max_abs_error": 0.0009667873382568359
+    },
+    {
+      "case": "fp32-weight",
+      "shape": [4, 4096],
+      "strides": [4096, 1],
+      "dtype": "bf16",
+      "weight_dtype": "f32",
+      "forced_search": true,
+      "tuner_key_sha256": "dcbd8df9e553944705c6555507877e1e1d5132b19c22764dcbc5cca44d717116",
+      "artifact": "rmsnorm-744aa79bf7838fc5ac54dbe323ff67eb557bff3d52578217a3f9a79045220693.json",
+      "jit_key_sha256": "570daf0d15d3faa2a3c329779fcec05087d90e6d052921a42aefeb041a498523",
+      "compiled_launcher_id": 140003866763552,
+      "output_data_ptr": 140003820838912,
+      "output_bytes_sha256": "a16dd2d44591404e4812941375cf33d801c22f7a10ee287719f1f58a7104e0cc",
+      "reference_bytes_sha256": "572c9af08b66ad5c31d2217f4c931412d8ee00a04b9f7010e12a9a2a246fc50e",
+      "max_abs_error": 0.013846874237060547
+    }
+  ],
+  "contract_findings": {
+    "supported_exact_row_strides": "4096, 8192, and 12288 share one tuner winner, artifact, and dynamic-stride JIT launcher",
+    "dtype_axis": "bf16 and f16 produce distinct tuner, artifact, and JIT identities",
+    "mode_axis": "bf16 and f32 weights produce distinct tuner, artifact, and JIT identities",
+    "incompatible_artifact": "a bf16 artifact written at the f16 path is rejected and falls back to the default without search",
+    "independent_outputs": "all five output buffers have distinct data pointers and each matches its own reference"
+  }
+}

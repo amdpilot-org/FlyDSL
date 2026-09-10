@@ -20,6 +20,7 @@ if torch is None or not torch.cuda.is_available():
     pytest.skip("CUDA/ROCm not available. Skipping GPU tests.", allow_module_level=True)
 
 import flydsl.compiler as flyc  # noqa: E402
+from flydsl.autotune import Config  # noqa: E402
 from kernels.norm.rmsnorm_autotune import _SEARCH_CONFIGS, _rmsnorm_tuner, rmsnorm_autotuned  # noqa: E402
 from kernels.norm.rmsnorm_kernel import rmsnorm_direct  # noqa: E402
 
@@ -52,6 +53,56 @@ def _inputs(M=32, N=8192, weight_dtype=torch.bfloat16):
 
 def _assert_close(out, ref):
     torch.testing.assert_close(out.float(), ref, rtol=0, atol=2e-2)
+
+
+def _strided_inputs(M, N, row_stride, dtype, weight_dtype):
+    generator = torch.Generator(device="cuda").manual_seed(0)
+    input_storage = torch.randn(M, row_stride, device="cuda", dtype=dtype, generator=generator)
+    input_t = input_storage[:, :N]
+    gamma = torch.rand(N, device="cuda", dtype=weight_dtype, generator=generator)
+    output_storage = torch.empty(M, row_stride, device="cuda", dtype=dtype)
+    output = output_storage[:, :N]
+    return input_t, gamma, output, _reference(input_t, gamma)
+
+
+def _tuner_key(input_t, gamma, output, M, N, dtype_str, weight_dtype_str, stream):
+    return _rmsnorm_tuner._make_key(
+        (input_t, gamma, output, M),
+        {
+            "N": N,
+            "dtype_str": dtype_str,
+            "weight_dtype_str": weight_dtype_str,
+            "stream": stream,
+        },
+    )
+
+
+def _artifact_ref(input_t, gamma, output, M, N, dtype_str, weight_dtype_str, stream):
+    return _rmsnorm_tuner._artifact_ref(
+        (input_t, gamma, output, M),
+        {
+            "N": N,
+            "dtype_str": dtype_str,
+            "weight_dtype_str": weight_dtype_str,
+            "stream": stream,
+        },
+        required=True,
+    )
+
+
+def _jit_key(input_t, gamma, output, M, N, dtype_str, weight_dtype_str, stream):
+    bound = rmsnorm_direct._sig.bind(
+        input_t,
+        gamma,
+        output,
+        M,
+        N,
+        dtype_str,
+        256,
+        stream,
+        weight_dtype_str,
+    )
+    return rmsnorm_direct._build_full_cache_key(bound.arguments)
 
 
 @pytest.mark.parametrize(
@@ -211,3 +262,91 @@ def test_rmsnorm_weight_dtype_has_distinct_tuning_identity():
     rmsnorm_autotuned(x, g_fp32, out, x.shape[0])
     torch.cuda.synchronize()
     _assert_close(out, mixed_ref)
+
+
+def test_equal_shape_specialization_and_incompatible_artifact_rejection(monkeypatch):
+    searches = 0
+
+    def bench_once(call, warmup, rep):
+        nonlocal searches
+        searches += 1
+        call()
+        return 1.0
+
+    monkeypatch.setattr(_rmsnorm_tuner, "_do_bench", bench_once)
+    monkeypatch.setattr(
+        _rmsnorm_tuner,
+        "configs",
+        lambda *_args, **_kwargs: [Config(BLOCK_THREADS=256)],
+    )
+
+    M, N = 4, 4096
+    stream = torch.cuda.current_stream().cuda_stream
+    cases = [
+        ("contiguous", N, torch.bfloat16, "bf16", torch.bfloat16, "bf16", True),
+        ("stride-2", 2 * N, torch.bfloat16, "bf16", torch.bfloat16, "bf16", False),
+        ("stride-3", 3 * N, torch.bfloat16, "bf16", torch.bfloat16, "bf16", False),
+        ("f16", N, torch.float16, "f16", torch.float16, "f16", True),
+        ("fp32-weight", N, torch.bfloat16, "bf16", torch.float32, "f32", True),
+    ]
+    tuner_keys = []
+    artifact_paths = []
+    artifact_identities = []
+    jit_keys = []
+
+    for _name, row_stride, dtype, dtype_str, weight_dtype, weight_dtype_str, force in cases:
+        if force:
+            monkeypatch.setenv("FLYDSL_AUTOTUNE", "1")
+        else:
+            monkeypatch.delenv("FLYDSL_AUTOTUNE", raising=False)
+
+        input_t, gamma, output, reference = _strided_inputs(M, N, row_stride, dtype, weight_dtype)
+        rmsnorm_autotuned(input_t, gamma, output, M, stream=stream)
+        torch.cuda.synchronize()
+        _assert_close(output, reference)
+
+        tuner_keys.append(_tuner_key(input_t, gamma, output, M, N, dtype_str, weight_dtype_str, stream))
+        artifact_path, artifact_identity = _artifact_ref(
+            input_t, gamma, output, M, N, dtype_str, weight_dtype_str, stream
+        )
+        artifact_paths.append(artifact_path)
+        artifact_identities.append(artifact_identity)
+        jit_keys.append(_jit_key(input_t, gamma, output, M, N, dtype_str, weight_dtype_str, stream))
+
+    assert searches == 3
+    assert len(_rmsnorm_tuner.cache) == 3
+    assert tuner_keys[0] == tuner_keys[1] == tuner_keys[2]
+    assert len({tuner_keys[0], tuner_keys[3], tuner_keys[4]}) == 3
+    assert artifact_paths[0] == artifact_paths[1] == artifact_paths[2]
+    assert artifact_identities[0] == artifact_identities[1] == artifact_identities[2]
+    assert len(set(artifact_paths)) == 3
+    assert jit_keys[0] == jit_keys[1] == jit_keys[2]
+    assert len({jit_keys[0], jit_keys[3], jit_keys[4]}) == 3
+
+    compiled = [rmsnorm_direct._mem_cache[key] for key in jit_keys]
+    assert compiled[0] is compiled[1] is compiled[2]
+    assert len({id(compiled[0]), id(compiled[3]), id(compiled[4])}) == 3
+
+    artifacts = list(Path(os.environ["FLYDSL_AUTOTUNE_CONFIG_DIR"]).glob("rmsnorm-*.json"))
+    assert len(artifacts) == 3
+    incompatible = json.loads(artifact_paths[0].read_text())
+    artifact_paths[3].write_text(json.dumps(incompatible))
+    _rmsnorm_tuner.cache.clear()
+    _rmsnorm_tuner._artifact_cache.clear()
+
+    served_defaults = []
+
+    def default_config(*_args, **_kwargs):
+        config = Config(BLOCK_THREADS=128)
+        served_defaults.append(config)
+        return config
+
+    monkeypatch.setattr(_rmsnorm_tuner, "default", default_config)
+    monkeypatch.delenv("FLYDSL_AUTOTUNE", raising=False)
+    input_t, gamma, output, reference = _strided_inputs(M, N, N, torch.float16, torch.float16)
+    rmsnorm_autotuned(input_t, gamma, output, M, stream=stream)
+    torch.cuda.synchronize()
+
+    assert searches == 3
+    assert [config.kwargs["BLOCK_THREADS"] for config in served_defaults] == [128]
+    _assert_close(output, reference)
