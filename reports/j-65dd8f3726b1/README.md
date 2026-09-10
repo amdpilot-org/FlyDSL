@@ -44,6 +44,7 @@ outside `/job/FlyDSL`:
 
 ```bash
 export PYTHONPATH=/job/FlyDSL
+export PYTHONDONTWRITEBYTECODE=1
 export HOME=/tmp/flydsl-cache-j-65dd8f3726b1/home
 export XDG_CACHE_HOME=/tmp/flydsl-cache-j-65dd8f3726b1/xdg
 export FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-cache-j-65dd8f3726b1/runtime
