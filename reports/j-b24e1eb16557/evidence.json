@@ -1,0 +1,118 @@
+{
+  "campaign": "repo-e2e-20260909",
+  "coordination_tracker": "amdpilot-org/amdpilotv2#402",
+  "issue": "ROCm/FlyDSL#732",
+  "gpu": {
+    "name": "AMD Instinct MI350X",
+    "arch": "gfx950",
+    "node": 2,
+    "guid": 36538,
+    "torch_capability": [9, 5]
+  },
+  "image": {
+    "qualified": "amdpilotv2/open-job:gbt350-20260909",
+    "local_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7",
+    "identity_source": "operator-provided; Docker CLI unavailable in job container"
+  },
+  "python": {
+    "path": "/opt/venv/bin/python",
+    "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+    "triton": "3.5.1+rocm7.2.0.gita272dfa8"
+  },
+  "installed_flydsl": {
+    "version": "0.2.4",
+    "python_path": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+    "native_paths": [
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libFlyPythonCAPI.so.23.0git",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so"
+    ]
+  },
+  "source": {
+    "checkout": "/job/FlyDSL",
+    "base_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+    "branch": "amdpilot/j-b24e1eb16557",
+    "build_python_path": "/tmp/flydsl-cache-j-b24e1eb16557/fly-build-main/python_packages/flydsl/__init__.py",
+    "mlir_path": "/tmp/flydsl-cache-j-b24e1eb16557/mlir_install"
+  },
+  "early_baseline": {
+    "record": "/job/baseline-first.json",
+    "initial_flydsl_candidate": {
+      "path": "/opt/aiter/aiter/ops/flydsl/test_flydsl_splitk_hgemm.py",
+      "aiter_commit": "d9e5ef7ce08ee7045d583aed768cff41aa9210fe",
+      "elapsed_seconds": 23.325518369674683,
+      "result": "failed before kernel launch",
+      "error": "ModuleNotFoundError: No module named 'aiter.jit.module_aiter_core'"
+    },
+    "supported_control": {
+      "type": "Triton copy plus atomic-add",
+      "first_gpu_execution_elapsed_seconds": 2.6882972717285156,
+      "steady_cuda_ms": 0.169441,
+      "copy_equal": true,
+      "atomic_sum_equal": true,
+      "max_copy_delta": 0.0,
+      "max_sum_delta": 0.0
+    }
+  },
+  "pr918_candidate": {
+    "pr": "ROCm/FlyDSL#918",
+    "tested_head": "742a6a69011c117c4c259c6c34efe7d081595a96",
+    "fix_commit": "933e351992d2ff71b5c66561b73bb8ff74a5cf3c",
+    "vector_atomic_diagnostic": "pass",
+    "retile_rank_diagnostic": "fail; assertion remains",
+    "valid_broadcast_sum": "pass",
+    "unchanged_atomic_tests": "6 passed"
+  },
+  "issue_cases": {
+    "no_retile": {
+      "classification": "invalid vector atomic layout",
+      "installed_0_2_4": "unsupported cmpxchg",
+      "source_main": "16-byte atomic error; one run returned 0 instead of expected sum",
+      "pr918": "clear vectorized atomic diagnostic"
+    },
+    "retile": {
+      "classification": "rank mismatch",
+      "installed_0_2_4": "IntTupleUtils assertion abort",
+      "source_main": "IntTupleUtils assertion abort",
+      "pr918": "IntTupleUtils assertion abort",
+      "corrected_branch": "MLIRError: input layout rank (2) must equal the tiled-copy rank plus its value mode (3)"
+    },
+    "explicit_broadcast_view": {
+      "classification": "valid GPU path",
+      "expected": -64.268074,
+      "actual": -64.268074,
+      "absolute_error": 0.0
+    }
+  },
+  "guarded_exact_tile": {
+    "shape": [64, 64],
+    "expected": -120.8905716,
+    "actual": -120.8905945,
+    "absolute_error": 0.00002288818,
+    "gate": "torch.allclose(rtol=2e-6, atol=2e-5)",
+    "a_guards_unchanged": true,
+    "b_guards_unchanged": true
+  },
+  "tail_results": [
+    {"shape": [64, 65], "expected": -112.8054733, "actual": -987868.1875, "guards_unchanged": true},
+    {"shape": [65, 64], "expected": -112.8054733, "actual": 765203.3125, "guards_unchanged": true},
+    {"shape": [65, 65], "expected": -120.5542908, "actual": 653882.25, "guards_unchanged": true},
+    {"shape": [64, 66], "expected": -120.8305435, "actual": -987853.25, "guards_unchanged": true},
+    {"shape": [64, 67], "expected": -111.7126923, "actual": -987839.3125, "guards_unchanged": true},
+    {"shape": [64, 68], "expected": -129.2678986, "actual": -987886.9375, "guards_unchanged": true},
+    {"shape": [1, 1], "expected": -1.8243021, "actual": -1975309.75, "guards_unchanged": true},
+    {"shape": [1, 2], "expected": -3.0304623, "actual": -7987744.0, "guards_unchanged": true},
+    {"shape": [1, 3], "expected": -2.3356347, "actual": 192802416.0, "guards_unchanged": true},
+    {"shape": [1, 4], "expected": -3.6001768, "actual": 44259200.0, "guards_unchanged": true},
+    {"shape": [2, 2], "expected": -3.6001768, "actual": -39592760.0, "guards_unchanged": true},
+    {"shape": [3, 3], "expected": -6.2010708, "actual": 154196960.0, "guards_unchanged": true},
+    {"shape": [4, 4], "expected": -6.6225653, "actual": 38333180.0, "guards_unchanged": true}
+  ],
+  "commands": [
+    "PYTHONPATH=/tmp/flydsl-cache-j-b24e1eb16557/fly-build-main/python_packages:/job/FlyDSL LD_LIBRARY_PATH=/tmp/flydsl-cache-j-b24e1eb16557/fly-build-main/python_packages/flydsl/_mlir/_mlir_libs:/tmp/flydsl-cache-j-b24e1eb16557/mlir_install/lib FLYDSL_GPU_ARCH=gfx950 /opt/venv/bin/python -m pytest -q /job/FlyDSL/tests/unit/test_tiled_copy_retile.py -s",
+    "PYTHONPATH=/tmp/flydsl-cache-j-b24e1eb16557/fly-build-main/python_packages:/job/FlyDSL LD_LIBRARY_PATH=/tmp/flydsl-cache-j-b24e1eb16557/fly-build-main/python_packages/flydsl/_mlir/_mlir_libs:/tmp/flydsl-cache-j-b24e1eb16557/mlir_install/lib FLYDSL_GPU_ARCH=gfx950 /opt/venv/bin/python -m pytest -q /job/FlyDSL/tests/unit/test_universal_atomic.py -s"
+  ],
+  "final_tests": {
+    "test_tiled_copy_retile.py": "2 passed",
+    "test_universal_atomic.py": "6 passed"
+  }
+}
