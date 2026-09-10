@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/opt/venv/lib/python3.12/site-packages/flydsl/runtime/device_runtime/__init__.py", line 158, in get_device_runtime
+    ensure_compile_runtime_pairing_from_env(_active_compile_backend_id())
+  File "/opt/venv/lib/python3.12/site-packages/flydsl/runtime/device_runtime/__init__.py", line 115, in ensure_compile_runtime_pairing_from_env
+    raise RuntimeError(
+RuntimeError: Compile backend 'rocm' requires device runtime kind 'rocm', but FLYDSL_RUNTIME_KIND (and registration) resolve to 'invalid'. Align FLYDSL_COMPILE_BACKEND with FLYDSL_RUNTIME_KIND (and extension mappings), or use a matching pair of register_backend / register_device_runtime.

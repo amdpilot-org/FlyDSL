@@ -1,0 +1,25 @@
+{
+  "env_compile_backend": "rocm",
+  "env_runtime_kind": "rocm",
+  "flydsl_backend_class": "RocmBackend",
+  "flydsl_compile_backend": "rocm",
+  "flydsl_current_device": 0,
+  "flydsl_device_count": 2,
+  "flydsl_file": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+  "flydsl_runtime_kind": "rocm",
+  "flydsl_target_arch": "gfx950",
+  "flydsl_version": "0.2.4",
+  "kernel_shape": [100, 1000],
+  "loaded_paths": [
+    "/opt/rocm-7.2.0/lib/libamdhip64.so.7.2.70200",
+    "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so",
+    "/opt/venv/lib/python3.12/site-packages/torch/_C.cpython-312-x86_64-linux-gnu.so"
+  ],
+  "max_abs_difference": 0.0,
+  "python": "/opt/venv/bin/python3",
+  "torch_device_capability": [9, 5],
+  "torch_device_name": "AMD Instinct MI350X",
+  "torch_equal": true,
+  "torch_hip_version": "7.2.26015-fc0010cf6a",
+  "torch_version": "2.9.1+rocm7.2.0.git7e1940d4"
+}
