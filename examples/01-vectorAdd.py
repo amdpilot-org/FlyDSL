@@ -87,18 +87,19 @@ def vector_add(
     vector_add_kernel(A, B, C, tiled_copy).launch(grid=(grid_m, grid_n, 1), block=(8 * 16, 1, 1), stream=stream)
 
 
-M, N = 100, 1000
+if __name__ == "__main__":
+    M, N = 100, 1000
 
-A = torch.randn(M, N, dtype=torch.float32, device=torch.device("cuda"))
-B = torch.randn(M, N, dtype=torch.float32, device=torch.device("cuda"))
-C = torch.zeros(M, N, dtype=torch.float32, device=torch.device("cuda"))
+    A = torch.randn(M, N, dtype=torch.float32, device=torch.device("cuda"))
+    B = torch.randn(M, N, dtype=torch.float32, device=torch.device("cuda"))
+    C = torch.zeros(M, N, dtype=torch.float32, device=torch.device("cuda"))
 
-vector_add(A, B, C, stream=torch.cuda.Stream())
-torch.cuda.synchronize()
+    vector_add(A, B, C, stream=torch.cuda.Stream())
+    torch.cuda.synchronize()
 
-if torch.allclose(A + B, C):
-    print("PASS")
-else:
-    print("FAIL:")
-    print(A + B)
-    print(C)
+    if torch.allclose(A + B, C):
+        print("PASS")
+    else:
+        print("FAIL:")
+        print(A + B)
+        print(C)
