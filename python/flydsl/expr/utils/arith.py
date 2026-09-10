@@ -210,6 +210,32 @@ _ARITH_OPS = {
 }
 
 
+def _floor_remsi(lhs, rhs):
+    zero = arith_const(0, lhs.type)
+    truncated = arith.remsi(lhs, rhs)
+    sign_mismatch = arith.xori(truncated, rhs)
+    nonzero = arith.cmpi(arith.CmpIPredicate.ne, truncated, zero)
+    negative = arith.cmpi(arith.CmpIPredicate.slt, sign_mismatch, zero)
+    adjusted = arith.addi(truncated, rhs)
+    return arith.select(arith.andi(nonzero, negative), adjusted, truncated)
+
+
+def _floor_divsi(lhs, rhs):
+    if element_type(lhs.type).width <= 64:
+        return arith.floordivsi(lhs, rhs)
+
+    zero = arith_const(0, lhs.type)
+    one = arith_const(1, lhs.type)
+    quotient = arith.divsi(lhs, rhs)
+    product = arith.muli(quotient, rhs)
+    inexact = arith.cmpi(arith.CmpIPredicate.ne, lhs, product)
+    lhs_negative = arith.cmpi(arith.CmpIPredicate.slt, lhs, zero)
+    rhs_negative = arith.cmpi(arith.CmpIPredicate.slt, rhs, zero)
+    signs_differ = arith.xori(lhs_negative, rhs_negative)
+    adjusted = arith.subi(quotient, one)
+    return arith.select(arith.andi(inexact, signs_differ), adjusted, quotient)
+
+
 @dsl_loc_tracing
 def _binary_op(self, other, op):
     other = _coerce_other(self, other)
@@ -243,7 +269,7 @@ def _binary_op(self, other, op):
         if isinstance(et, ir.IndexType):
             return arith.divui(self, other)
         if self.signed is not False:
-            return arith.floordivsi(self, other)
+            return _floor_divsi(self, other)
         return arith.divui(self, other)
 
     if op == "mod":
@@ -253,7 +279,7 @@ def _binary_op(self, other, op):
         if isinstance(et, ir.IndexType):
             return arith.remui(self, other)
         if self.signed is not False:
-            return arith.remsi(self, other)
+            return _floor_remsi(self, other)
         return arith.remui(self, other)
 
     raise ValueError(f"unknown binary op: {op}")

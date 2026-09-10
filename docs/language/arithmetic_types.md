@@ -41,6 +41,18 @@ The following methods apply to both `Numeric` and `Vector`, and are elementwise 
 | `cond.select(true_value, false_value)` | ternary select; a non-`Boolean` `cond` is converted by truthiness (nonzero) | `(a < b).select(a, b)` → min |
 | `x.to(dtype, *, rounding_mode=None)` | value-preserving conversion; the optional `rounding_mode=` applies to float-to-float casts | `Int32(5).to(Float32)` → `Float32(5.0)` |
 
+### Integer division and remainder
+
+`//`, `%`, and `divmod` follow Python floor semantics. The quotient rounds toward
+negative infinity, and the remainder has the divisor's sign. They satisfy
+`lhs == quotient * rhs + remainder` and `0 <= abs(remainder) < abs(rhs)` for a
+nonzero divisor.
+
+The lower-level `fx.arith.divsi` and `fx.arith.remsi` operations retain MLIR's
+truncating semantics: division rounds toward zero and the remainder has the
+dividend's sign. Division by zero and signed overflow are undefined at run time;
+compile-time constant division by zero raises `ZeroDivisionError`.
+
 `Numeric`-only methods:
 
 | Method | Meaning | Example |
