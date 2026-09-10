@@ -12,6 +12,7 @@ Layout — one subpackage per scope, one module per algorithm::
     │   ├── reduce.py      warp_reduce
     │   ├── scan.py        warp_inclusive_scan, warp_exclusive_scan, warp_scan,
     │   │                      warp_scan_with_aggregate
+    │   ├── vote.py        warp_ballot, warp_all, warp_any
     │   └── rocdl.py       ROCm overrides for the above
     └── block/
         ├── _spec.py       shared [...] specialization machinery
@@ -39,6 +40,9 @@ __all__ = [
     "warp_exclusive_scan",
     "warp_scan",
     "warp_scan_with_aggregate",
+    "warp_ballot",
+    "warp_all",
+    "warp_any",
     # block scope
     "BlockReduceAlgorithm",
     "BlockReduce",
