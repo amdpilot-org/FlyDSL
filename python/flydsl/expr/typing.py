@@ -1845,6 +1845,18 @@ class Vector(ArithValue):
 
     @dsl_loc_tracing
     def reduce(self, op, init_val=None, reduction_profile=None, *, fastmath=None):
+        """Reduce a one-dimensional vector to a scalar.
+
+        Floating-point ``"max"`` uses ``vector.reduction <maxnumf>`` and follows
+        ``arith.maxnumf``: NaN is suppressed and ``-0.0``/``+0.0`` may return
+        either signed zero. Floating-point ``"min"`` uses
+        ``vector.reduction <minimumf>`` and follows ``arith.minimumf``: NaN
+        propagates and ``-0.0`` is less than ``+0.0``. Integer reductions use
+        the signed or unsigned integer kind selected by the vector dtype.
+
+        ``reduction_profile`` is currently accepted for API compatibility but
+        does not change the generated reduction.
+        """
         is_fp = self._dtype.is_float
         signed = getattr(self._dtype, "signed", True)
         kind = _resolve_combining_kind(op, is_fp, signed)
