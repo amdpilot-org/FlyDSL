@@ -1,0 +1,148 @@
+{
+  "process_count": 4,
+  "cache_dir": "/tmp/flydsl-cache-j-f91c5f66a6b2/concurrency-4",
+  "cache_state": "cold",
+  "reference": "/tmp/flydsl-cache-j-f91c5f66a6b2/reference-output/vector_add_reference.pt",
+  "timeout_seconds": 300.0,
+  "workers": [
+    {
+      "label": "process-1",
+      "command": [
+        "/opt/venv/bin/python3",
+        "/job/FlyDSL/reports/j-f91c5f66a6b2/vector_add_worker.py",
+        "--example",
+        "/job/FlyDSL/examples/01-vectorAdd.py",
+        "--reference",
+        "/tmp/flydsl-cache-j-f91c5f66a6b2/reference-output/vector_add_reference.pt",
+        "--output",
+        "/tmp/flydsl-cache-j-f91c5f66a6b2/concurrency-4-results/process-1.pt",
+        "--label",
+        "process-1"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 3.4150138664990664,
+      "worker_result": {
+        "allclose": true,
+        "elapsed_seconds": 1.6203083572909236,
+        "exit_code": 0,
+        "label": "process-1",
+        "max_abs_diff": 0.0,
+        "seed": 20260910,
+        "shape": [
+          100,
+          1000
+        ]
+      },
+      "stdout": "PASS\n{\"allclose\": true, \"elapsed_seconds\": 1.6203083572909236, \"exit_code\": 0, \"label\": \"process-1\", \"max_abs_diff\": 0.0, \"seed\": 20260910, \"shape\": [100, 1000]}\n",
+      "stderr": ""
+    },
+    {
+      "label": "process-2",
+      "command": [
+        "/opt/venv/bin/python3",
+        "/job/FlyDSL/reports/j-f91c5f66a6b2/vector_add_worker.py",
+        "--example",
+        "/job/FlyDSL/examples/01-vectorAdd.py",
+        "--reference",
+        "/tmp/flydsl-cache-j-f91c5f66a6b2/reference-output/vector_add_reference.pt",
+        "--output",
+        "/tmp/flydsl-cache-j-f91c5f66a6b2/concurrency-4-results/process-2.pt",
+        "--label",
+        "process-2"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 3.4142890609800816,
+      "worker_result": {
+        "allclose": true,
+        "elapsed_seconds": 1.6195411011576653,
+        "exit_code": 0,
+        "label": "process-2",
+        "max_abs_diff": 0.0,
+        "seed": 20260910,
+        "shape": [
+          100,
+          1000
+        ]
+      },
+      "stdout": "PASS\n{\"allclose\": true, \"elapsed_seconds\": 1.6195411011576653, \"exit_code\": 0, \"label\": \"process-2\", \"max_abs_diff\": 0.0, \"seed\": 20260910, \"shape\": [100, 1000]}\n",
+      "stderr": ""
+    },
+    {
+      "label": "process-3",
+      "command": [
+        "/opt/venv/bin/python3",
+        "/job/FlyDSL/reports/j-f91c5f66a6b2/vector_add_worker.py",
+        "--example",
+        "/job/FlyDSL/examples/01-vectorAdd.py",
+        "--reference",
+        "/tmp/flydsl-cache-j-f91c5f66a6b2/reference-output/vector_add_reference.pt",
+        "--output",
+        "/tmp/flydsl-cache-j-f91c5f66a6b2/concurrency-4-results/process-3.pt",
+        "--label",
+        "process-3"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 3.4139362070709467,
+      "worker_result": {
+        "allclose": true,
+        "elapsed_seconds": 1.5759677831083536,
+        "exit_code": 0,
+        "label": "process-3",
+        "max_abs_diff": 0.0,
+        "seed": 20260910,
+        "shape": [
+          100,
+          1000
+        ]
+      },
+      "stdout": "PASS\n{\"allclose\": true, \"elapsed_seconds\": 1.5759677831083536, \"exit_code\": 0, \"label\": \"process-3\", \"max_abs_diff\": 0.0, \"seed\": 20260910, \"shape\": [100, 1000]}\n",
+      "stderr": ""
+    },
+    {
+      "label": "process-4",
+      "command": [
+        "/opt/venv/bin/python3",
+        "/job/FlyDSL/reports/j-f91c5f66a6b2/vector_add_worker.py",
+        "--example",
+        "/job/FlyDSL/examples/01-vectorAdd.py",
+        "--reference",
+        "/tmp/flydsl-cache-j-f91c5f66a6b2/reference-output/vector_add_reference.pt",
+        "--output",
+        "/tmp/flydsl-cache-j-f91c5f66a6b2/concurrency-4-results/process-4.pt",
+        "--label",
+        "process-4"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 3.41367678437382,
+      "worker_result": {
+        "allclose": true,
+        "elapsed_seconds": 1.587475273758173,
+        "exit_code": 0,
+        "label": "process-4",
+        "max_abs_diff": 0.0,
+        "seed": 20260910,
+        "shape": [
+          100,
+          1000
+        ]
+      },
+      "stdout": "PASS\n{\"allclose\": true, \"elapsed_seconds\": 1.587475273758173, \"exit_code\": 0, \"label\": \"process-4\", \"max_abs_diff\": 0.0, \"seed\": 20260910, \"shape\": [100, 1000]}\n",
+      "stderr": ""
+    }
+  ],
+  "cache_files": [
+    {
+      "path": "/tmp/flydsl-cache-j-f91c5f66a6b2/concurrency-4/vector_add_2481fecf4a6976d3b0f5cf8777735e1d/589bbe0250dca637.lock",
+      "relative_path": "vector_add_2481fecf4a6976d3b0f5cf8777735e1d/589bbe0250dca637.lock",
+      "size_bytes": 0
+    },
+    {
+      "path": "/tmp/flydsl-cache-j-f91c5f66a6b2/concurrency-4/vector_add_2481fecf4a6976d3b0f5cf8777735e1d/589bbe0250dca637.pkl",
+      "relative_path": "vector_add_2481fecf4a6976d3b0f5cf8777735e1d/589bbe0250dca637.pkl",
+      "size_bytes": 32141
+    }
+  ],
+  "temporary_files": [],
+  "partial_cache_errors": [],
+  "all_workers_passed": true
+}
