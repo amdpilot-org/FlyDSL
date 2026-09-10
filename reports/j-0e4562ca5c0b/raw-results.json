@@ -1,0 +1,106 @@
+{
+  "candidate_commit": "5445af52ab018caf16e1c615a3d6fd71b1579f04",
+  "matrix": {
+    "shape": [100, 1000],
+    "dtype": "float32",
+    "launches": 5
+  },
+  "results": [
+    {
+      "operation": "add",
+      "exact_reference_equal": true,
+      "max_abs_error": 0.0,
+      "module_handle_before": 262924464,
+      "module_handle_after": 262924464,
+      "matches_add": true,
+      "matches_mul": false,
+      "matches_a": false,
+      "matches_b": false,
+      "matches_zero": false,
+      "a_unchanged": false,
+      "b_unchanged": true
+    },
+    {
+      "operation": "add",
+      "exact_reference_equal": true,
+      "max_abs_error": 0.0,
+      "module_handle_before": 262924464,
+      "module_handle_after": 262924464,
+      "matches_add": true,
+      "matches_mul": false,
+      "matches_a": false,
+      "matches_b": false,
+      "matches_zero": false,
+      "a_unchanged": false,
+      "b_unchanged": true
+    },
+    {
+      "operation": "mul",
+      "exact_reference_equal": true,
+      "max_abs_error": 0.0,
+      "module_handle_before": 276452496,
+      "module_handle_after": 276452496,
+      "matches_add": false,
+      "matches_mul": true,
+      "matches_a": false,
+      "matches_b": false,
+      "matches_zero": false,
+      "a_unchanged": false,
+      "b_unchanged": true
+    },
+    {
+      "operation": "add",
+      "exact_reference_equal": true,
+      "max_abs_error": 0.0,
+      "module_handle_before": 262924464,
+      "module_handle_after": 262924464,
+      "matches_add": true,
+      "matches_mul": false,
+      "matches_a": false,
+      "matches_b": false,
+      "matches_zero": false,
+      "a_unchanged": false,
+      "b_unchanged": true
+    },
+    {
+      "operation": "mul",
+      "exact_reference_equal": true,
+      "max_abs_error": 0.0,
+      "module_handle_before": 276452496,
+      "module_handle_after": 276452496,
+      "matches_add": false,
+      "matches_mul": true,
+      "matches_a": false,
+      "matches_b": false,
+      "matches_zero": false,
+      "a_unchanged": false,
+      "b_unchanged": true
+    }
+  ],
+  "isolation": {
+    "add_pointer": 140459245376064,
+    "mul_pointer": 140459245343296,
+    "pointers_distinct": true,
+    "add_object_sha256": "24cf28d94b170976d040bb5c967cc5fc040ba944b5a53464951ac3420f3161b1",
+    "mul_object_sha256": "2b85ec6fcc911386ed6f887eeb4bb7fd33433d1dd3af222977c0165fea84ccc1",
+    "object_bytes_distinct": true,
+    "add_object_size": 8760,
+    "mul_object_size": 8760,
+    "add_symbols": [
+      "0000000000001240 T _mlir_add_iso_add_launch",
+      "0000000000001180 T add_iso_add_launch",
+      "00000000000073c0 D add_iso_args_spec",
+      "00000000000073a0 D add_iso_entry_name",
+      "00000000000073b3 D add_iso_fly_version",
+      "00000000000073b9 D add_iso_gpu_arch"
+    ],
+    "mul_symbols": [
+      "0000000000001240 T _mlir_mul_iso_mul_launch",
+      "00000000000073c0 D mul_iso_args_spec",
+      "00000000000073a0 D mul_iso_entry_name",
+      "00000000000073b3 D mul_iso_fly_version",
+      "00000000000073b9 D mul_iso_gpu_arch",
+      "0000000000001180 T mul_iso_mul_launch"
+    ]
+  }
+}
