@@ -1,0 +1,166 @@
+{
+  "cache_after": [
+    {
+      "path": "/tmp/flydsl-cache-j-ce54fc8121f9/launch_gemm_4cd37713a7a1e522a9ad02d7382fb84d/921f9fb6924bd9b8.pkl",
+      "sha256": "9676722f965c51574053f0d6fc1b882847722d640f543069d3199c711ea0267c",
+      "size": 56663
+    },
+    {
+      "path": "/tmp/flydsl-cache-j-ce54fc8121f9/launch_rmsnorm_large_m_small_n_d9d3c876d1d2b4c3591d075ce2f7c45a/b2311704f68b6168.pkl",
+      "sha256": "117ff7f664fe1b8e064abc1ceae6f677e1755f7f5c8fa019831712da81b25d30",
+      "size": 44150
+    }
+  ],
+  "cache_before": [
+    {
+      "path": "/tmp/flydsl-cache-j-ce54fc8121f9/launch_gemm_4cd37713a7a1e522a9ad02d7382fb84d/921f9fb6924bd9b8.pkl",
+      "sha256": "9676722f965c51574053f0d6fc1b882847722d640f543069d3199c711ea0267c",
+      "size": 56663
+    },
+    {
+      "path": "/tmp/flydsl-cache-j-ce54fc8121f9/launch_rmsnorm_large_m_small_n_d9d3c876d1d2b4c3591d075ce2f7c45a/b2311704f68b6168.pkl",
+      "sha256": "117ff7f664fe1b8e064abc1ceae6f677e1755f7f5c8fa019831712da81b25d30",
+      "size": 44150
+    }
+  ],
+  "cache_root": "/tmp/flydsl-cache-j-ce54fc8121f9",
+  "environment": {
+    "flydsl": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+    "flydsl_version": "0.2.4",
+    "native_runtime_libs": [
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libmlir_c_runner_utils.so"
+    ],
+    "python": "/opt/venv/bin/python",
+    "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+    "torch_hip": "7.2.26015-fc0010cf6a",
+    "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+    "triton": "/opt/venv/lib/python3.12/site-packages/triton/__init__.py",
+    "triton_version": "3.5.1+rocm7.2.0.gita272dfa8"
+  },
+  "gpu": {
+    "capability": [
+      9,
+      5
+    ],
+    "multi_processor_count": 256,
+    "name": "AMD Instinct MI350X",
+    "rocm_smi": "\n\n============================ ROCm System Management Interface ============================\n=========================================== ID ===========================================\nGPU[0]\t\t: Device Name: \t\tAMD Instinct MI350X\nGPU[0]\t\t: Device ID: \t\t0x75a0\nGPU[0]\t\t: Device Rev: \t\t0x00\nGPU[0]\t\t: Subsystem ID: \t0x75a0\nGPU[0]\t\t: GUID: \t\t36538\n==========================================================================================\n====================================== Product Info ======================================\nGPU[0]\t\t: Card Series: \t\tAMD Instinct MI350X\nGPU[0]\t\t: Card Model: \t\t0x75a0\nGPU[0]\t\t: Card Vendor: \t\tAdvanced Micro Devices, Inc. [AMD/ATI]\nGPU[0]\t\t: Card SKU: \t\tN/A\nGPU[0]\t\t: Subsystem ID: \t0x75a0\nGPU[0]\t\t: Device Rev: \t\t0x00\nGPU[0]\t\t: Node ID: \t\t2\nGPU[0]\t\t: GUID: \t\t36538\nGPU[0]\t\t: GFX Version: \t\tgfx950\n==========================================================================================\n================================== End of ROCm SMI Log ===================================\n",
+    "total_memory_bytes": 270566162432
+  },
+  "image_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7",
+  "kernels": [
+    {
+      "configuration": {
+        "in_dtype": "bf16",
+        "out_dtype": "bf16",
+        "tile": [
+          16,
+          64,
+          64
+        ]
+      },
+      "gate": {
+        "atol": 0.1,
+        "rtol": 0.1
+      },
+      "gate_passed": true,
+      "input_sha256": {
+        "a": "61dba82d822e00461039be1c30a4f9b0dd959589a2718b0773385f5fcc6ff96c",
+        "b": "7618a8d9c76d152bd8d98096c99bd1c016d3dfc28026176df906fff04a8aa713",
+        "b_shuffled": "4169aa62dde2b9d33ff67b22f55a35b4bbb57db48f39495b7a8061e5ce6e1af7",
+        "output_initial": "e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad"
+      },
+      "kernel": "preshuffle_gemm",
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "measurements": [
+        {
+          "artifact_ir_sha256": [
+            "0db727c3d52955858a10f8d05625d75f414cded1bb7673115d30860227b5624d"
+          ],
+          "call_state_s": 0.0008200276643037796,
+          "code_object_load_s": 0.02519293688237667,
+          "frontend_cache_and_host_launch_s": 0.011353611946105957,
+          "frontend_lowering_code_object_s": 0.0,
+          "gpu_sync_s": 0.0001001209020614624,
+          "label": "cold_or_disk_warm",
+          "total_jit_call_s": 0.03736657649278641
+        },
+        {
+          "artifact_ir_sha256": [
+            "0db727c3d52955858a10f8d05625d75f414cded1bb7673115d30860227b5624d"
+          ],
+          "call_state_s": 0.0,
+          "code_object_load_s": 0.0,
+          "frontend_cache_and_host_launch_s": 0.00024298299103975296,
+          "frontend_lowering_code_object_s": 0.0,
+          "gpu_sync_s": 2.5589950382709503e-05,
+          "label": "in_process_warm",
+          "total_jit_call_s": 0.00024298299103975296
+        }
+      ],
+      "reference": "torch.mm(a.float(), b.t().float()).to(bfloat16)",
+      "shape": [
+        16,
+        64,
+        64
+      ]
+    },
+    {
+      "configuration": {
+        "dtype": "bf16",
+        "eps": 1e-06
+      },
+      "gate": {
+        "atol": 0.02,
+        "rtol": 0.0
+      },
+      "gate_passed": true,
+      "input_sha256": {
+        "gamma": "b06502cd59a9823fdcf7883532c2b50d905531b0dc602107869bccee20d8501b",
+        "input": "61dba82d822e00461039be1c30a4f9b0dd959589a2718b0773385f5fcc6ff96c",
+        "output_initial": "d18fd293853a12f3c167a883449c4cf4c3df6cd05e94aed2568e8125616ca423"
+      },
+      "kernel": "rmsnorm",
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "measurements": [
+        {
+          "artifact_ir_sha256": [
+            "0db727c3d52955858a10f8d05625d75f414cded1bb7673115d30860227b5624d",
+            "8b7b7133c225bd7e0994c6dea0a6e50623b0399c9b114e7c6df0457ec9c74d2e"
+          ],
+          "call_state_s": 0.0006134845316410065,
+          "code_object_load_s": 0.018649778328835964,
+          "frontend_cache_and_host_launch_s": 0.0019783079624176025,
+          "frontend_lowering_code_object_s": 0.0,
+          "gpu_sync_s": 8.318107575178146e-05,
+          "label": "cold_or_disk_warm",
+          "total_jit_call_s": 0.021241570822894573
+        },
+        {
+          "artifact_ir_sha256": [
+            "0db727c3d52955858a10f8d05625d75f414cded1bb7673115d30860227b5624d",
+            "8b7b7133c225bd7e0994c6dea0a6e50623b0399c9b114e7c6df0457ec9c74d2e"
+          ],
+          "call_state_s": 0.0,
+          "code_object_load_s": 0.0,
+          "frontend_cache_and_host_launch_s": 0.00018886197358369827,
+          "frontend_lowering_code_object_s": 0.0,
+          "gpu_sync_s": 2.4110078811645508e-05,
+          "label": "in_process_warm",
+          "total_jit_call_s": 0.00018886197358369827
+        }
+      ],
+      "reference": "x * rsqrt(mean(x^2) + eps) * gamma in float32, cast to bfloat16",
+      "shape": [
+        16,
+        64
+      ]
+    }
+  ],
+  "mode": "warm",
+  "source_commit": "145a87651be9b278ea05a701c14b049eecae7db3",
+  "source_root": "/tmp/flydsl-v0.2.4"
+}
