@@ -591,6 +591,23 @@ def test_select_config_policy_must_return_a_measured_pair(monkeypatch):
         invalid.resolve_config(*args)
 
 
+def test_equal_timing_tie_break_is_independent_of_candidate_order(tmp_path, monkeypatch):
+    monkeypatch.setenv("FLYDSL_AUTOTUNE_CACHE_DIR", str(tmp_path))
+    monkeypatch.setenv("FLYDSL_AUTOTUNE", "1")
+    first = Config(BLOCK=256)
+    second = Config(BLOCK=128, waves_per_eu=2)
+
+    def resolve(order):
+        tuner = _make_tuner(
+            configs=order,
+            do_bench_fn=lambda call, warmup, rep: 1.0,
+        )
+        return tuner.resolve_config(FakeTensor((8,)), FakeTensor((8,)))
+
+    assert resolve([first, second]) is second
+    assert resolve([second, first]) is second
+
+
 # ── two-track default/search ─────────────────────────────────────────────
 def test_cache_hit_precedes_default_and_search(monkeypatch):
     # The broad test runner uses the explicit off value; search stays opt-in.
@@ -934,7 +951,7 @@ def test_call_returns_tuned_fn_value(monkeypatch):
     tuner = _make_tuner(
         fn=fn,
         configs=[Config(BLOCK=64), Config(BLOCK=128)],
-        do_bench_fn=lambda call, warmup, rep: (call(), 1.0)[1],
+        do_bench_fn=lambda call, warmup, rep, times=iter((1.0, 2.0)): (call(), next(times))[1],
     )
     args = (FakeTensor((8,)), FakeTensor((1,)))
 
