@@ -1,0 +1,388 @@
+{
+  "cases": [
+    {
+      "case": "hot_inactive_tail_1",
+      "checks": {
+        "block_bounds": true,
+        "num_valid_ids": true,
+        "sorted_expert_ids": true,
+        "sorted_token_ids": true,
+        "sorted_weights": true,
+        "tail_inactive_experts": true,
+        "tail_sentinel": true,
+        "tail_zero_weights": true,
+        "valid_bounds": true
+      },
+      "experts": 8,
+      "max_blocks": 8,
+      "max_padded": 256,
+      "num_valid_ids": [
+        32,
+        1
+      ],
+      "passed": true,
+      "reference_num_valid_ids": [
+        32,
+        1
+      ],
+      "reference_valid_blocks": 1,
+      "sentinel": 33554433,
+      "tokens": 1,
+      "topk": 2,
+      "unit_size": 32,
+      "valid_blocks": 1
+    },
+    {
+      "case": "hot_inactive_tail_3",
+      "checks": {
+        "block_bounds": true,
+        "num_valid_ids": true,
+        "sorted_expert_ids": true,
+        "sorted_token_ids": true,
+        "sorted_weights": true,
+        "tail_inactive_experts": true,
+        "tail_sentinel": true,
+        "tail_zero_weights": true,
+        "valid_bounds": true
+      },
+      "experts": 8,
+      "max_blocks": 9,
+      "max_padded": 260,
+      "num_valid_ids": [
+        32,
+        3
+      ],
+      "passed": true,
+      "reference_num_valid_ids": [
+        32,
+        3
+      ],
+      "reference_valid_blocks": 1,
+      "sentinel": 33554435,
+      "tokens": 3,
+      "topk": 2,
+      "unit_size": 32,
+      "valid_blocks": 1
+    },
+    {
+      "case": "hot_inactive_tail_7",
+      "checks": {
+        "block_bounds": true,
+        "num_valid_ids": true,
+        "sorted_expert_ids": true,
+        "sorted_token_ids": true,
+        "sorted_weights": true,
+        "tail_inactive_experts": true,
+        "tail_sentinel": true,
+        "tail_zero_weights": true,
+        "valid_bounds": true
+      },
+      "experts": 8,
+      "max_blocks": 9,
+      "max_padded": 268,
+      "num_valid_ids": [
+        32,
+        7
+      ],
+      "passed": true,
+      "reference_num_valid_ids": [
+        32,
+        7
+      ],
+      "reference_valid_blocks": 1,
+      "sentinel": 33554439,
+      "tokens": 7,
+      "topk": 2,
+      "unit_size": 32,
+      "valid_blocks": 1
+    },
+    {
+      "case": "hot_inactive_tail_15",
+      "checks": {
+        "block_bounds": true,
+        "num_valid_ids": true,
+        "sorted_expert_ids": true,
+        "sorted_token_ids": true,
+        "sorted_weights": true,
+        "tail_inactive_experts": true,
+        "tail_sentinel": true,
+        "tail_zero_weights": true,
+        "valid_bounds": true
+      },
+      "experts": 8,
+      "max_blocks": 9,
+      "max_padded": 284,
+      "num_valid_ids": [
+        32,
+        15
+      ],
+      "passed": true,
+      "reference_num_valid_ids": [
+        32,
+        15
+      ],
+      "reference_valid_blocks": 1,
+      "sentinel": 33554447,
+      "tokens": 15,
+      "topk": 2,
+      "unit_size": 32,
+      "valid_blocks": 1
+    },
+    {
+      "case": "hot_inactive_tail_16",
+      "checks": {
+        "block_bounds": true,
+        "num_valid_ids": true,
+        "sorted_expert_ids": true,
+        "sorted_token_ids": true,
+        "sorted_weights": true,
+        "tail_inactive_experts": true,
+        "tail_sentinel": true,
+        "tail_zero_weights": true,
+        "valid_bounds": true
+      },
+      "experts": 8,
+      "max_blocks": 9,
+      "max_padded": 286,
+      "num_valid_ids": [
+        32,
+        16
+      ],
+      "passed": true,
+      "reference_num_valid_ids": [
+        32,
+        16
+      ],
+      "reference_valid_blocks": 1,
+      "sentinel": 33554448,
+      "tokens": 16,
+      "topk": 2,
+      "unit_size": 32,
+      "valid_blocks": 1
+    },
+    {
+      "case": "hot_inactive_tail_17",
+      "checks": {
+        "block_bounds": true,
+        "num_valid_ids": true,
+        "sorted_expert_ids": true,
+        "sorted_token_ids": true,
+        "sorted_weights": true,
+        "tail_inactive_experts": true,
+        "tail_sentinel": true,
+        "tail_zero_weights": true,
+        "valid_bounds": true
+      },
+      "experts": 8,
+      "max_blocks": 9,
+      "max_padded": 288,
+      "num_valid_ids": [
+        32,
+        17
+      ],
+      "passed": true,
+      "reference_num_valid_ids": [
+        32,
+        17
+      ],
+      "reference_valid_blocks": 1,
+      "sentinel": 33554449,
+      "tokens": 17,
+      "topk": 2,
+      "unit_size": 32,
+      "valid_blocks": 1
+    },
+    {
+      "case": "hot_inactive_tail_31",
+      "checks": {
+        "block_bounds": true,
+        "num_valid_ids": true,
+        "sorted_expert_ids": true,
+        "sorted_token_ids": true,
+        "sorted_weights": true,
+        "tail_inactive_experts": true,
+        "tail_sentinel": true,
+        "tail_zero_weights": true,
+        "valid_bounds": true
+      },
+      "experts": 8,
+      "max_blocks": 10,
+      "max_padded": 316,
+      "num_valid_ids": [
+        32,
+        31
+      ],
+      "passed": true,
+      "reference_num_valid_ids": [
+        32,
+        31
+      ],
+      "reference_valid_blocks": 1,
+      "sentinel": 33554463,
+      "tokens": 31,
+      "topk": 2,
+      "unit_size": 32,
+      "valid_blocks": 1
+    },
+    {
+      "case": "hot_inactive_tail_32",
+      "checks": {
+        "block_bounds": true,
+        "num_valid_ids": true,
+        "sorted_expert_ids": true,
+        "sorted_token_ids": true,
+        "sorted_weights": true,
+        "tail_inactive_experts": true,
+        "tail_sentinel": true,
+        "tail_zero_weights": true,
+        "valid_bounds": true
+      },
+      "experts": 8,
+      "max_blocks": 10,
+      "max_padded": 318,
+      "num_valid_ids": [
+        32,
+        32
+      ],
+      "passed": true,
+      "reference_num_valid_ids": [
+        32,
+        32
+      ],
+      "reference_valid_blocks": 1,
+      "sentinel": 33554464,
+      "tokens": 32,
+      "topk": 2,
+      "unit_size": 32,
+      "valid_blocks": 1
+    },
+    {
+      "case": "hot_inactive_tail_33",
+      "checks": {
+        "block_bounds": true,
+        "num_valid_ids": true,
+        "sorted_expert_ids": true,
+        "sorted_token_ids": true,
+        "sorted_weights": true,
+        "tail_inactive_experts": true,
+        "tail_sentinel": true,
+        "tail_zero_weights": true,
+        "valid_bounds": true
+      },
+      "experts": 8,
+      "max_blocks": 10,
+      "max_padded": 320,
+      "num_valid_ids": [
+        64,
+        33
+      ],
+      "passed": true,
+      "reference_num_valid_ids": [
+        64,
+        33
+      ],
+      "reference_valid_blocks": 2,
+      "sentinel": 33554465,
+      "tokens": 33,
+      "topk": 2,
+      "unit_size": 32,
+      "valid_blocks": 2
+    },
+    {
+      "case": "spread_inactive_48_tail_1",
+      "checks": {
+        "block_bounds": true,
+        "num_valid_ids": true,
+        "sorted_expert_ids": true,
+        "sorted_token_ids": true,
+        "sorted_weights": true,
+        "tail_inactive_experts": true,
+        "tail_sentinel": true,
+        "tail_zero_weights": true,
+        "valid_bounds": true
+      },
+      "experts": 48,
+      "max_blocks": 48,
+      "max_padded": 1536,
+      "num_valid_ids": [
+        128,
+        1
+      ],
+      "passed": true,
+      "reference_num_valid_ids": [
+        128,
+        1
+      ],
+      "reference_valid_blocks": 4,
+      "sentinel": 134217729,
+      "tokens": 1,
+      "topk": 8,
+      "unit_size": 32,
+      "valid_blocks": 4
+    },
+    {
+      "case": "spread_inactive_48_tail_17",
+      "checks": {
+        "block_bounds": true,
+        "num_valid_ids": true,
+        "sorted_expert_ids": true,
+        "sorted_token_ids": true,
+        "sorted_weights": true,
+        "tail_inactive_experts": true,
+        "tail_sentinel": true,
+        "tail_zero_weights": true,
+        "valid_bounds": true
+      },
+      "experts": 48,
+      "max_blocks": 52,
+      "max_padded": 1664,
+      "num_valid_ids": [
+        128,
+        17
+      ],
+      "passed": true,
+      "reference_num_valid_ids": [
+        128,
+        17
+      ],
+      "reference_valid_blocks": 4,
+      "sentinel": 134217745,
+      "tokens": 17,
+      "topk": 8,
+      "unit_size": 32,
+      "valid_blocks": 4
+    }
+  ],
+  "flydsl_python_path": "/tmp/flydsl-cache-j-f48e2e4d7ec1/src-overlay-dc8e153/python/flydsl/__init__.py",
+  "gpu": {
+    "capability": [
+      9,
+      5
+    ],
+    "multi_processor_count": 256,
+    "name": "AMD Instinct MI350X",
+    "rocm_smi": {
+      "card0": {
+        "Card Model": "0x75a0",
+        "Card SKU": "N/A",
+        "Card Series": "AMD Instinct MI350X",
+        "Card Vendor": "Advanced Micro Devices, Inc. [AMD/ATI]",
+        "Device Rev": "0x00",
+        "GFX Version": "gfx950",
+        "GUID": "17079",
+        "Node ID": "4",
+        "Serial Number": "692517020475",
+        "Subsystem ID": "0x75a0",
+        "Unique ID": "0x593d46f1dbb5dce5"
+      }
+    }
+  },
+  "image_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7",
+  "kernel_source_path": "/job/FlyDSL-dc8e153/kernels/moe/moe_sorting_kernel.py",
+  "native_flydsl_path": "/tmp/flydsl-cache-j-f48e2e4d7ec1/src-overlay-dc8e153/python/flydsl/_mlir",
+  "passed": true,
+  "python": "/opt/venv/bin/python",
+  "python_version": "3.12.3",
+  "tested_commit": "dc8e1539b24fb8e06357c6385139a8f5307173cc",
+  "torch_version": "2.9.1+rocm7.2.0.git7e1940d4"
+}
