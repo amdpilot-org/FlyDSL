@@ -59,6 +59,77 @@ def test_conv3d_vs_torch(n, c, t, h, w, k, stride, padding):
     assert torch.allclose(y, y_ref, rtol=2e-2, atol=2e-2)
 
 
+def _structural_impulse_case(stride, padding):
+    """Build a small case whose nonzero outputs identify batch/channel/tap mapping."""
+    n, c, d, h, w, k = 2, 3, 5, 5, 5, 4
+    x = torch.zeros((n, c, d, h, w), device="cuda", dtype=torch.bfloat16)
+    weight = torch.zeros((k, c, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    bias = torch.tensor([1000, 2000, 3000, 4000], device="cuda", dtype=torch.float32)
+
+    impulses = {
+        (0, 0, 1, 1, 1): 11,
+        (0, 1, 2, 2, 2): 22,
+        (0, 2, 3, 3, 3): 33,
+        (1, 0, 3, 1, 1): 44,
+        (1, 1, 1, 2, 3): 55,
+        (1, 2, 2, 3, 1): 66,
+    }
+    for (batch, channel, depth, height, width), value in impulses.items():
+        x[batch, channel, depth, height, width] = value
+
+    taps = {
+        (0, 0, 0, 0, 0): 101,
+        (1, 1, 2, 2, 2): 202,
+        (2, 2, 0, 2, 0): 303,
+        (3, 0, 2, 0, 2): 404,
+    }
+    for (out_channel, in_channel, tap_d, tap_h, tap_w), value in taps.items():
+        weight[out_channel, in_channel, tap_d, tap_h, tap_w] = value
+
+    return x, weight, bias
+
+
+@_skip_non_cdna4
+@pytest.mark.parametrize("input_layout,output_layout", [
+    ("NCDHW", "NCDHW"),
+    ("NCDHW", "NDHWC"),
+    ("NDHWC", "NCDHW"),
+    ("NDHWC", "NDHWC"),
+])
+@pytest.mark.parametrize("stride,padding", [
+    ((1, 1, 1), (1, 1, 1)),
+    ((2, 1, 2), (1, 0, 1)),
+])
+def test_conv3d_structural_impulse_response(input_layout, output_layout, stride, padding):
+    """Use impulses and asymmetric taps to validate orientation, mapping, stride and padding."""
+    x, weight, bias = _structural_impulse_case(stride, padding)
+
+    kernel_input = x if input_layout == "NCDHW" else x.permute(0, 2, 3, 4, 1).contiguous()
+    y = conv3d_implicit(
+        kernel_input,
+        weight,
+        bias=bias,
+        stride=stride,
+        padding=padding,
+        input_layout=input_layout,
+        output_layout=output_layout,
+    )
+    torch.cuda.synchronize()
+
+    y_ref = F.conv3d(
+        x.float().cpu(),
+        weight.float().cpu(),
+        bias=bias.float().cpu(),
+        stride=stride,
+        padding=padding,
+    ).to(torch.bfloat16)
+    if output_layout == "NDHWC":
+        y_ref = y_ref.permute(0, 2, 3, 4, 1).contiguous()
+
+    assert y.shape == y_ref.shape
+    assert torch.allclose(y, y_ref.to(device="cuda"), rtol=2e-2, atol=2e-2)
+
+
 @_skip_non_cdna4
 @pytest.mark.parametrize(
     "kernel_shape,padding",
