@@ -1,0 +1,149 @@
+{
+  "campaign": "repo-e2e-20260909",
+  "job": "gbt-refill-8-0344",
+  "scope": "structural impulse-response validation for FlyDSL conv3d",
+  "upstream_context": {
+    "repository": "ROCm/FlyDSL",
+    "issue": 993,
+    "title": "[Feature]: conv3d_implicit — accept and emit NDHWC so chained convs skip the layout round-trip",
+    "state": "open",
+    "read_only": true,
+    "conclusion": "Current mirror main already implements independent input_layout and output_layout support; this change adds a distinct structural oracle rather than duplicating a fix."
+  },
+  "source": {
+    "repository": "https://github.com/amdpilot-org/FlyDSL.git",
+    "checkout": "/job/FlyDSL",
+    "branch": "amdpilot/j-127556238a1c",
+    "base_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+    "kernel": "/job/FlyDSL/kernels/conv/conv3d_implicit.py",
+    "test": "/job/FlyDSL/tests/kernels/test_conv3d_implicit.py"
+  },
+  "environment": {
+    "image_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7",
+    "python": "/opt/venv/bin/python",
+    "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+    "torch_path": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+    "torch_hip": "7.2.26015-fc0010cf6a",
+    "installed_flydsl_version": "0.2.4",
+    "installed_flydsl_path": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+    "checkout_runtime_flydsl_version": "0.3.2",
+    "checkout_runtime_flydsl_path": "/tmp/flydsl-cache-127556238a1c/wheel-0.3.2/flydsl/__init__.py",
+    "runtime_cache": "/tmp/flydsl-cache-127556238a1c/runtime",
+    "autotune_cache": "/tmp/flydsl-cache-127556238a1c/autotune",
+    "gpu": {
+      "name": "AMD Instinct MI350X",
+      "architecture": "gfx950",
+      "capability": [
+        9,
+        5
+      ],
+      "count": 1,
+      "serial": "692517019400"
+    }
+  },
+  "oracle": {
+    "kind": "small impulse response with distinctive asymmetric weights",
+    "input_shape": [
+      2,
+      3,
+      5,
+      5,
+      5
+    ],
+    "weight_shape": [
+      4,
+      3,
+      3,
+      3,
+      3
+    ],
+    "dtype": "bfloat16",
+    "layouts": [
+      "NCDHW->NCDHW",
+      "NCDHW->NDHWC",
+      "NDHWC->NCDHW",
+      "NDHWC->NDHWC"
+    ],
+    "stride_padding_cases": [
+      {
+        "stride": [
+          1,
+          1,
+          1
+        ],
+        "padding": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "stride": [
+          2,
+          1,
+          2
+        ],
+        "padding": [
+          1,
+          0,
+          1
+        ]
+      }
+    ],
+    "reference": "independent Torch CPU float32 cross-correlation via torch.nn.functional.conv3d, cast to bfloat16",
+    "numerical_gate": {
+      "rtol": 0.02,
+      "atol": 0.02,
+      "unchanged": true
+    }
+  },
+  "installed_source_baseline": {
+    "artifact": "/job/baseline-first.json",
+    "label": "installed-source baseline; not proof for later checkout changes",
+    "reference": "Torch CPU cross-correlation",
+    "allclose": true,
+    "max_abs_error": 0.0,
+    "first_gpu_execution_elapsed_seconds": 3.6251891599968076,
+    "timing_method": "time.perf_counter around one synchronized first GPU conv3d execution; no warmup or repeated work",
+    "initial_attempt_error": "RuntimeError: shape '[1, 2, 3, 1, 1]' is invalid for input of size 7; corrected arange length from 7 to 6 before GPU execution"
+  },
+  "checkout_compatibility": {
+    "installed_wheel_control": {
+      "command": "PYTHONPATH=/job/FlyDSL FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-cache-127556238a1c/runtime FLYDSL_AUTOTUNE_CACHE_DIR=/tmp/flydsl-cache-127556238a1c/autotune /opt/venv/bin/python -m pytest -q tests/kernels/test_conv3d_implicit.py::test_conv3d_vs_torch -k '1 and 32 and 8 and 16 and 16 and 64 and 1 and 0'",
+      "result": "failed",
+      "error": "TypeError: s_waitcnt() got an unexpected keyword argument 'lgkmcnt'",
+      "interpretation": "installed FlyDSL 0.2.4 is too old for current main"
+    },
+    "matching_runtime_control": {
+      "wheel": "/tmp/flydsl-cache-127556238a1c/wheel/flydsl-0.3.2-cp312-cp312-manylinux_2_27_x86_64.whl",
+      "command": "PYTHONPATH=/tmp/flydsl-cache-127556238a1c/wheel-0.3.2:/job/FlyDSL FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-cache-127556238a1c/runtime FLYDSL_AUTOTUNE_CACHE_DIR=/tmp/flydsl-cache-127556238a1c/autotune /opt/venv/bin/python -m pytest -q tests/kernels/test_conv3d_implicit.py::test_conv3d_vs_torch -k '1 and 32 and 8 and 16 and 16 and 64 and 1 and 0'",
+      "result": "passed",
+      "pytest_elapsed_seconds": 7.79
+    }
+  },
+  "raw_results": {
+    "focused_impulse_oracle": {
+      "command": "PYTHONPATH=/tmp/flydsl-cache-127556238a1c/wheel-0.3.2:/job/FlyDSL FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-cache-127556238a1c/runtime FLYDSL_AUTOTUNE_CACHE_DIR=/tmp/flydsl-cache-127556238a1c/autotune /opt/venv/bin/python -m pytest -q tests/kernels/test_conv3d_implicit.py -k structural_impulse_response",
+      "selected": 8,
+      "passed": 8,
+      "failed": 0,
+      "pytest_elapsed_seconds": 2.68,
+      "wall_elapsed_seconds": 4.901230379,
+      "earlier_pre_cleanup_run": {
+        "pytest_elapsed_seconds": 4.57,
+        "wall_elapsed_seconds": 6.900705603
+      }
+    },
+    "full_affected_file": {
+      "command": "PYTHONPATH=/tmp/flydsl-cache-127556238a1c/wheel-0.3.2:/job/FlyDSL FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-cache-127556238a1c/runtime FLYDSL_AUTOTUNE_CACHE_DIR=/tmp/flydsl-cache-127556238a1c/autotune /opt/venv/bin/python -m pytest -q tests/kernels/test_conv3d_implicit.py",
+      "selected": 65,
+      "passed": 65,
+      "failed": 0,
+      "pytest_elapsed_seconds": 221.24,
+      "wall_elapsed_seconds": 224.341410726
+    }
+  },
+  "timing_method": "pytest's reported test duration plus one surrounding date +%s%N wall measurement per command; no synthetic burn, unbounded loops, sleep loops, or repeated work",
+  "upstream_modifications": "none",
+  "notes": "Open mirror PRs 417 and 434 were inspected to avoid duplicating their random-layout-edge and boundary coverage. This oracle is structural and uses impulses with distinctive asymmetric taps."
+}
