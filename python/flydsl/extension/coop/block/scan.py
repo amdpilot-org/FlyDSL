@@ -6,12 +6,13 @@
 import enum
 
 from ....compiler import jit
-from ....expr.gpu import barrier
+from ....expr.gpu import barrier, lane_id, shuffle_up
+from ....expr.numeric import Boolean, Uint8
 from ....expr.primitive import const_expr, range_constexpr
 from ....expr.struct import Struct
 from ....expr.typing import Array, Vector
 from .. import warp as _dispatched_warp
-from .._common import combine, linear_thread_id, seed
+from .._common import combine, identity, linear_thread_id, seed
 from ._spec import BlockAlgorithmMeta
 
 __all__ = [
@@ -83,7 +84,57 @@ def _prefix_warp_scans(partial, tid, slots, op, warp_scan_with_aggregate, warp_t
 
 
 def _storage_warp_scans(dtype, block_threads, warp_threads):
-    return Struct["slots" : Array[dtype, block_threads // warp_threads]]
+    return Struct[
+        "slots" : Array[dtype, block_threads // warp_threads],
+        "segment_starts" : Array[Uint8, block_threads // warp_threads],
+    ]
+
+
+def _combine_segment_state(op, lhs_value, lhs_flag, rhs_value, rhs_flag):
+    """Fold two segmented-scan states, letting *rhs*'s segment start reset."""
+    value = rhs_flag.select(rhs_value, combine(op, lhs_value, rhs_value))
+    return value, lhs_flag | rhs_flag
+
+
+@jit
+def _segmented_warp_inclusive(value, flag, op, width):
+    """Segmented inclusive scan over one logical warp."""
+    within_group = lane_id() % width
+    offset = 1
+    while offset < width:
+        shifted_value = shuffle_up(value, offset, width)
+        shifted_flag = shuffle_up(flag, offset, width)
+        valid = within_group >= offset
+        shifted_value = valid.select(shifted_value, identity(op, value.dtype))
+        shifted_flag = valid.select(shifted_flag, Boolean(0))
+        value, flag = _combine_segment_state(op, shifted_value, shifted_flag, value, flag)
+        offset <<= 1
+    return value, flag
+
+
+@jit
+def _segmented_block_inclusive(value, flag, tid, slots, segment_starts, op, warp_threads, num_warps):
+    """Segmented inclusive scan over one block."""
+    local_value, local_flag = _segmented_warp_inclusive(value, flag, op, warp_threads)
+    if const_expr(num_warps == 1):
+        return local_value
+
+    lane = tid % warp_threads
+    warp_id = tid // warp_threads
+    if lane == warp_threads - 1:
+        slots[warp_id] = local_value
+        segment_starts[warp_id] = local_flag.select(Uint8(1), Uint8(0))
+    barrier()
+
+    prefix_value = identity(op, value.dtype)
+    prefix_flag = Boolean(0)
+    for i in range_constexpr(0, num_warps):
+        included = warp_id > i
+        slot_value = included.select(slots[i], identity(op, value.dtype))
+        slot_flag = included.select(segment_starts[i] != 0, Boolean(0))
+        prefix_value, prefix_flag = _combine_segment_state(op, prefix_value, prefix_flag, slot_value, slot_flag)
+    result, _ = _combine_segment_state(op, prefix_value, prefix_flag, local_value, local_flag)
+    return result
 
 
 # Registry of the implemented policies. An unlisted member of the enum names a
@@ -132,6 +183,11 @@ class BlockScan(metaclass=_BlockScanMeta):
     Passing ``init=`` folds a value in ahead of the whole block, so the first thread's exclusive
     result is ``init`` rather than :func:`~flydsl.extension.coop._common.identity`.
 
+    :meth:`segmented_inclusive` additionally takes one explicit segment-start flag per thread.
+    A true flag resets the running fold at that thread; the result is the fold from the latest
+    segment start through the current thread. It supports one scalar value per thread, and does
+    not try to generalize into a segmented-scan library.
+
     :meth:`inclusive_with_aggregate` and :meth:`exclusive_with_aggregate` return ``(result,
     block_aggregate)`` instead. The aggregate is the fold of every thread's input, valid in all of
     them. It reuses what the scan already staged in shared memory, so it adds ``num_warps - 1``
@@ -176,6 +232,26 @@ class BlockScan(metaclass=_BlockScanMeta):
         :func:`~flydsl.extension.coop._common.identity` when none is given.
         """
         return cls._scan(value, op, storage, inclusive=False, init=init)[0]
+
+    @classmethod
+    def segmented_inclusive(cls, value, flag, op, *, storage):
+        """Fold from the latest true *flag* through this thread's scalar value."""
+        if cls.block_threads is None:
+            raise TypeError("specialize first, e.g. BlockScan[fx.Float32, 256]")
+        if isinstance(value, Vector):
+            raise TypeError("segmented_inclusive supports one scalar value per thread")
+
+        tid = linear_thread_id(cls.block_size)
+        return _segmented_block_inclusive(
+            value,
+            flag != 0,
+            tid,
+            storage.slots,
+            storage.segment_starts,
+            op,
+            cls.warp_threads,
+            cls.num_warps,
+        )
 
     @classmethod
     def inclusive_with_aggregate(cls, value, op, *, storage, init=None):
