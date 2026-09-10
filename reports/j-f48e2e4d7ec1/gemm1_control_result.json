@@ -1,0 +1,13 @@
+{
+  "commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+  "test": "tests/kernels/test_moe_gemm_2stage.py::test_moe_gemm1_numeric[16-8-bf16-fp8]",
+  "gpu": "AMD Instinct MI350X gfx950",
+  "result": "passed",
+  "numerical_gate": "cosine_similarity > 0.99",
+  "runtime": {
+    "python": "/opt/venv/bin/python3",
+    "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+    "triton": "3.5.1+rocm7.2.0.gita272dfa8",
+    "flydsl": "0.2.4"
+  }
+}
