@@ -28,6 +28,7 @@ from .block import reduce as _block_reduce
 from .block import scan as _block_scan
 from .warp import reduce as _warp_reduce
 from .warp import scan as _warp_scan
+from .warp import sort as _warp_sort
 
 __all__ = [
     # warp scope
@@ -36,6 +37,7 @@ __all__ = [
     "warp_exclusive_scan",
     "warp_scan",
     "warp_scan_with_aggregate",
+    "warp_sort",
     # block scope
     "BlockReduceAlgorithm",
     "BlockReduce",
@@ -49,6 +51,7 @@ warp_inclusive_scan = _warp_scan.warp_inclusive_scan
 warp_exclusive_scan = _warp_scan.warp_exclusive_scan
 warp_scan = _warp_scan.warp_scan
 warp_scan_with_aggregate = _warp_scan.warp_scan_with_aggregate
+warp_sort = _warp_sort.warp_sort
 
 
 # What the block classes below fold through, in place of the dispatched warp

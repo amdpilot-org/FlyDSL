@@ -6,6 +6,7 @@
 from ..._dispatch import Dispatcher
 from .reduce import *
 from .scan import *
+from .sort import *
 
 __all__ = [
     "warp_reduce",
@@ -13,6 +14,7 @@ __all__ = [
     "warp_exclusive_scan",
     "warp_scan",
     "warp_scan_with_aggregate",
+    "warp_sort",
 ]
 
 _dispatch = Dispatcher(__name__, targets={"rocm": "rocdl"})
