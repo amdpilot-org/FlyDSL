@@ -188,6 +188,52 @@ class TestCrossStreamDependency:
         assert torch.allclose(C, A + B, atol=1e-5)
         assert torch.allclose(E, (A + B) + D, atol=1e-5)
 
+    def test_compiled_function_non_default_stream_event_order(self):
+        """AOT producer/consumer launches honor an event-based stream join."""
+        A = torch.randn(SIZE, device="cuda", dtype=torch.float32)
+        B = torch.randn(SIZE, device="cuda", dtype=torch.float32)
+        C = torch.empty_like(A)
+        D = torch.randn(SIZE, device="cuda", dtype=torch.float32)
+        E = torch.empty_like(A)
+
+        producer = torch.cuda.Stream()
+        consumer = torch.cuda.Stream()
+        assert producer.cuda_stream != 0
+        assert consumer.cuda_stream != 0
+        assert producer.cuda_stream != consumer.cuda_stream
+
+        producer.wait_stream(torch.cuda.current_stream())
+        flyc.compile(
+            _add_jit,
+            A,
+            B,
+            C,
+            SIZE,
+            BLOCK_DIM,
+            VEC_WIDTH,
+            producer,
+        )
+        producer_event = producer.record_event()
+        consumer.wait_event(producer_event)
+        flyc.compile(
+            _add_jit,
+            C,
+            D,
+            E,
+            SIZE,
+            BLOCK_DIM,
+            VEC_WIDTH,
+            consumer,
+        )
+        consumer_event = consumer.record_event()
+        torch.cuda.current_stream().wait_event(consumer_event)
+        torch.cuda.synchronize()
+
+        expected_c = A.cpu() + B.cpu()
+        expected_e = expected_c + D.cpu()
+        assert torch.allclose(C.cpu(), expected_c, atol=1e-5, rtol=1e-5)
+        assert torch.allclose(E.cpu(), expected_e, atol=1e-5, rtol=1e-5)
+
     def test_diamond_pipeline_with_event_sync(self):
         """Diamond fork-join: 3 streams with event-based sync.
 
