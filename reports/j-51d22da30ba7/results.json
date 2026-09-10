@@ -1,0 +1,86 @@
+{
+  "campaign": "repo-e2e-20260909",
+  "issue": {
+    "repository": "ROCm/FlyDSL",
+    "number": 688,
+    "title": "[Feature]: Troubleshooting for potential issues related to internal control flow value modification",
+    "comments": 0,
+    "linked_pull_requests": 0
+  },
+  "tested_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+  "gpu": {
+    "count": 1,
+    "product": "AMD Instinct MI350X",
+    "arch": "gfx950",
+    "driver": "7.1.1.31500000"
+  },
+  "image": {
+    "name": "amdpilotv2/open-job:gbt350-20260909",
+    "local_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7"
+  },
+  "installed_baseline": {
+    "flydsl_python": "0.2.4",
+    "first_attempt": {
+      "status": "unsupported_before_gpu_launch",
+      "error": "ValueError: Operand 0 of operation \"fly.memref.store_vec\" must be a Value"
+    },
+    "supported_rerun": {
+      "status": "passed",
+      "dtype": "int32",
+      "max_abs_difference": 0,
+      "first_gpu_execution_seconds": 0.45149003341794014,
+      "process_wall_seconds": 2.481941504,
+      "bounds": {
+        "blocks": 1,
+        "threads": 64,
+        "loop_iterations": 12,
+        "repetitions": 1
+      }
+    }
+  },
+  "checkout_validation": {
+    "source_version": "0.3.3",
+    "native_package_version": "0.2.4",
+    "direct_overlay_blocker": "'convert-rocdl-fastmath-ops' does not refer to a registered pass",
+    "compatibility_overlay": "job-private checkout Python with installed native bindings; unavailable unrelated fast-math pass omitted",
+    "unit_tests": {
+      "passed": 41,
+      "failed": 0,
+      "seconds": 0.76
+    },
+    "gpu_system_tests": {
+      "passed": 21,
+      "failed": 0,
+      "seconds": 2.37,
+      "process_wall_seconds": 4.547136000
+    },
+    "independent_accumulator_probe": {
+      "status": "passed",
+      "dtype": "int32",
+      "max_abs_difference": 0,
+      "jit_plus_synchronize_seconds": 0.4432005602866411,
+      "process_wall_seconds": 2.482379008,
+      "bounds": {
+        "blocks": 1,
+        "threads": 64,
+        "loop_iterations": 12,
+        "repetitions": 1
+      }
+    }
+  },
+  "already_working_fixes": [
+    {
+      "commit": "3eefcd3d10e3d12fad84c658d4f26c9a3e3416c9",
+      "pull_request": 874,
+      "summary": "Carry Python containers through dynamic if/for/while/ifexp"
+    },
+    {
+      "commit": "01d63f7d04d5040e3d9df77feb6d083936b9d86a",
+      "pull_request": 1003,
+      "summary": "Isolate mutable state across dynamic if branches"
+    }
+  ],
+  "generated_ir_retained": false,
+  "generated_ir_reason": "No numerical discrepancy was observed.",
+  "production_code_changed": false
+}
