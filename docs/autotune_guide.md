@@ -27,6 +27,9 @@ searched winner cache -> matching artifact -> default -> search
 `FLYDSL_AUTOTUNE=1` bypasses those serving decisions, searches the existing
 configs, updates the scratch winner cache, and atomically writes an artifact.
 A normal fallback search updates only the scratch cache.
+`prune_configs_by` runs before benchmarking; if it removes every candidate,
+forced search refuses with an empty-search error rather than reporting that a
+candidate failed.
 While artifact lookup is active, scratch winners use the same device descriptor
 so a same-architecture product cannot shadow the matching artifact.
 

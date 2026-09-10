@@ -678,6 +678,13 @@ class Autotuner:
 
         configs = self.configs(*args, **kwargs) if callable(self.configs) else self.configs
         configs = self._prune(configs, args, kwargs)
+        if not configs:
+            reason = (
+                "pruning removed all candidate configs"
+                if self.prune_configs_by is not None
+                else "search space is empty"
+            )
+            raise RuntimeError(f"Autotune {reason}")
         print(f"[autotune] tuning {len(configs)} configs...")
         results = []
         last_error = None
@@ -760,6 +767,9 @@ def autotune(
     Args:
         configs: sequence of :class:`Config`, or a callable returning one for
             the current arguments.
+        prune_configs_by: optional ``prune_configs_by(configs, sig_args) ->
+            sequence[Config]`` filter run before benchmarking. An empty result
+            is a precise search refusal, not a candidate failure.
         default: optional heuristic ``default(*args, **kwargs) -> Config`` used
             without benchmarking unless ``FLYDSL_AUTOTUNE`` forces a search.
         artifact_name: stable name for opt-in config lookup and emission through
