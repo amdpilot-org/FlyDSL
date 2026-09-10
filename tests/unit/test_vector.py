@@ -554,6 +554,41 @@ class TestReduction:
         ir_text = _build_module(build, [_vec_i32])
         assert "vector.reduction <add>" in ir_text
 
+    def test_int_reduce_bitwise(self):
+        def build(a):
+            ta = Vector(a, 8, Int32)
+            result = ta.reduce(ReductionOp.AND)
+            assert isinstance(result, Int32)
+
+        ir_text = _build_module(build, [_vec_i32])
+        assert "vector.reduction <and>" in ir_text
+
+    def test_int_reduce_or(self):
+        def build(a):
+            ta = Vector(a, 8, Uint32)
+            result = ta.reduce(ReductionOp.OR)
+            assert isinstance(result, Uint32)
+
+        ir_text = _build_module(build, [_vec_i32])
+        assert "vector.reduction <or>" in ir_text
+
+    def test_int_reduce_xor(self):
+        def build(a):
+            ta = Vector(a, 8, Uint32)
+            result = ta.reduce(ReductionOp.XOR)
+            assert isinstance(result, Uint32)
+
+        ir_text = _build_module(build, [_vec_i32])
+        assert "vector.reduction <xor>" in ir_text
+
+    def test_bitwise_reduce_float_raises(self):
+        def build(a):
+            ta = Vector(a, 8, Float32)
+            with pytest.raises(TypeError):
+                ta.reduce(ReductionOp.AND)
+
+        _build_module(build)
+
     def test_int_reduce_max_signed(self):
         """Int32 MAX should use maxsi, not maxnumf."""
 

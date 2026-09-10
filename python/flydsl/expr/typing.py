@@ -1375,6 +1375,9 @@ def E(*mode):
 class ReductionOp(enum.Enum):
     ADD = "add"
     MUL = "mul"
+    AND = "and"
+    OR = "or"
+    XOR = "xor"
     MAX = "max"
     MIN = "min"
 
@@ -1382,9 +1385,16 @@ class ReductionOp(enum.Enum):
 _REDUCE_KINDS = {
     "add": (vector.CombiningKind.ADD, vector.CombiningKind.ADD, vector.CombiningKind.ADD),
     "mul": (vector.CombiningKind.MUL, vector.CombiningKind.MUL, vector.CombiningKind.MUL),
+    "and": (vector.CombiningKind.AND, vector.CombiningKind.AND, vector.CombiningKind.AND),
+    "or": (vector.CombiningKind.OR, vector.CombiningKind.OR, vector.CombiningKind.OR),
+    "xor": (vector.CombiningKind.XOR, vector.CombiningKind.XOR, vector.CombiningKind.XOR),
     "max": (vector.CombiningKind.MAXNUMF, vector.CombiningKind.MAXSI, vector.CombiningKind.MAXUI),
     "min": (vector.CombiningKind.MINIMUMF, vector.CombiningKind.MINSI, vector.CombiningKind.MINUI),
 }
+
+_BITWISE_COMBINING_KINDS = frozenset(
+    (vector.CombiningKind.AND, vector.CombiningKind.OR, vector.CombiningKind.XOR)
+)
 
 _VECTOR_OP_METHODS = {
     operator.add: "__add__",
@@ -1425,6 +1435,8 @@ _VECTOR_REVERSE_OP_METHODS = {
 
 def _resolve_combining_kind(op, is_float, signed):
     if isinstance(op, vector.CombiningKind):
+        if is_float and op in _BITWISE_COMBINING_KINDS:
+            raise TypeError("bitwise reductions require an integer vector")
         return op
     if isinstance(op, ReductionOp):
         key = op.value
@@ -1435,6 +1447,8 @@ def _resolve_combining_kind(op, is_float, signed):
     triple = _REDUCE_KINDS.get(key)
     if triple is None:
         raise ValueError(f"unknown reduction kind {op!r}; expected one of {list(_REDUCE_KINDS)}")
+    if is_float and triple[0] in _BITWISE_COMBINING_KINDS:
+        raise TypeError("bitwise reductions require an integer vector")
     return triple[0] if is_float else (triple[1] if signed else triple[2])
 
 
@@ -1845,6 +1859,17 @@ class Vector(ArithValue):
 
     @dsl_loc_tracing
     def reduce(self, op, init_val=None, reduction_profile=None, *, fastmath=None):
+        """Reduce a one-dimensional vector to a scalar.
+
+        Integer ``add`` wraps modulo ``2**width`` in the vector's element type:
+        signed results use two's-complement representation and unsigned results
+        use their ordinary modular representation. Integer ``and``, ``or``, and
+        ``xor`` operate on element bit patterns and are independent of
+        signedness. Bitwise reductions are rejected for floating-point vectors.
+
+        ``reduction_profile`` is currently accepted for API compatibility but
+        does not change the generated reduction.
+        """
         is_fp = self._dtype.is_float
         signed = getattr(self._dtype, "signed", True)
         kind = _resolve_combining_kind(op, is_fp, signed)

@@ -86,6 +86,15 @@ elementwise; a scalar operand is auto-broadcast across the lanes.
 - **Type aliases** — `Float32x4`, `BFloat16x8`, `Int32x4`, … name a
   `dtype`×`N` vector type directly (`<dtype>x<N>`).
 
+### Vector reduction
+
+`Vector.reduce` lowers a one-dimensional vector to a scalar. Integer `add`
+wraps modulo `2**width` in the element type: signed results use two's
+complement representation and unsigned results use their ordinary modular
+representation. Integer `and`, `or`, and `xor` reduce the element bit patterns
+and are independent of signedness. Bitwise reductions are rejected for
+floating-point vectors.
+
 ## Compile-time and run-time values
 
 A `Numeric` is *polymorphic in the value it holds* — the type is the same either
