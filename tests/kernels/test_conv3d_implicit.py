@@ -162,6 +162,143 @@ def test_conv3d_autotune(tmp_path, monkeypatch):
     assert calls["n"] == 0  # cached, no re-benchmark
 
 
+@_skip_non_cdna4
+@pytest.mark.parametrize("input_layout", ["NCDHW", "NDHWC"])
+@pytest.mark.parametrize("output_layout", ["NCDHW", "NDHWC"])
+@pytest.mark.parametrize(
+    "kernel_shape,stride,padding,dilation",
+    [
+        ((3, 3, 3), (1, 2, 1), (1, 0, 1), (1, 2, 1)),
+        ((2, 2, 2), (1, 1, 1), "same", (1, 1, 1)),
+        ((3, 3, 3), (1, 1, 1), (1, 1, 1), (2, 1, 1)),
+    ],
+)
+def test_conv3d_layout_edge_cases_vs_torch(
+    input_layout,
+    output_layout,
+    kernel_shape,
+    stride,
+    padding,
+    dilation,
+):
+    """Cover odd channels, spatial tails, bias, and admitted stride/padding/dilation."""
+    torch.manual_seed(9000 + sum(kernel_shape) + sum(stride) + sum(dilation))
+    n, c, d, h, w, k = 1, 3, 5, 5, 3, 5
+    x_ncdhw = torch.randn((n, c, d, h, w), device="cuda", dtype=torch.bfloat16)
+    x = (
+        x_ncdhw.permute(0, 2, 3, 4, 1).contiguous()
+        if input_layout == "NDHWC"
+        else x_ncdhw
+    )
+    weight = torch.randn((k, c, *kernel_shape), device="cuda", dtype=torch.bfloat16)
+    bias = torch.randn((k,), device="cuda", dtype=torch.float32)
+
+    y = conv3d_implicit(
+        x,
+        weight,
+        bias=bias,
+        stride=stride,
+        padding=padding,
+        dilation=dilation,
+        input_layout=input_layout,
+        output_layout=output_layout,
+    )
+    y_ref = F.conv3d(
+        x_ncdhw,
+        weight,
+        bias=bias.to(torch.bfloat16),
+        stride=stride,
+        padding=padding,
+        dilation=dilation,
+    )
+    if output_layout == "NDHWC":
+        y_ref = y_ref.permute(0, 2, 3, 4, 1).contiguous()
+    torch.cuda.synchronize()
+
+    assert y.shape == y_ref.shape
+    assert torch.allclose(y, y_ref, rtol=2e-2, atol=2e-2)
+
+
+@_skip_non_cdna4
+def test_conv3d_invalid_layout_rejected_with_control():
+    """Reject an unsupported layout, then prove the neighboring valid layout works."""
+    torch.manual_seed(9100)
+    x = torch.randn((1, 3, 5, 5, 3), device="cuda", dtype=torch.bfloat16)
+    weight = torch.randn((5, 3, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    bias = torch.randn((5,), device="cuda", dtype=torch.float32)
+
+    with pytest.raises(AssertionError, match="input_layout must be one of"):
+        conv3d_implicit(
+            x,
+            weight,
+            bias=bias,
+            stride=(1, 2, 1),
+            padding=(1, 0, 1),
+            dilation=(1, 2, 1),
+            input_layout="NHWC",
+        )
+
+    y = conv3d_implicit(
+        x,
+        weight,
+        bias=bias,
+        stride=(1, 2, 1),
+        padding=(1, 0, 1),
+        dilation=(1, 2, 1),
+        input_layout="NCDHW",
+        output_layout="NCDHW",
+    )
+    y_ref = F.conv3d(
+        x,
+        weight,
+        bias=bias.to(torch.bfloat16),
+        stride=(1, 2, 1),
+        padding=(1, 0, 1),
+        dilation=(1, 2, 1),
+    )
+    torch.cuda.synchronize()
+    assert torch.allclose(y, y_ref, rtol=2e-2, atol=2e-2)
+
+
+@_skip_non_cdna4
+def test_conv3d_unsupported_dilation_rejected_with_control():
+    """Reject an inadmissible dilated footprint, then prove the valid neighbor works."""
+    torch.manual_seed(9200)
+    x = torch.randn((1, 3, 5, 4, 3), device="cuda", dtype=torch.bfloat16)
+    weight = torch.randn((5, 3, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    bias = torch.randn((5,), device="cuda", dtype=torch.float32)
+
+    with pytest.raises(AssertionError, match="dilated filter is larger than the padded input"):
+        conv3d_implicit(
+            x,
+            weight,
+            bias=bias,
+            stride=(1, 2, 1),
+            padding=(1, 0, 1),
+            dilation=(1, 2, 1),
+        )
+
+    x_valid = torch.randn((1, 3, 5, 5, 3), device="cuda", dtype=torch.bfloat16)
+    y = conv3d_implicit(
+        x_valid,
+        weight,
+        bias=bias,
+        stride=(1, 2, 1),
+        padding=(1, 0, 1),
+        dilation=(1, 2, 1),
+    )
+    y_ref = F.conv3d(
+        x_valid,
+        weight,
+        bias=bias.to(torch.bfloat16),
+        stride=(1, 2, 1),
+        padding=(1, 0, 1),
+        dilation=(1, 2, 1),
+    )
+    torch.cuda.synchronize()
+    assert torch.allclose(y, y_ref, rtol=2e-2, atol=2e-2)
+
+
 # 2D conv via the depth-1 degenerate path through the 3D kernel.
 @_skip_non_cdna4
 @pytest.mark.parametrize(
