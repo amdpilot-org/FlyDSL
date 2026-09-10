@@ -1571,14 +1571,33 @@ if torch is not None:
             _FWD_CACHE[key] = launcher
         return launcher
 
+    def _flatten_rmsnorm_input(x, weight):
+        if x.dim() == 0:
+            raise ValueError("rmsnorm expects a non-scalar input")
+        if x.numel() == 0:
+            raise ValueError("rmsnorm expects a positive-size input")
+        if weight.dim() != 1:
+            raise ValueError(f"rmsnorm expects a 1D weight, got shape {tuple(weight.shape)}")
+        N = weight.shape[0]
+        if x.shape[-1] != N:
+            raise ValueError(f"x last dim {x.shape[-1]} != weight length {N}")
+        if x.stride(-1) != 1:
+            raise ValueError("rmsnorm expects a unit-stride last dimension")
+
+        x_flat = x.reshape(-1, N)
+        if x_flat.data_ptr() != x.data_ptr() or x_flat.stride(-1) != 1:
+            raise ValueError("rmsnorm expects a flattenable row-contiguous view without copy")
+        return x_flat
+
     def rmsnorm_fwd(x, weight, eps=EPS, store_rstd=False):
         """Forward RMSNorm. Returns (out, rstd). eps is baked into the kernel."""
         assert x.dim() == 2, "rmsnorm_fwd expects a 2D (M, N) input"
-        assert x.is_contiguous() and weight.is_contiguous(), "rmsnorm_fwd expects contiguous inputs"
+        assert x.stride(-1) == 1, "rmsnorm_fwd expects a unit-stride last dimension"
+        assert weight.is_contiguous(), "rmsnorm_fwd expects a contiguous weight"
         assert weight.device == x.device, "rmsnorm_fwd: weight and x must be on the same device"
         device = x.device
         M, N = x.shape
-        out = torch.empty_like(x)
+        out = torch.empty((M, N), device=device, dtype=x.dtype)
         rstd = torch.empty((M,), device=device, dtype=torch.float32) if store_rstd else None
         dtype_str = _torch_dtype_to_str(x.dtype)
         weight_dtype_str = _resolve_rmsnorm_weight_dtype(dtype_str, _torch_dtype_to_str(weight.dtype))
@@ -1603,14 +1622,14 @@ if torch is not None:
         device = x.device
         dtype = x.dtype
         assert x.dim() == 2, "rmsnorm_bwd expects a 2D (M, N) input"
-        assert x.is_contiguous() and dout.is_contiguous(), "rmsnorm_bwd expects contiguous inputs"
+        assert x.stride(-1) == 1 and dout.stride(-1) == 1, "rmsnorm_bwd expects unit-stride last dimensions"
         assert weight.is_contiguous(), "rmsnorm_bwd: weight must be contiguous"
         assert weight.device == device == dout.device == rstd.device, "rmsnorm_bwd: inputs must share a device"
         assert dout.dtype == dtype, "rmsnorm_bwd: dout dtype must match x"
         M, N = x.shape
         dtype_str = _torch_dtype_to_str(dtype)
         weight_dtype_str = _resolve_rmsnorm_weight_dtype(dtype_str, _torch_dtype_to_str(weight.dtype))
-        dx = torch.empty_like(x)
+        dx = torch.empty((M, N), device=device, dtype=x.dtype)
         path, num_programs = _select_rmsnorm_bwd_config(M, N, dtype_str, device)
         if path == "two_stage":
             dweight = torch.empty_like(weight)
@@ -1687,12 +1706,7 @@ if torch is not None:
     def rmsnorm(x, weight=None, eps=EPS):
         """Public entry: plain RMSNorm with autograd (weight required in PR 1)."""
         assert weight is not None, "PR 1 rmsnorm requires an explicit weight"
-        N = weight.shape[-1]
-        assert x.shape[-1] == N, f"x last dim {x.shape[-1]} != weight length {N}"
-        # reshape() can return a non-contiguous view (e.g. from a strided slice);
-        # the kernel indexes rows by raw stride, so force contiguity here rather
-        # than relying only on the fwd assert (which vanishes under python -O).
-        x_flat = x.reshape(-1, N).contiguous()
+        x_flat = _flatten_rmsnorm_input(x, weight)
         out_flat = RMSNormFunction.apply(x_flat, weight, eps)
         return out_flat.reshape(x.shape)
 

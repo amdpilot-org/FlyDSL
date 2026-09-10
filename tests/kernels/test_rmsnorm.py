@@ -1523,6 +1523,81 @@ def test_rmsnorm_eps_honored():
     print("  -> PASSED")
 
 
+@pytest.mark.parametrize(
+    ("rows", "N", "padding", "input_shape"),
+    (
+        (37, 512, 0, (37, 512)),
+        (37, 4096, 128, (37, 4096)),
+        (38, 512, 0, (2, 19, 512)),
+        (38, 4096, 128, (2, 19, 4096)),
+    ),
+    ids=("contiguous_2d", "row_strided_2d", "contiguous_3d", "row_strided_3d"),
+)
+def test_rmsnorm_forward_layout_admission(rows, N, padding, input_shape):
+    """Admit only zero-copy row-contiguous views and preserve their backing storage."""
+    device = torch.device("cuda", torch.cuda.current_device())
+    torch.manual_seed(749)
+    leading_shape = input_shape[:-1] + (N + padding,)
+    base = torch.randn(leading_shape, device=device, dtype=DTYPE_BF16)
+    x = base[..., :N] if padding else base
+    x_flat = x.reshape(-1, N)
+    weight = torch.rand((N,), device=device, dtype=DTYPE_BF16)
+    base_snapshot = base.detach().clone()
+    weight_snapshot = weight.detach().clone()
+
+    assert x_flat.stride(-1) == 1
+    assert x_flat.data_ptr() == x.data_ptr()
+    output, rstd = rmsnorm_kernel_impl.rmsnorm_fwd(x_flat, weight, eps=EPS, store_rstd=True)
+    torch.cuda.synchronize(device)
+
+    x_reference = x_flat.detach().to(DTYPE_FP32)
+    weight_reference = weight.detach().to(DTYPE_FP32)
+    rstd_reference = torch.rsqrt(x_reference.square().mean(dim=1) + EPS)
+    output_reference = x_reference * rstd_reference[:, None] * weight_reference
+    torch.testing.assert_close(output.to(DTYPE_FP32), output_reference, rtol=0.0, atol=2e-2)
+    torch.testing.assert_close(rstd, rstd_reference, rtol=0.0, atol=1e-3)
+    assert torch.equal(base.detach(), base_snapshot)
+    assert torch.equal(weight.detach(), weight_snapshot)
+
+
+def test_rmsnorm_row_strided_autograd_and_refusal():
+    """Row-strided autograd works, while non-row views fail before kernel launch."""
+    device = torch.device("cuda", torch.cuda.current_device())
+    rows, N, padding = 513, 512, 128
+    torch.manual_seed(749)
+    base = torch.randn((rows, N + padding), device=device, dtype=DTYPE_BF16)
+    x = base[:, :N].requires_grad_(True)
+    weight = torch.rand((N,), device=device, dtype=DTYPE_BF16).requires_grad_(True)
+    dout = torch.randn((rows, N), device=device, dtype=DTYPE_BF16)
+    base_snapshot = base.detach().clone()
+
+    output = rmsnorm(x, weight)
+    torch.autograd.backward(output, dout)
+    torch.cuda.synchronize(device)
+
+    x_reference = x.detach().to(DTYPE_FP32).requires_grad_(True)
+    weight_reference = weight.detach().to(DTYPE_FP32).requires_grad_(True)
+    rstd_reference = torch.rsqrt(x_reference.square().mean(dim=1, keepdim=True) + EPS)
+    output_reference = x_reference * rstd_reference * weight_reference
+    dx_reference, dweight_reference = torch.autograd.grad(
+        output_reference,
+        (x_reference, weight_reference),
+        dout.to(DTYPE_FP32),
+    )
+    torch.testing.assert_close(output.to(DTYPE_FP32), output_reference.detach(), rtol=1e-1, atol=2e-1)
+    torch.testing.assert_close(x.grad.to(DTYPE_FP32), dx_reference.detach(), rtol=1e-1, atol=2e-1)
+    torch.testing.assert_close(weight.grad.to(DTYPE_FP32), dweight_reference.detach(), rtol=1e-1, atol=5e-1)
+    assert torch.equal(base.detach(), base_snapshot)
+
+    transposed = torch.randn((N, rows), device=device, dtype=DTYPE_BF16).T
+    with pytest.raises(ValueError, match="unit-stride last dimension"):
+        rmsnorm(transposed, weight.detach())
+
+    permuted = torch.randn((2, rows // 2, N), device=device, dtype=DTYPE_BF16).permute(1, 0, 2)
+    with pytest.raises(ValueError, match="flattenable row-contiguous view"):
+        rmsnorm(permuted, weight.detach())
+
+
 def test_rmsnorm_bwd_dispatch_boundary():
     """The hybrid selector is the single authority for atomic vs two-stage."""
     device = torch.device("cuda", torch.cuda.current_device())
