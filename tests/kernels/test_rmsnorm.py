@@ -1523,6 +1523,98 @@ def test_rmsnorm_eps_honored():
     print("  -> PASSED")
 
 
+@pytest.mark.parametrize(
+    ("n", "activation_dtype", "weight_dtype"),
+    (
+        (512, DTYPE_FP32, DTYPE_FP32),
+        (3000, DTYPE_FP32, DTYPE_FP32),
+        (4096, DTYPE_BF16, DTYPE_FP32),
+    ),
+    ids=("small_n_f32", "generic_scalar_f32", "vec8_bf16_f32_weight"),
+)
+def test_rmsnorm_row_permutation_independence(n, activation_dtype, weight_dtype):
+    """Permuting independent rows must not change any row's output or rstd."""
+    rows = 16
+    epsilon = 1e-6
+    device = torch.device("cuda", torch.cuda.current_device())
+    torch.manual_seed(749)
+
+    row_scales = torch.tensor(
+        [1e-6, 1.0, 1e6, 1e-3, 1e3, 1e-6, 1e6, 1.0] * 2,
+        device=device,
+        dtype=DTYPE_FP32,
+    )
+    source = (torch.randn((rows, n), device=device, dtype=DTYPE_FP32) * row_scales[:, None])
+    source = source.to(activation_dtype).contiguous()
+    weight = (0.5 + torch.rand((n,), device=device, dtype=DTYPE_FP32)).to(weight_dtype).contiguous()
+
+    permutation = torch.tensor(
+        [3, 11, 7, 0, 14, 5, 9, 2, 13, 6, 1, 10, 15, 4, 8, 12],
+        device=device,
+        dtype=torch.long,
+    )
+    inverse = torch.empty_like(permutation)
+    inverse[permutation] = torch.arange(rows, device=device)
+
+    direct_output, direct_rstd = rmsnorm_kernel_impl.rmsnorm_fwd(
+        source,
+        weight,
+        eps=epsilon,
+        store_rstd=True,
+    )
+    permuted_output, permuted_rstd = rmsnorm_kernel_impl.rmsnorm_fwd(
+        source[permutation].contiguous(),
+        weight,
+        eps=epsilon,
+        store_rstd=True,
+    )
+    torch.cuda.synchronize(device)
+    restored_output = permuted_output[inverse]
+    restored_rstd = permuted_rstd[inverse]
+
+    source_reference = source.detach().cpu().to(torch.float64)
+    weight_reference = weight.detach().cpu().to(torch.float64)
+    mean_square = source_reference.square().mean(dim=1, keepdim=True)
+    reference_rstd = (mean_square + epsilon).rsqrt()
+    reference_output = source_reference * reference_rstd * weight_reference
+
+    assert torch.isfinite(direct_output).all()
+    assert torch.isfinite(direct_rstd).all()
+    assert direct_rstd.gt(0).all()
+    assert direct_output.abs().max().item() < 8.0
+    assert direct_rstd.abs().max().item() < 2e6
+    assert torch.equal(direct_output, restored_output)
+    assert torch.equal(direct_rstd, restored_rstd)
+
+    activation_rtol, activation_atol = (
+        (1e-4, 1e-4) if activation_dtype == DTYPE_FP32 else (2e-2, 2e-2)
+    )
+    torch.testing.assert_close(
+        direct_output.detach().cpu().to(DTYPE_FP32),
+        reference_output.to(DTYPE_FP32),
+        rtol=activation_rtol,
+        atol=activation_atol,
+    )
+    torch.testing.assert_close(
+        direct_rstd.detach().cpu(),
+        reference_rstd.squeeze(1).to(DTYPE_FP32),
+        rtol=1e-3,
+        atol=1e-3,
+    )
+
+    output_abs_error = (
+        direct_output.detach().cpu().to(DTYPE_FP32) - reference_output.to(DTYPE_FP32)
+    ).abs().max().item()
+    rstd_abs_error = (
+        direct_rstd.detach().cpu() - reference_rstd.squeeze(1).to(DTYPE_FP32)
+    ).abs().max().item()
+    print(
+        f"  n={n} activation={activation_dtype} weight={weight_dtype}: "
+        f"output_abs_err={output_abs_error:.3e}, rstd_abs_err={rstd_abs_error:.3e}, "
+        "restored rows exact"
+    )
+
+
 def test_rmsnorm_bwd_dispatch_boundary():
     """The hybrid selector is the single authority for atomic vs two-stage."""
     device = torch.device("cuda", torch.cuda.current_device())
