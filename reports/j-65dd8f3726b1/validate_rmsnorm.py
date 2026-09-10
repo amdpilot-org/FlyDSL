@@ -6,14 +6,28 @@ from __future__ import annotations
 import argparse
 import json
 import platform
+import subprocess
 import sys
 from pathlib import Path
 
 import torch
+import triton
 
 import flydsl
-from flydsl.runtime.device import get_rocm_arch
-from kernels.norm import rmsnorm_kernel as rmsnorm_impl
+import flydsl.runtime.device as flydsl_device
+
+
+if not hasattr(flydsl_device, "get_warp_size"):
+
+    def _get_warp_size(arch: str | None = None) -> int:
+        if arch is None:
+            arch = flydsl_device.get_rocm_arch()
+        return 32 if str(arch).lower().startswith(("gfx10", "gfx11", "gfx12")) else 64
+
+    flydsl_device.get_warp_size = _get_warp_size
+
+
+from kernels.norm import rmsnorm_kernel as rmsnorm_impl  # noqa: E402
 
 
 EPS = 1e-5
@@ -44,6 +58,16 @@ def _assert_close(actual: torch.Tensor, expected: torch.Tensor, *, rtol: float, 
 def _native_paths() -> list[str]:
     package_root = Path(flydsl.__file__).resolve().parent
     return sorted(str(path) for path in package_root.rglob("*.so"))
+
+
+def _source_paths() -> dict[str, str]:
+    repository_root = Path(__file__).resolve().parents[2]
+    return {
+        "repository": str(repository_root),
+        "kernel": str(repository_root / "kernels/norm/rmsnorm_kernel.py"),
+        "shared_helpers": str(repository_root / "kernels/norm/rmsnorm_common.py"),
+        "tests": str(repository_root / "tests/kernels/test_rmsnorm.py"),
+    }
 
 
 def _validate_case(dtype_name: str, hidden_size: int, device: torch.device) -> dict:
@@ -108,6 +132,9 @@ def _validate_case(dtype_name: str, hidden_size: int, device: torch.device) -> d
     forward_compiled = forward_launcher._cf
     backward_launcher = rmsnorm_impl._BWD_CACHE[backward_key]
     backward_compiled = backward_launcher._cf
+
+    x.grad = None
+    weight.grad = None
 
     with torch.cuda.stream(side_stream):
         warm_out = rmsnorm_impl.rmsnorm(x, weight, eps=EPS)
@@ -176,7 +203,7 @@ def main() -> int:
 
     device = torch.device("cuda", torch.cuda.current_device())
     properties = torch.cuda.get_device_properties(device)
-    arch = str(get_rocm_arch())
+    arch = str(flydsl_device.get_rocm_arch())
     if arch != "gfx950":
         raise SystemExit(f"expected gfx950, found {arch}")
 
@@ -205,18 +232,38 @@ def main() -> int:
             "warm_cache_reuse": True,
         },
         "environment": {
+            "delivery_image": {
+                "requested_tag": "amdpilotv2/open-job:gbt350-20260909",
+                "operator_provided_local_image_id": (
+                    "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7"
+                ),
+            },
             "python": sys.executable,
             "python_version": sys.version,
             "platform": platform.platform(),
             "torch": torch.__version__,
             "torch_path": torch.__file__,
+            "torch_native_path": torch._C.__file__,
+            "triton": triton.__version__,
+            "triton_path": triton.__file__,
             "flydsl": flydsl.__version__,
             "flydsl_path": flydsl.__file__,
             "flydsl_native_paths": _native_paths(),
+            "source_commit": subprocess.check_output(
+                ["git", "rev-parse", "HEAD"],
+                cwd=Path(__file__).resolve().parents[2],
+                text=True,
+            ).strip(),
+            "pr_base_commit": subprocess.check_output(
+                ["git", "rev-parse", "origin/main"],
+                cwd=Path(__file__).resolve().parents[2],
+                text=True,
+            ).strip(),
+            "source_paths": _source_paths(),
             "gpu_name": properties.name,
             "gpu_arch": arch,
             "gpu_device_count": torch.cuda.device_count(),
-            "gpu_uuid": getattr(properties, "uuid", None),
+            "gpu_uuid": str(getattr(properties, "uuid", "")),
             "gpu_multi_processor_count": properties.multi_processor_count,
         },
         "results": results,
