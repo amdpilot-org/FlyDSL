@@ -14,6 +14,7 @@ RMSNorm(x) = x / sqrt(mean(x^2) + eps) * gamma
 """
 
 import os
+from decimal import Decimal, localcontext
 
 import pytest
 
@@ -1521,6 +1522,82 @@ def test_rmsnorm_eps_honored():
         print(f"  N={N} eps 1e-2 vs 1e-6 output diff = {diff:.3e} (must be > 0)")
         assert diff > 0, f"N={N}: eps appears to be ignored"
     print("  -> PASSED")
+
+
+def _high_precision_rmsnorm_reference(input_rows, weight, eps):
+    weight_values = [Decimal(value) for value in weight.detach().cpu().tolist()]
+    expected = []
+    with localcontext() as context:
+        context.prec = 50
+        eps_value = Decimal(str(eps))
+        for row in input_rows:
+            values = [Decimal(value) for value in row.detach().cpu().tolist()]
+            mean_square = sum(value * value for value in values) / Decimal(len(values))
+            scale = Decimal(1) / (mean_square + eps_value).sqrt()
+            expected.append([value * scale * weight_values[index] for index, value in enumerate(values)])
+    return expected
+
+
+@pytest.mark.parametrize(
+    ("dtype_str", "weight_dtype_str"),
+    (
+        ("f32", "f32"),
+        ("f16", "f16"),
+        ("f16", "f32"),
+        ("bf16", "bf16"),
+        ("bf16", "f32"),
+    ),
+)
+def test_rmsnorm_finite_range_and_epsilon_scale(dtype_str, weight_dtype_str):
+    """Zero, tiny, and finite-outlier rows follow the documented fp64 reference."""
+    torch_dtype = _torch_dtype(dtype_str)
+    weight_torch_dtype = _torch_dtype(weight_dtype_str)
+    device = torch.device("cuda", torch.cuda.current_device())
+    fixed_weight = torch.tensor(
+        [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5],
+        device=device,
+        dtype=weight_torch_dtype,
+    )
+    outlier_value = 1.0e4 if dtype_str == "f16" else 1.0e18
+    input_rows = torch.tensor(
+        [
+            [0.0] * 8,
+            [1.0e-6, 2.0e-6, 4.0e-6, 8.0e-6] * 2,
+            [outlier_value, 2.0 * outlier_value, 3.0 * outlier_value, 4.0 * outlier_value] * 2,
+        ],
+        device=device,
+        dtype=torch_dtype,
+    )
+    outputs = {}
+    for eps in (1.0e-6, 1.0e-2):
+        output = rmsnorm(input_rows, fixed_weight, eps=eps)
+        torch.cuda.synchronize()
+        assert output.dtype == torch_dtype
+        assert torch.isfinite(output).all(), f"non-finite output for {dtype_str}/{weight_dtype_str}, eps={eps}"
+        expected = _high_precision_rmsnorm_reference(input_rows, fixed_weight, eps)
+        expected_quantized = (
+            torch.tensor(expected, device=device, dtype=torch.float64).to(torch_dtype).to(torch.float64)
+        )
+        rtol = 2.0e-5 if dtype_str == "f32" else 2.0e-2
+        torch.testing.assert_close(
+            output.to(torch.float64),
+            expected_quantized,
+            rtol=rtol,
+            atol=rtol,
+            msg=f"{dtype_str}/{weight_dtype_str} mismatch at eps={eps}",
+        )
+        outputs[eps] = output
+
+    tiny_ratio = outputs[1.0e-6][1].to(torch.float64) / outputs[1.0e-2][1].to(torch.float64)
+    expected_ratio = torch.full_like(tiny_ratio, 100.0)
+    ratio_rtol = 1.0e-3 if dtype_str == "f32" else 2.0e-1
+    torch.testing.assert_close(
+        tiny_ratio,
+        expected_ratio,
+        rtol=ratio_rtol,
+        atol=0.0,
+        msg=f"{dtype_str}/{weight_dtype_str} epsilon scale relationship mismatch",
+    )
 
 
 def test_rmsnorm_bwd_dispatch_boundary():
