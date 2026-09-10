@@ -1,0 +1,51 @@
+{
+  "phase": "populate",
+  "source_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+  "python": "/opt/venv/bin/python",
+  "gpu": "AMD Instinct MI350X",
+  "cache_dir": "/tmp/flydsl-cache-j-098141cbd04d-specialization-1789010094967669655",
+  "cases": [
+    {
+      "scale": 2.0,
+      "mode": "ADD",
+      "cache_key": "(('_globals_', ((('Mode', '__main__'), ('callable', '__main__', 'Mode')), (('fx', '__main__'), ('obj', 'module')))), ('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', ''), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', ''), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Float32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Float32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Float32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+      "manager_key": "4e5f8e2e8e19750cadf54ab1be7cde37",
+      "cold_seconds": 0.4663169225677848,
+      "warm_seconds": 0.000290941447019577,
+      "max_abs_error": 0.0,
+      "allclose": true
+    },
+    {
+      "scale": 3.0,
+      "mode": "ADD",
+      "cache_key": "(('_globals_', ((('Mode', '__main__'), ('callable', '__main__', 'Mode')), (('fx', '__main__'), ('obj', 'module')))), ('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', ''), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', ''), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Float32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Float32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Float32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+      "manager_key": "2d15b60f373064ddde30c6a26a88613e",
+      "cold_seconds": 0.10617144126445055,
+      "warm_seconds": 0.0002933833748102188,
+      "max_abs_error": 0.0,
+      "allclose": true
+    },
+    {
+      "scale": 2.0,
+      "mode": "MAX",
+      "cache_key": "(('_globals_', ((('Mode', '__main__'), ('callable', '__main__', 'Mode')), (('fx', '__main__'), ('obj', 'module')))), ('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', ''), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', ''), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Float32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Float32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Float32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+      "manager_key": "5159a869fe6d1a479dc616e0471c23d7",
+      "cold_seconds": 0.10484816879034042,
+      "warm_seconds": 0.00026207324117422104,
+      "max_abs_error": 0.0,
+      "allclose": true
+    },
+    {
+      "scale": 3.0,
+      "mode": "MAX",
+      "cache_key": "(('_globals_', ((('Mode', '__main__'), ('callable', '__main__', 'Mode')), (('fx', '__main__'), ('obj', 'module')))), ('_env_', (('FLYDSL_COMPILE_OPT_LEVEL', ''), ('FLYDSL_COMPILE_BACKEND', ''), ('FLYDSL_COMPILE_LLVM_DIR', ''), ('FLYDSL_DEBUG_ENABLE_DEBUG_INFO', ''), ('FLYDSL_EXTRA_SOURCE_DIRS', ''))), ('_target_', GPUTarget(backend='rocm', arch='gfx950', warp_size=64)), ('A', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Float32'>, 'global', 4)), ('B', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Float32'>, 'global', 4)), ('C', (<class 'flydsl.compiler.jit_argument.PointerJitArg'>, <class 'flydsl.expr.numeric.Float32'>, 'global', 4)), ('n', (<class 'flydsl.expr.numeric.Int32'>,)), ('stream', (<class 'flydsl.expr.typing.Stream'>,)))",
+      "manager_key": "b08065c044b50d794d5f803a85531b49",
+      "cold_seconds": 0.09867177531123161,
+      "warm_seconds": 0.00025665201246738434,
+      "max_abs_error": 0.0,
+      "allclose": true
+    }
+  ],
+  "distinct_manager_keys": true,
+  "all_outputs_correct": true
+}
