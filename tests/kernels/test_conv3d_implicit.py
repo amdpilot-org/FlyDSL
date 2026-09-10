@@ -83,6 +83,114 @@ def test_conv3d_factorized_filters_vs_torch(kernel_shape, padding):
 
 
 @_skip_non_cdna4
+@pytest.mark.parametrize("n", [0, 1, 2, 3])
+@pytest.mark.parametrize(
+    "input_layout,output_layout",
+    [
+        ("NCDHW", "NCDHW"),
+        ("NCDHW", "NDHWC"),
+        ("NDHWC", "NCDHW"),
+        ("NDHWC", "NDHWC"),
+    ],
+)
+def test_conv3d_small_batches_layouts_and_bias(n, input_layout, output_layout):
+    """Keep batch, bias, and both layout contracts independent."""
+    torch.manual_seed(3300 + n)
+    c, d, h, w, k = 8, 5, 7, 9, 16
+    x_ncdhw = torch.randn((n, c, d, h, w), device="cuda", dtype=torch.bfloat16)
+    x = (
+        x_ncdhw.contiguous()
+        if input_layout == "NCDHW"
+        else x_ncdhw.permute(0, 2, 3, 4, 1).contiguous()
+    )
+    weight = torch.randn((k, c, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    bias = torch.randn((k,), device="cuda", dtype=torch.float32)
+
+    y = conv3d_implicit(
+        x,
+        weight,
+        bias=bias,
+        stride=1,
+        padding=1,
+        input_layout=input_layout,
+        output_layout=output_layout,
+    )
+    y_ref = F.conv3d(
+        x_ncdhw,
+        weight,
+        bias=bias.to(torch.bfloat16),
+        stride=1,
+        padding=1,
+    )
+    expected_shape = (
+        y_ref.shape if output_layout == "NCDHW" else (n, d, h, w, k)
+    )
+    y_ncdhw = y if output_layout == "NCDHW" else y.permute(0, 4, 1, 2, 3)
+    torch.cuda.synchronize()
+
+    assert y.shape == expected_shape
+    assert torch.allclose(y_ncdhw, y_ref, rtol=2e-2, atol=2e-2)
+
+
+@_skip_non_cdna4
+@pytest.mark.parametrize(
+    "kernel_shape",
+    [
+        (1, 1, 1),
+        (1, 1, 3),
+        (1, 3, 1),
+        (3, 1, 1),
+        (3, 3, 3),
+        (5, 1, 1),
+    ],
+)
+def test_conv3d_odd_kernels_and_spatial_vs_torch(kernel_shape):
+    """Cover odd supported kernels over odd spatial extents."""
+    torch.manual_seed(3400 + sum(kernel_shape))
+    n, c, d, h, w, k = 2, 8, 5, 7, 9, 16
+    x = torch.randn((n, c, d, h, w), device="cuda", dtype=torch.bfloat16)
+    weight = torch.randn(
+        (k, c, *kernel_shape), device="cuda", dtype=torch.bfloat16
+    )
+    bias = torch.randn((k,), device="cuda", dtype=torch.float32)
+    padding = tuple(kernel_extent // 2 for kernel_extent in kernel_shape)
+
+    y = conv3d_implicit(
+        x,
+        weight,
+        bias=bias,
+        stride=1,
+        padding=padding,
+    )
+    y_ref = F.conv3d(
+        x,
+        weight,
+        bias=bias.to(torch.bfloat16),
+        stride=1,
+        padding=padding,
+    )
+    torch.cuda.synchronize()
+
+    assert y.shape == y_ref.shape
+    assert torch.allclose(y, y_ref, rtol=2e-2, atol=2e-2)
+
+
+@_skip_non_cdna4
+def test_conv3d_empty_spatial_output_rejected():
+    """Reject an empty spatial output before allocating or launching a kernel."""
+    x = torch.randn((1, 8, 1, 1, 1), device="cuda", dtype=torch.bfloat16)
+    weight = torch.randn(
+        (16, 8, 3, 3, 3), device="cuda", dtype=torch.bfloat16
+    )
+
+    with pytest.raises(
+        AssertionError,
+        match="dilated filter is larger than the padded input",
+    ):
+        conv3d_implicit(x, weight, stride=1, padding=0)
+
+
+@_skip_non_cdna4
 @pytest.mark.parametrize("c", [16, 64])
 def test_conv3d_runtime_k_loop_short_problems(c):
     """Exercise one- and two-K-tile runtime-pipeline epilogues."""
