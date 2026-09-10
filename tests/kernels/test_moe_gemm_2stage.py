@@ -642,6 +642,83 @@ def test_moe_gemm2_numeric(accumulate, out_dtype, tile_m, tokens, in_dtype):
 
 
 @_requires_fp8
+def test_moe_gemm2_duplicate_routes_padded_reduce():
+    """Exercise duplicate experts, ragged routing padding, and slot reduction.
+
+    The reduce epilogue writes one row per (token, top-k slot). Summing those rows
+    performs the same output accumulation as the atomic path while avoiding the
+    buffer-resource API unavailable in the installed FlyDSL 0.2.4 runtime.
+    """
+    tokens, tile_m = 7, 16
+    model_dim, inter_dim, experts, topk = 256, 128, 4, 2
+    device = torch.device("cuda")
+
+    topk_ids = torch.tensor(
+        [[0, 0], [1, 1], [2, 2], [3, 3], [0, 0], [1, 1], [2, 2]],
+        device=device,
+        dtype=torch.int64,
+    )
+    topk_weights = torch.full((tokens, topk), 0.25, device=device, dtype=torch.float32)
+    topk_weights[:, 1] = 0.75
+    routing = _build_routing(topk_ids.to(torch.int32), topk_weights, experts=experts, tile_m=tile_m)
+    sorted_token_ids, _, _, num_valid_ids, _ = routing
+
+    assert torch.equal(topk_ids[:, 0], topk_ids[:, 1])
+    assert tokens % tile_m != 0
+    assert int(num_valid_ids[0].item()) < sorted_token_ids.numel()
+
+    torch.manual_seed(727)
+    a2_fp32 = torch.randn((tokens, topk, inter_dim), device=device, dtype=torch.float32)
+    w2_fp32 = torch.randn((experts, model_dim, inter_dim), device=device, dtype=torch.float32) * (
+        1.0 / math.sqrt(inter_dim)
+    )
+    a2_q, a2_scale = pertoken_quant(a2_fp32, quant_dtype=_DTYPE_FP8)
+    w2_q, w2_scale = pertoken_quant(w2_fp32, quant_dtype=_DTYPE_FP8)
+    w2_kernel = shuffle_weight(w2_q).view(experts * model_dim, inter_dim).contiguous().view(-1)
+    w2_scale_flat = w2_scale.view(experts * model_dim, 1)
+
+    exe = compile_moe_gemm2(
+        model_dim=model_dim,
+        inter_dim=inter_dim,
+        experts=experts,
+        topk=topk,
+        tile_m=tile_m,
+        tile_n=64,
+        tile_k=128,
+        doweight_stage2=True,
+        out_dtype="bf16",
+        accumulate=False,
+        in_dtype="fp8",
+    )
+    out = torch.zeros((tokens * topk, model_dim), device=device, dtype=torch.bfloat16)
+    _launch(
+        exe,
+        out,
+        x=a2_q,
+        w=w2_kernel,
+        scale_x=a2_scale,
+        scale_w=w2_scale_flat,
+        routing=routing,
+        dim0=model_dim,
+        dim1=inter_dim,
+        tokens=tokens,
+        zero_out=True,
+    )
+    got = out.view(tokens, topk, model_dim).sum(dim=1)
+
+    a2 = a2_q.float() * a2_scale
+    w2 = w2_q.float() * w2_scale
+    reference = torch.zeros((tokens, model_dim), device=device, dtype=torch.float32)
+    for token in range(tokens):
+        for slot in range(topk):
+            expert = int(topk_ids[token, slot].item())
+            reference[token] += topk_weights[token, slot] * (a2[token, slot] @ w2[expert].t())
+
+    cos = _cosine_sim(got, reference)
+    assert cos > 0.99, f"stage2 duplicate-route padded-reduce cos={cos:.5f}"
+
+
+@_requires_fp8
 def test_moe_gemm2_int4_perturb():
     """gemm2 W4A8 de-interleave order is load-bearing, mirroring the gemm1 guard.
 
