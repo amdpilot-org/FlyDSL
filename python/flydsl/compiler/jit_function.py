@@ -6,6 +6,7 @@ import enum
 import fcntl
 import hashlib
 import inspect
+import numbers
 import os
 import pickle
 import threading
@@ -22,6 +23,7 @@ from .._mlir import ir
 from .._mlir.dialects import func
 from .._mlir.passmanager import PassManager
 from ..expr.meta import tracing_context
+from ..expr.numeric import Float, Integer
 from ..expr.typing import Constexpr, Stream
 from ..utils import env, log
 from ..utils.file import atomic_write
@@ -35,7 +37,13 @@ from .diagnostics import (
     warn_annotation_value_mismatch,
     warn_invalid_annotations,
 )
-from .jit_argument import convert_to_jit_arguments, is_type_param_annotation, resolve_signature
+from .jit_argument import (
+    JitArgumentRegistry,
+    MemRefJitArg,
+    convert_to_jit_arguments,
+    is_type_param_annotation,
+    resolve_signature,
+)
 from .jit_executor import CallState, CompiledArtifact
 from .kernel_function import (
     CompilationContext,
@@ -1625,14 +1633,94 @@ class CompiledFunction:
     original ``@flyc.jit`` function).
     """
 
-    __slots__ = ("_call_state", "_keepalive")
+    __slots__ = ("_call_state", "_keepalive", "_schema")
 
-    def __init__(self, call_state, keepalive):
+    def __init__(self, call_state, keepalive, schema):
         self._call_state = call_state
         self._keepalive = keepalive  # prevent GC of CompiledArtifact / ExecutionEngine
+        self._schema = schema
 
     def __call__(self, *args):
+        _validate_compiled_args(self._schema, args)
         return self._call_state(args)
+
+
+def _compiled_argument_schema(sig: inspect.Signature, args_tuple: tuple) -> tuple:
+    schema = []
+    for (name, param), expected in zip(sig.parameters.items(), args_tuple, strict=True):
+        annotation = param.annotation
+        ignored = (
+            annotation is not inspect.Parameter.empty
+            and (
+                Constexpr.is_constexpr_annotation(annotation)
+                or is_type_param_annotation(annotation)
+            )
+        )
+        schema.append((name, None if ignored else expected, None if ignored else annotation))
+    return tuple(schema)
+
+
+def _argument_description(arg) -> str:
+    if isinstance(arg, MemRefJitArg):
+        return f"{type(arg).__name__}(dtype={arg.dtype}, rank={arg.rank})"
+    return type(arg).__name__
+
+
+def _validate_compiled_argument(name, expected, annotation, actual) -> None:
+    if isinstance(actual, JitArgument):
+        actual_argument = actual
+    elif isinstance(annotation, type) and issubclass(annotation, JitArgument):
+        actual_argument = annotation(actual)
+    else:
+        constructor, _ = JitArgumentRegistry.get(type(actual))
+        if constructor is None:
+            raise TypeError(
+                f"flyc.compile() argument {name!r} expected {type(expected).__name__}, "
+                f"got unsupported type {type(actual).__name__}"
+            )
+        actual_argument = constructor(actual)
+
+    if type(actual_argument) is not type(expected):
+        raise TypeError(
+            f"flyc.compile() argument {name!r} schema mismatch: "
+            f"expected {_argument_description(expected)}, got {_argument_description(actual_argument)}"
+        )
+
+    if isinstance(expected, MemRefJitArg):
+        if actual_argument.dtype != expected.dtype:
+            raise TypeError(
+                f"flyc.compile() argument {name!r} dtype mismatch: "
+                f"expected {expected.dtype}, got {actual_argument.dtype}"
+            )
+        if actual_argument.rank != expected.rank:
+            raise TypeError(
+                f"flyc.compile() argument {name!r} rank mismatch: "
+                f"expected {expected.rank}, got {actual_argument.rank}"
+            )
+    elif isinstance(expected, Integer):
+        value = actual.value if isinstance(actual, Integer) else actual
+        if not isinstance(value, numbers.Integral):
+            raise TypeError(
+                f"flyc.compile() argument {name!r} scalar mismatch: "
+                f"expected integer, got {type(value).__name__}"
+            )
+    elif isinstance(expected, Float):
+        value = actual.value if isinstance(actual, Float) else actual
+        if not isinstance(value, numbers.Real):
+            raise TypeError(
+                f"flyc.compile() argument {name!r} scalar mismatch: "
+                f"expected real number, got {type(value).__name__}"
+            )
+
+
+def _validate_compiled_args(schema, args) -> None:
+    if len(args) != len(schema):
+        raise TypeError(
+            f"flyc.compile() expects {len(schema)} positional arguments, got {len(args)}"
+        )
+    for (name, expected, annotation), actual in zip(schema, args, strict=True):
+        if expected is not None:
+            _validate_compiled_argument(name, expected, annotation, actual)
 
 
 def _compile_impl(func, *args) -> Optional[CompiledFunction]:
@@ -1688,7 +1776,7 @@ def _compile_impl(func, *args) -> Optional[CompiledFunction]:
     if call_state is None:
         call_state = _build_call_state(sig, args_tuple, artifact._get_func_exe())
 
-    return CompiledFunction(call_state, artifact)
+    return CompiledFunction(call_state, artifact, _compiled_argument_schema(sig, args_tuple))
 
 
 class CompileCallable:

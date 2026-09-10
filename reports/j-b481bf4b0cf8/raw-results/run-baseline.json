@@ -1,0 +1,60 @@
+{
+  "argument_signature": "a=float32[1024], b=float32[1024], out=float32[1024], n=int32, const_n=1024, block_dim=64, vec_width=4, stream=fx.Stream",
+  "artifacts": [
+    {
+      "path": "/tmp/flydsl-cache-j-b481bf4b0cf8/aot/vec_add_69ff0479b02d28cbe3ed548c1c1f4eb8/11fdb25ff36bcfa5.pkl",
+      "sha256": "1b82af7868a7ea648a817652ed05fb1c57aa10fe2bdb1ecf4922b95c2b2a41ea",
+      "size": 28458
+    }
+  ],
+  "flydsl_expr_source": "/opt/venv/lib/python3.12/site-packages/flydsl/expr/__init__.py",
+  "flydsl_source": "/opt/venv/lib/python3.12/site-packages/flydsl/compiler/__init__.py",
+  "flydsl_version": "0.2.4",
+  "gpu_arch": "gfx950",
+  "gpu_capability": [
+    9,
+    5
+  ],
+  "gpu_name": "AMD Instinct MI350X",
+  "mode": "run",
+  "native_modules": [
+    "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so",
+    "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFly.cpython-312-x86_64-linux-gnu.so",
+    "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libFlyPythonCAPI.so.23.0git",
+    "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so",
+    "/opt/venv/lib/python3.12/site-packages/triton/backends/amd/lib/libamdhip64.so"
+  ],
+  "numerical_gate": "torch.allclose(actual, expected, rtol=1e-6, atol=1e-6)",
+  "python": "/opt/venv/bin/python",
+  "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+  "triton_version": "3.5.1+rocm7.2.0.gita272dfa8",
+  "valid_output_allclose_to_torch": true,
+  "valid_output_checksum": "5210a464f51774bb9e2a8b28a65fa40fadef118da093800ae7c2d0e7b2cf6c1b",
+  "valid_output_max_abs_error": 0.0,
+  "wrong_arguments": [
+    {
+      "argument_signature": "a=float32[1024], b=float64[1024], out=float32[1024], n=int32",
+      "case": "wrong_dtype",
+      "output_allclose_to_torch": false,
+      "output_checksum": "b8ec1651bb195feb0d94c92a30e2bad6df4216f939dc706e229457687c0b29f6",
+      "raw_error": null,
+      "rejected_before_launch": false
+    },
+    {
+      "argument_signature": "a=float32[1024], b=float32[1,1024], out=float32[1024], n=int32",
+      "case": "wrong_rank",
+      "output_allclose_to_torch": true,
+      "output_checksum": "5210a464f51774bb9e2a8b28a65fa40fadef118da093800ae7c2d0e7b2cf6c1b",
+      "raw_error": null,
+      "rejected_before_launch": false
+    },
+    {
+      "argument_signature": "a=float32[1024], b=float32[1024], out=float32[1024], n=float",
+      "case": "wrong_scalar",
+      "output_allclose_to_torch": false,
+      "output_checksum": "664d78ea542a53ee90c2a67e049dcc28a7b86d2e3ee0b3039ce9461649ae23df",
+      "raw_error": "TypeError: 'float' object cannot be interpreted as an integer",
+      "rejected_before_launch": true
+    }
+  ]
+}
