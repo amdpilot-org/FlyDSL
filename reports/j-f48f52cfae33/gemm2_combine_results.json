@@ -1,0 +1,411 @@
+{
+  "configuration": {
+    "dtype_identities": {
+      "activation_payload": "torch.float8_e4m3fn",
+      "activation_scale": "torch.float32",
+      "kernel_in_dtype": "fp8",
+      "kernel_output": "torch.bfloat16",
+      "torch_reference": "torch.float32",
+      "weight_payload": "torch.float8_e4m3fn",
+      "weight_scale": "torch.float32"
+    },
+    "epilogue": "reduce plus explicit top-k slot sum",
+    "experts": 4,
+    "inter_dim": 128,
+    "model_dim": 256,
+    "seed": 727,
+    "tile_k": 128,
+    "tile_m": 16,
+    "tile_n": 64,
+    "tokens": 7,
+    "topk": 2
+  },
+  "environment": {
+    "container_hostname": "gbt350-odcdh1-a08-1.png-odc.dcgpu",
+    "flydsl_native_paths": [
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFly.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFlyROCDL.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsGPU.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsLLVM.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirExecutionEngine.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirGPUPasses.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirRegisterEverything.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libMLIRPythonSupport-mlir.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libmlir_c_runner_utils.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libnanobind-mlir.so"
+    ],
+    "flydsl_package": "/opt/venv/lib/python3.12/site-packages/flydsl",
+    "flydsl_runtime_cache_dir": "/tmp/flydsl-cache-j-f48f52cfae33/gemm2-report",
+    "flydsl_version": "0.2.4",
+    "gpu": {
+      "capability": [
+        9,
+        5
+      ],
+      "gcn_arch_name": "gfx950:sramecc+:xnack-",
+      "multi_processor_count": 256,
+      "name": "AMD Instinct MI350X",
+      "total_memory_bytes": 270566162432,
+      "uuid": "35666234-3266-6639-3038-363630363065"
+    },
+    "hip_version": "7.2.26015-fc0010cf6a",
+    "local_image_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7",
+    "platform": "Linux-4.18.0-513.1.1.el8_9.g12b5.x86_64-x86_64-with-glibc2.39",
+    "python": "/opt/venv/bin/python",
+    "python_version": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]",
+    "rocm_smi": {
+      "returncode": 0,
+      "stderr": "WARNING: AMD GPU device(s) is/are in a low-power state. Check power control/runtime_status\n\n",
+      "stdout": "\n\n============================ ROCm System Management Interface ============================\n============================== Version of System Component ===============================\nDriver version: 7.1.1.31500000\n==========================================================================================\n======================================= Unique ID ========================================\nGPU[0]\t\t: Unique ID: 0x5fb42ff90866060e\n==========================================================================================\n===================================== Serial Number ======================================\nGPU[0]\t\t: Serial Number: 692517020502\n==========================================================================================\n====================================== Product Info ======================================\nGPU[0]\t\t: Card Series: \t\tAMD Instinct MI350X\nGPU[0]\t\t: Card Model: \t\t0x75a0\nGPU[0]\t\t: Card Vendor: \t\tAdvanced Micro Devices, Inc. [AMD/ATI]\nGPU[0]\t\t: Card SKU: \t\tN/A\nGPU[0]\t\t: Subsystem ID: \t0x75a0\nGPU[0]\t\t: Device Rev: \t\t0x00\nGPU[0]\t\t: Node ID: \t\t8\nGPU[0]\t\t: GUID: \t\t58070\nGPU[0]\t\t: GFX Version: \t\tgfx950\n==========================================================================================\n================================== End of ROCm SMI Log ===================================\n"
+    },
+    "source": {
+      "branch": "amdpilot/j-f48f52cfae33",
+      "commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+      "main_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111"
+    },
+    "torch_version": "2.9.1+rocm7.2.0.git7e1940d4"
+  },
+  "kernel_identity": {
+    "cache_artifacts": [
+      {
+        "agpr_count": 0,
+        "artifact_path": "/tmp/flydsl-cache-j-f48f52cfae33/gemm2-report/launch_moe_gemm2_5646ea41a1580764e5a269b02f458c3c/b3c9c01d4fe59dac.pkl",
+        "gpu_function": "moe_gemm2_0",
+        "group_segment_fixed_size": 4096,
+        "max_flat_workgroup_size": 256,
+        "private_segment_fixed_size": 0,
+        "sgpr_count": 26,
+        "sgpr_spill_count": 0,
+        "sha256": "8f31fb799fb2dd31b48dfc7250b807cb179187175cfe3ffab3aee11f6db0491a",
+        "vgpr_count": 34,
+        "vgpr_spill_count": 0,
+        "wavefront_size": 64
+      }
+    ],
+    "launcher": "launch_moe_gemm2",
+    "profiler_events": {
+      "moe_gemm2_0": {
+        "count": 5,
+        "device_time_us": 25.396000000000072
+      },
+      "void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::array<char*, 1ul> >(int, at::native::FillFunctor<c10::BFloat16>, std::array<char*, 1ul>)": {
+        "count": 5,
+        "device_time_us": 14.674999999999955
+      }
+    },
+    "source": "kernels/moe/moe_gemm_2stage/gemm2.py"
+  },
+  "related_upstream": {
+    "candidate_pr_932": {
+      "applied": false,
+      "head_commit": "a59eca588a962373baede3fb4e63a4c1e9552b3c",
+      "merged": false,
+      "reason": "existing upstream fix; not duplicated",
+      "state": "closed",
+      "title": "fix(mega_moe): correct GEMM2 A-scale indexing for BM=16"
+    },
+    "issue": {
+      "number": 727,
+      "repository": "ROCm/FlyDSL",
+      "state": "open",
+      "title": "[Feature]: Support Mega-Moe V1",
+      "url": "https://github.com/ROCm/FlyDSL/issues/727"
+    }
+  },
+  "reproduction_commands": [
+    "export FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-cache-j-f48f52cfae33/gemm2-report",
+    "export TRITON_CACHE_DIR=/tmp/flydsl-cache-j-f48f52cfae33/triton",
+    "/opt/venv/bin/python -m pytest tests/kernels/test_moe_gemm_2stage.py::test_moe_gemm2_duplicate_routes_padded_reduce -q",
+    "/opt/venv/bin/python reports/j-f48f52cfae33/validate_gemm2_combine.py"
+  ],
+  "results": {
+    "cosine_similarity": 0.9999973177909851,
+    "gate": {
+      "changed": false,
+      "metric": "cosine_similarity",
+      "operator": ">",
+      "threshold": 0.99
+    },
+    "gate_pass": true,
+    "max_abs_error": 0.013124942779541016,
+    "mean_abs_error": 0.0012168334797024727,
+    "reference_l2": 32.9512825012207,
+    "relative_l2": 0.002321361331269145
+  },
+  "routing": {
+    "duplicate_route_rows": 7,
+    "expert_route_counts": [
+      4,
+      4,
+      4,
+      2
+    ],
+    "logical_routes": 14,
+    "num_valid_ids": [
+      64
+    ],
+    "padding_rows": 12,
+    "sorted_capacity": 76,
+    "sorted_expert_ids": [
+      0,
+      1,
+      2,
+      3,
+      -1
+    ],
+    "sorted_ids": [
+      0,
+      16777216,
+      4,
+      16777220,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      1,
+      16777217,
+      5,
+      16777221,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      2,
+      16777218,
+      6,
+      16777222,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      3,
+      16777219,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439,
+      33554439
+    ],
+    "sorted_weights": [
+      0.25,
+      0.75,
+      0.25,
+      0.75,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.25,
+      0.75,
+      0.25,
+      0.75,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.25,
+      0.75,
+      0.25,
+      0.75,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.25,
+      0.75,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "topk_ids": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        2,
+        2
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        2,
+        2
+      ]
+    ],
+    "topk_weights": [
+      [
+        0.25,
+        0.75
+      ],
+      [
+        0.25,
+        0.75
+      ],
+      [
+        0.25,
+        0.75
+      ],
+      [
+        0.25,
+        0.75
+      ],
+      [
+        0.25,
+        0.75
+      ],
+      [
+        0.25,
+        0.75
+      ],
+      [
+        0.25,
+        0.75
+      ]
+    ]
+  },
+  "schema_version": 1,
+  "scope": "GEMM2/combine only; GEMM1 dispatch/sorting and persistent scheduling excluded",
+  "unsupported_paths": [
+    {
+      "exception": "module 'flydsl.expr.rocdl' has no attribute 'get_buffer_rsrc'",
+      "exception_type": "AttributeError",
+      "path": "moe_gemm_2stage atomic epilogue",
+      "status": "unsupported_in_installed_runtime",
+      "traceback_tail": [
+        "    ReplaceIfWithDispatch._call_branch(then_fn, result_names, result_values)",
+        "  File \"/opt/venv/lib/python3.12/site-packages/flydsl/compiler/ast_rewriter.py\", line 593, in _call_branch",
+        "    return fn(result_names, *state_values)",
+        "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "  File \"/job/FlyDSL/kernels/moe/moe_gemm_2stage/gemm2.py\", line 414, in __then_22",
+        "    out_atomic_rsrc = fx.rocdl.get_buffer_rsrc(",
+        "                  ^^^^^^^^^^^^^^^^^^^^^^^^",
+        "AttributeError: module 'flydsl.expr.rocdl' has no attribute 'get_buffer_rsrc'"
+      ]
+    },
+    {
+      "exception": "module 'flydsl.expr.rocdl' has no attribute 'make_buffer_ptr'",
+      "exception_type": "AttributeError",
+      "path": "MegaMoE fused GEMM2/P2P combine",
+      "status": "unsupported_in_installed_runtime",
+      "traceback_tail": [
+        "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "  File \"/opt/venv/lib/python3.12/site-packages/flydsl/expr/meta.py\", line 140, in wrapper",
+        "    return fn(*args, **kwargs)",
+        "           ^^^^^^^^^^^^^^^^^^^",
+        "  File \"/job/FlyDSL/kernels/common/buffer_ops.py\", line 161, in _byte_buffer_ptr",
+        "    return fx.rocdl.make_buffer_ptr(ptr, num_records_bytes=_as_num_records(num_records_bytes))",
+        "           ^^^^^^^^^^^^^^^^^^^^^^^^",
+        "AttributeError: module 'flydsl.expr.rocdl' has no attribute 'make_buffer_ptr'"
+      ]
+    }
+  ]
+}
