@@ -1,0 +1,147 @@
+{
+  "cases": {
+    "aligned": {
+      "compiled_cold": {
+        "allclose_default": true,
+        "equal": true,
+        "gpu_milliseconds": 1200.439453125,
+        "max_abs_difference": 0.0,
+        "result_dtype": "torch.float32",
+        "result_shape": [
+          128,
+          128
+        ],
+        "wall_milliseconds": 1200.5626549944282
+      },
+      "compiled_warm": {
+        "allclose_default": true,
+        "equal": true,
+        "gpu_milliseconds": 0.28852400183677673,
+        "max_abs_difference": 0.0,
+        "result_dtype": "torch.float32",
+        "result_shape": [
+          128,
+          128
+        ],
+        "wall_milliseconds": 0.32209325581789017
+      },
+      "eager": {
+        "allclose_default": true,
+        "equal": true,
+        "gpu_milliseconds": 417.185791015625,
+        "max_abs_difference": 0.0,
+        "result_dtype": "torch.float32",
+        "result_shape": [
+          128,
+          128
+        ],
+        "wall_milliseconds": 417.2929413616657
+      },
+      "shape": [
+        128,
+        128
+      ]
+    },
+    "tail": {
+      "compiled_cold": {
+        "allclose_default": true,
+        "equal": true,
+        "gpu_milliseconds": 21.966968536376953,
+        "max_abs_difference": 0.0,
+        "result_dtype": "torch.float32",
+        "result_shape": [
+          100,
+          1000
+        ],
+        "wall_milliseconds": 22.03145530074835
+      },
+      "compiled_warm": {
+        "allclose_default": true,
+        "equal": true,
+        "gpu_milliseconds": 0.2539229989051819,
+        "max_abs_difference": 0.0,
+        "result_dtype": "torch.float32",
+        "result_shape": [
+          100,
+          1000
+        ],
+        "wall_milliseconds": 0.2952730283141136
+      },
+      "eager": {
+        "allclose_default": true,
+        "equal": true,
+        "gpu_milliseconds": 0.13748100399971008,
+        "max_abs_difference": 0.0,
+        "result_dtype": "torch.float32",
+        "result_shape": [
+          100,
+          1000
+        ],
+        "wall_milliseconds": 0.17128046602010727
+      },
+      "shape": [
+        100,
+        1000
+      ]
+    }
+  },
+  "environment": {
+    "compile_backend": "inductor",
+    "compile_dynamic": false,
+    "compile_fullgraph": true,
+    "cuda_device_capability": [
+      9,
+      5
+    ],
+    "cuda_device_name": "AMD Instinct MI350X",
+    "cuda_device_uuid": "35653934-6639-6363-3634-316634303237",
+    "cuda_pci_bus_id": 134,
+    "cuda_total_memory_bytes": 270566162432,
+    "current_stream": 246601504,
+    "flydsl_cache_dir": "/tmp/flydsl-cache-j-ad628f12156f/flydsl",
+    "flydsl_module": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+    "flydsl_native_modules": [
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFly.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFlyROCDL.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsGPU.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsLLVM.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirExecutionEngine.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirGPUPasses.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirRegisterEverything.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libFlyPythonCAPI.so.23.0git",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libMLIRPythonSupport-mlir.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libmlir_c_runner_utils.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libmlir_float16_utils.so.23.0git",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libnanobind-mlir.so"
+    ],
+    "hip_version": "7.2.26015-fc0010cf6a",
+    "inductor_cache_dir": "/tmp/flydsl-cache-j-ad628f12156f/inductor",
+    "platform": "Linux-4.18.0-513.1.1.el8_9.g12b5.x86_64-x86_64-with-glibc2.39",
+    "python_executable": "/opt/venv/bin/python3",
+    "python_version": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]",
+    "rocm_runtime_module": "/opt/rocm-7.2.0/lib/libamdhip64.so.7.2.70200",
+    "source_branch": "main",
+    "source_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+    "source_example": "/job/FlyDSL/examples/01-vectorAdd.py",
+    "torch_module": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+    "torch_native_modules": [
+      "/opt/venv/lib/python3.12/site-packages/torch/lib/libtorch.so",
+      "/opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so",
+      "/opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_global_deps.so",
+      "/opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so",
+      "/opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_python.so",
+      "/opt/venv/lib/python3.12/site-packages/torch/lib/libtorchbind_test.so"
+    ],
+    "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+    "triton_cache_dir": "/tmp/flydsl-cache-j-ad628f12156f/triton",
+    "triton_module": "/opt/venv/lib/python3.12/site-packages/triton/__init__.py",
+    "triton_version": "3.5.1+rocm7.2.0.gita272dfa8"
+  },
+  "fake_check": {
+    "lhs_type": "FakeTensor",
+    "passed": true,
+    "result_type": "NoneType"
+  }
+}
