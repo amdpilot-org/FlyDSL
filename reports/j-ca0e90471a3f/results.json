@@ -1,0 +1,61 @@
+{
+  "all_passed": true,
+  "cases": [
+    {
+      "active_exact": true,
+      "active_length": 64,
+      "active_mismatches": 0,
+      "block_threads": 64,
+      "expected_sha256": "3387444aa0127f4eca5add199e0b55172d740b1b51d03a04e308844a8633758e",
+      "input_sha256": "45c326a5522421e23232c52532c143a97463ea256934ceb92459292b1179af7a",
+      "num_waves": 1,
+      "output_first_4": [-759, -735, -533, 462],
+      "output_last_4": [1490, 1212, 1301, 1781],
+      "output_sha256": "3387444aa0127f4eca5add199e0b55172d740b1b51d03a04e308844a8633758e",
+      "sentinel_exact": true,
+      "sentinel_mismatches": 0
+    },
+    {
+      "active_exact": true,
+      "active_length": 256,
+      "active_mismatches": 0,
+      "block_threads": 256,
+      "expected_sha256": "8b1cbf5d563003daa48fcc7f74daa9c7424b05041e49059c6ec520cdcc43b043",
+      "input_sha256": "25f79f885fdbb458db5dbd061ab6ff3025b4db68cda197de7298d762667dc8a0",
+      "num_waves": 4,
+      "output_first_4": [267, 398, 183, 1128],
+      "output_last_4": [7302, 8229, 7253, 7498],
+      "output_sha256": "8b1cbf5d563003daa48fcc7f74daa9c7424b05041e49059c6ec520cdcc43b043",
+      "sentinel_exact": true,
+      "sentinel_mismatches": 0
+    },
+    {
+      "active_exact": true,
+      "active_length": 37,
+      "active_mismatches": 0,
+      "block_threads": 64,
+      "expected_sha256": "0c794a8169b89f74bd70e165a7881e535193546af72ba98884ca886afbed7bbc",
+      "input_sha256": "9852c6c21ee55011052a23532c4440dcb81f55db928e2d9a8d2a41b851be524e",
+      "num_waves": 1,
+      "output_first_4": [801, 522, 827, 1238],
+      "output_last_4": [-2309, -2403, -1948, -2784],
+      "output_sha256": "9f4efac91095f611f72da7aabbde564a31fd9952e47114c76946a2d82dca109a",
+      "sentinel_exact": true,
+      "sentinel_mismatches": 0
+    },
+    {
+      "active_exact": true,
+      "active_length": 100,
+      "active_mismatches": 0,
+      "block_threads": 256,
+      "expected_sha256": "9f9f0e4b1505133e6bfabbe202cdf44ef9d6f83e4ef3ffb61af0d7fba9eb7985",
+      "input_sha256": "c6f5028ae662cecec0c970f692e904845ba44790a05c761e4417fa908d8c75e3",
+      "num_waves": 4,
+      "output_first_4": [-241, -1061, -188, -327],
+      "output_last_4": [-461, -900, -1491, -830],
+      "output_sha256": "154dc1473414d32269aea1b99119477f6beeb78ad8713c33f23976b20ee4e1cb",
+      "sentinel_exact": true,
+      "sentinel_mismatches": 0
+    }
+  ]
+}
