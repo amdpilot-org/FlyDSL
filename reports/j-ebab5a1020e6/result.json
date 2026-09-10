@@ -1,0 +1,126 @@
+{
+  "a6w4": {
+    "a_dtype": "fp6-e2m3",
+    "a_scale_bytes": 256,
+    "allclose": true,
+    "b_dtype": "fp4-e2m1",
+    "b_scale_bytes": 1024,
+    "elapsed_seconds": 0.03774422127753496,
+    "encoded_a_bytes": 8192,
+    "encoded_b_bytes": 16384,
+    "kernel_sample": [
+      -11.5,
+      -9.375,
+      -13.5625,
+      -12.1875
+    ],
+    "max_abs_error": 0.125,
+    "max_rel_error": 0.0038910505827516317,
+    "mean_abs_error": 0.017217636108398438,
+    "output_dtype": "bf16",
+    "reference_sample": [
+      -11.46875,
+      -9.390625,
+      -13.5625,
+      -12.171875
+    ],
+    "shape": [
+      32,
+      128,
+      256
+    ],
+    "tile": [
+      32,
+      128,
+      256
+    ]
+  },
+  "bf16_control": {
+    "a_dtype": "bf16",
+    "allclose": true,
+    "b_dtype": "bf16",
+    "elapsed_seconds": 0.06840893253684044,
+    "kernel_sample": [
+      -36.75,
+      5.6875,
+      10.25,
+      2.953125
+    ],
+    "max_abs_error": 0.1947784423828125,
+    "max_rel_error": 0.003843734972178936,
+    "mean_abs_error": 0.018257617950439453,
+    "output_dtype": "bf16",
+    "reference_sample": [
+      -36.736148834228516,
+      5.678688049316406,
+      10.267708778381348,
+      2.955118417739868
+    ],
+    "shape": [
+      32,
+      128,
+      256
+    ],
+    "tile": [
+      32,
+      128,
+      256
+    ]
+  },
+  "environment": {
+    "flydsl_file": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+    "flydsl_mlir_paths": [
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir"
+    ],
+    "flydsl_version": "0.2.4",
+    "gpu_arch": "gfx950",
+    "gpu_gcn_arch": "gfx950:sramecc+:xnack-",
+    "gpu_name": "AMD Instinct MI350X",
+    "gpu_uuid": "35666234-3266-6639-3038-363630363065",
+    "image_identity": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7",
+    "python_executable": "/opt/venv/bin/python",
+    "python_version": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]",
+    "repo_branch": "amdpilot/j-ebab5a1020e6",
+    "repo_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+    "torch_hip_version": "7.2.26015-fc0010cf6a",
+    "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+    "triton_version": "3.5.1+rocm7.2.0.gita272dfa8",
+    "visible_device_count": 1
+  },
+  "passed": true,
+  "supported_atom_table": {
+    "a_dtypes": [
+      "fp4",
+      "fp6",
+      "fp8"
+    ],
+    "atom": "MFMA_Scale(16, 16, 128, A, B, opsel_a, opsel_b)",
+    "b_dtypes": [
+      "fp4",
+      "fp8"
+    ]
+  },
+  "unsupported": [
+    {
+      "a_dtype": "fp6",
+      "b_dtype": "fp6",
+      "returncode": 1,
+      "stderr": "Traceback (most recent call last):\n  File \"/job/FlyDSL/reports/j-ebab5a1020e6/reproduce.py\", line 309, in <module>\n    main()\n  File \"/job/FlyDSL/reports/j-ebab5a1020e6/reproduce.py\", line 278, in main\n    probe_unsupported(*args.probe_unsupported)\n  File \"/job/FlyDSL/reports/j-ebab5a1020e6/reproduce.py\", line 210, in probe_unsupported\n    launch_gemm(\n  File \"/opt/venv/lib/python3.12/site-packages/flydsl/compiler/jit_function.py\", line 1523, in __call__\n    self.func(**named_args)\n  File \"/job/FlyDSL/kernels/gemm/mxfp4_preshuffle.py\", line 561, in launch_gemm\n    kernel_gemm(\n  File \"/opt/venv/lib/python3.12/site-packages/flydsl/compiler/kernel_function.py\", line 593, in __call__\n    kernel_args, gpu_func_op, smem_bytes = self._emit_kernel(ctx, args, kwargs, bound_self=bound_self)\n                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/flydsl/compiler/kernel_function.py\", line 561, in _emit_kernel\n    self._func(**dsl_args)\n  File \"/job/FlyDSL/kernels/gemm/mxfp4_preshuffle.py\", line 188, in kernel_gemm\n    scale_atoms = _scale_mma_atoms(a_dtype, b_dtype)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/job/FlyDSL/kernels/gemm/mxfp4_preshuffle.py\", line 41, in _scale_mma_atoms\n    elem_b = _B_ELEM[b_dtype]\n             ~~~~~~~^^^^^^^^^\nKeyError: 'fp6'\n",
+      "stdout": "BEGIN a_dtype='fp6' b_dtype='fp6'\n"
+    },
+    {
+      "a_dtype": "bf16",
+      "b_dtype": "fp4",
+      "returncode": 1,
+      "stderr": "Traceback (most recent call last):\n  File \"/job/FlyDSL/reports/j-ebab5a1020e6/reproduce.py\", line 309, in <module>\n    main()\n  File \"/job/FlyDSL/reports/j-ebab5a1020e6/reproduce.py\", line 278, in main\n    probe_unsupported(*args.probe_unsupported)\n  File \"/job/FlyDSL/reports/j-ebab5a1020e6/reproduce.py\", line 210, in probe_unsupported\n    launch_gemm(\n  File \"/opt/venv/lib/python3.12/site-packages/flydsl/compiler/jit_function.py\", line 1523, in __call__\n    self.func(**named_args)\n  File \"/job/FlyDSL/kernels/gemm/mxfp4_preshuffle.py\", line 561, in launch_gemm\n    kernel_gemm(\n  File \"/opt/venv/lib/python3.12/site-packages/flydsl/compiler/kernel_function.py\", line 593, in __call__\n    kernel_args, gpu_func_op, smem_bytes = self._emit_kernel(ctx, args, kwargs, bound_self=bound_self)\n                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/flydsl/compiler/kernel_function.py\", line 561, in _emit_kernel\n    self._func(**dsl_args)\n  File \"/job/FlyDSL/kernels/gemm/mxfp4_preshuffle.py\", line 188, in kernel_gemm\n    scale_atoms = _scale_mma_atoms(a_dtype, b_dtype)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/job/FlyDSL/kernels/gemm/mxfp4_preshuffle.py\", line 40, in _scale_mma_atoms\n    elem_a = _A_ELEM[a_dtype]\n             ~~~~~~~^^^^^^^^^\nKeyError: 'bf16'\n",
+      "stdout": "BEGIN a_dtype='bf16' b_dtype='fp4'\n"
+    },
+    {
+      "a_dtype": "fp6",
+      "b_dtype": "bf16",
+      "returncode": 1,
+      "stderr": "Traceback (most recent call last):\n  File \"/job/FlyDSL/reports/j-ebab5a1020e6/reproduce.py\", line 309, in <module>\n    main()\n  File \"/job/FlyDSL/reports/j-ebab5a1020e6/reproduce.py\", line 278, in main\n    probe_unsupported(*args.probe_unsupported)\n  File \"/job/FlyDSL/reports/j-ebab5a1020e6/reproduce.py\", line 210, in probe_unsupported\n    launch_gemm(\n  File \"/opt/venv/lib/python3.12/site-packages/flydsl/compiler/jit_function.py\", line 1523, in __call__\n    self.func(**named_args)\n  File \"/job/FlyDSL/kernels/gemm/mxfp4_preshuffle.py\", line 561, in launch_gemm\n    kernel_gemm(\n  File \"/opt/venv/lib/python3.12/site-packages/flydsl/compiler/kernel_function.py\", line 593, in __call__\n    kernel_args, gpu_func_op, smem_bytes = self._emit_kernel(ctx, args, kwargs, bound_self=bound_self)\n                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/flydsl/compiler/kernel_function.py\", line 561, in _emit_kernel\n    self._func(**dsl_args)\n  File \"/job/FlyDSL/kernels/gemm/mxfp4_preshuffle.py\", line 188, in kernel_gemm\n    scale_atoms = _scale_mma_atoms(a_dtype, b_dtype)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/job/FlyDSL/kernels/gemm/mxfp4_preshuffle.py\", line 41, in _scale_mma_atoms\n    elem_b = _B_ELEM[b_dtype]\n             ~~~~~~~^^^^^^^^^\nKeyError: 'bf16'\n",
+      "stdout": "BEGIN a_dtype='fp6' b_dtype='bf16'\n"
+    }
+  ]
+}
