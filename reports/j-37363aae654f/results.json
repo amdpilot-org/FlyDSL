@@ -1,0 +1,77 @@
+{
+  "campaign": "repo-e2e-20260909",
+  "coordination_tracker": "amdpilot-org/amdpilotv2 issue 402",
+  "upstream_context": {
+    "repository": "ROCm/FlyDSL",
+    "issue": 749,
+    "relevant_landed_changes": [795, 800, 855, 884],
+    "conclusion": "fused-add/residual backward is already present; validation only"
+  },
+  "tested_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+  "gpu": {
+    "name": "AMD Instinct MI350X",
+    "gfx": "gfx950",
+    "unique_id": "0xfa55ca8c650dfefb",
+    "serial": "692517020458"
+  },
+  "image": {
+    "name": "amdpilotv2/open-job:gbt350-20260909",
+    "local_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7"
+  },
+  "paths": {
+    "python": "/opt/venv/bin/python",
+    "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+    "triton": "/opt/venv/lib/python3.12/site-packages/triton/__init__.py",
+    "flydsl": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+    "test": "/job/FlyDSL/tests/kernels/test_rmsnorm.py",
+    "public_wrapper": "/job/FlyDSL/kernels/norm/rmsnorm_kernel.py",
+    "backward_kernel": "/job/FlyDSL/kernels/norm/rmsnorm_bwd_kernel.py",
+    "cache": "/tmp/flydsl-cache-j-37363aae654f"
+  },
+  "baseline": {
+    "first_exact_attempt": {
+      "exit_code": 4,
+      "wall_seconds": 2.955988,
+      "result": "unsupported",
+      "error": "ImportError: cannot import name 'get_warp_size' from 'flydsl.runtime.device'"
+    },
+    "supported_control": {
+      "command": "/opt/venv/bin/python examples/01-vectorAdd.py",
+      "exit_code": 0,
+      "wall_seconds": 2.620896,
+      "result": "PASS"
+    },
+    "installed_source_backward_with_shim": {
+      "exit_code": 0,
+      "wall_seconds": 10.55306,
+      "result": "ALL TESTS PASSED"
+    }
+  },
+  "new_adversarial_test": {
+    "cases": [
+      {"M": 64, "N": 512, "dtype": "f32", "alignment": "aligned", "passed": true},
+      {"M": 128, "N": 4096, "dtype": "f16", "alignment": "aligned", "passed": true},
+      {"M": 513, "N": 4097, "dtype": "bf16", "alignment": "tail", "passed": true},
+      {"M": 1537, "N": 3001, "dtype": "f32", "alignment": "tail", "passed": true}
+    ],
+    "pytest_result": "4 passed in 4.38s",
+    "command_wall_seconds": 7.244077,
+    "exit_code": 0
+  },
+  "affected_gpu_set": {
+    "pytest_result": "7 passed in 8.75s",
+    "command_wall_seconds": 12.085001,
+    "exit_code": 0
+  },
+  "contract_checks": [
+    "output against independent Torch autograd",
+    "residual output against independent Torch autograd",
+    "input gradient against independent Torch autograd",
+    "residual gradient against independent Torch autograd",
+    "weight gradient against independent Torch autograd",
+    "activation, output, residual-output, and gradient dtypes",
+    "finite adversarial inputs",
+    "source tensors unchanged",
+    "residual output owns new storage"
+  ]
+}

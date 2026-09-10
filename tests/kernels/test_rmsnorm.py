@@ -1200,6 +1200,83 @@ def test_rmsnorm_mixed_fp32_weight_autograd(M, N, dtype, fused_add):
     torch.testing.assert_close(weight.grad, dweight_ref, rtol=5e-3, atol=5e-2)
 
 
+@pytest.mark.parametrize(
+    ("M", "N", "dtype"),
+    (
+        (64, 512, "f32"),
+        (128, 4096, "f16"),
+        (513, 4097, "bf16"),
+        (1537, 3001, "f32"),
+    ),
+    ids=("aligned_f32", "aligned_f16", "tail_bf16", "tail_f32"),
+)
+def test_fused_add_rmsnorm_adversarial_autograd(M, N, dtype):
+    """Finite adversarial inputs must preserve the public fused-add contract."""
+    torch_dtype = _torch_dtype(dtype)
+    device = torch.device("cuda", torch.cuda.current_device())
+    positions = torch.arange(M * N, device=device, dtype=DTYPE_FP32).reshape(M, N)
+    columns = torch.arange(N, device=device, dtype=DTYPE_FP32)
+
+    x = torch.where(positions % 3 == 0, 0.0, (positions % 17) / 8 - 1).to(torch_dtype).contiguous()
+    residual = torch.where(positions % 2 == 0, 0.03125, -1.75).to(torch_dtype).contiguous()
+    weight = (0.25 + 1.5 * ((columns % 7) / 6)).to(torch_dtype).contiguous()
+    dout = torch.where(positions % 3 == 0, 0.0, torch.where(positions % 2 == 0, 1.5, -0.75)).to(torch_dtype)
+    dresidual_grad = torch.where(positions % 5 == 0, 0.125, -0.5).to(torch_dtype)
+
+    for tensor in (x, residual, weight, dout, dresidual_grad):
+        assert torch.isfinite(tensor).all()
+
+    x = x.requires_grad_(True)
+    residual = residual.requires_grad_(True)
+    weight = weight.requires_grad_(True)
+    x_snapshot = x.detach().clone()
+    residual_snapshot = residual.detach().clone()
+    weight_snapshot = weight.detach().clone()
+
+    out, residual_out = fused_add_rmsnorm(x, residual, weight, prenorm=True)
+    torch.autograd.backward((out, residual_out), (dout, dresidual_grad))
+
+    assert out.dtype == torch_dtype
+    assert residual_out.dtype == torch_dtype
+    assert x.grad is not None and x.grad.dtype == torch_dtype
+    assert residual.grad is not None and residual.grad.dtype == torch_dtype
+    assert weight.grad is not None and weight.grad.dtype == torch_dtype
+    assert out.data_ptr() != residual_out.data_ptr()
+    assert residual_out.data_ptr() not in (x.data_ptr(), residual.data_ptr())
+    assert torch.equal(x.detach(), x_snapshot)
+    assert torch.equal(residual.detach(), residual_snapshot)
+    assert torch.equal(weight.detach(), weight_snapshot)
+
+    x_reference = x.detach().to(DTYPE_FP32).requires_grad_(True)
+    residual_reference = residual.detach().to(DTYPE_FP32).requires_grad_(True)
+    weight_reference = weight.detach().to(DTYPE_FP32).requires_grad_(True)
+    added_reference = x_reference + residual_reference
+    rstd_reference = torch.rsqrt(added_reference.square().mean(dim=1, keepdim=True) + EPS)
+    output_reference = added_reference * rstd_reference * weight_reference
+    dx_reference, dresidual_reference, dweight_reference = torch.autograd.grad(
+        (output_reference, added_reference),
+        (x_reference, residual_reference, weight_reference),
+        (dout.to(DTYPE_FP32), dresidual_grad.to(DTYPE_FP32)),
+    )
+
+    value_rtol = {"f32": 1e-5, "f16": 3e-2, "bf16": 1e-1}[dtype]
+    value_atol = {"f32": 1e-5, "f16": 3e-2, "bf16": 2e-1}[dtype]
+    weight_rtol = {"f32": 1e-4, "f16": 3e-2, "bf16": 1e-1}[dtype]
+    weight_atol = {"f32": 1e-2, "f16": 2e-1, "bf16": 1.0}[dtype]
+
+    torch.testing.assert_close(
+        residual_out.to(DTYPE_FP32), added_reference.detach(), rtol=value_rtol, atol=value_atol
+    )
+    torch.testing.assert_close(out.to(DTYPE_FP32), output_reference.detach(), rtol=value_rtol, atol=value_atol)
+    torch.testing.assert_close(x.grad.to(DTYPE_FP32), dx_reference.detach(), rtol=value_rtol, atol=value_atol)
+    torch.testing.assert_close(
+        residual.grad.to(DTYPE_FP32), dresidual_reference.detach(), rtol=value_rtol, atol=value_atol
+    )
+    torch.testing.assert_close(
+        weight.grad.to(DTYPE_FP32), dweight_reference.detach(), rtol=weight_rtol, atol=weight_atol
+    )
+
+
 def test_fused_add_rmsnorm_dtype_mismatch():
     """Residual must match x; weight may only differ by using FP32."""
     print("=" * 80)
