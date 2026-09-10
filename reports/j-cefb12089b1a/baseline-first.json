@@ -1,0 +1,90 @@
+{
+  "campaign": "repo-e2e-20260909",
+  "commands": [
+    "/opt/venv/bin/python /job/baseline_first.py",
+    "rocm-smi --showproduct --showserial",
+    "rg -n 'conv3d_implicit|_ncdhw_to_ndhwc' /opt/venv/lib/python3.12/site-packages/flydsl"
+  ],
+  "finite_matrix": {
+    "channels": 192,
+    "finite_values": [
+      -1.0,
+      -0.5,
+      0.0,
+      0.5,
+      1.0
+    ],
+    "lengths": [
+      2,
+      4,
+      64
+    ],
+    "tolerance": 0.05,
+    "widths": [
+      2,
+      4
+    ]
+  },
+  "first_gpu_execution_elapsed_s": 0.12086394242942333,
+  "gpu": {
+    "capability": [
+      9,
+      5
+    ],
+    "count": 1,
+    "name": "AMD Instinct MI350X"
+  },
+  "image": {
+    "container_id": "7e85beda40605dd99d2c56dcba5737ed167ab49afc7219ee0d2030c98de33af2",
+    "local_image_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7",
+    "qualified_name": "amdpilotv2/open-job:gbt350-20260909"
+  },
+  "installed_source_commit": "d9e5ef7ce08ee7045d583aed768cff41aa9210fe",
+  "interpreter": "/opt/venv/bin/python",
+  "label": "installed-source baseline; not proof for later checkout changes",
+  "passed": false,
+  "paths": {
+    "buffer_ops_source": "/opt/aiter/aiter/ops/flydsl/kernels/buffer_ops.py",
+    "flydsl_native": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so",
+    "flydsl_python": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+    "flydsl_rocdl_native": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFlyROCDL.cpython-312-x86_64-linux-gnu.so",
+    "kernel_source": "/opt/aiter/aiter/ops/flydsl/causal_conv1d_flydsl.py",
+    "torch_native": "/opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so"
+  },
+  "reference": "torch.nn.functional.conv1d grouped cross-correlation in fp32, including bias; superposition subtracts bias once on each side",
+  "relevant_api_status": {
+    "conv3d_implicit": "not present in installed FlyDSL wheel; used installed AITER causal-conv1d FlyDSL kernel as neighboring control",
+    "upstream_issue": "ROCm/FlyDSL issue 993"
+  },
+  "results": [
+    {
+      "case": "superposition-a",
+      "elapsed_s": 0.12086394242942333,
+      "finite": true,
+      "max_abs_error": 0.75,
+      "mean_abs_error": 0.0013020833721384406,
+      "passed": false,
+      "query_start_loc_after": [
+        0,
+        4
+      ],
+      "query_start_loc_before": [
+        0,
+        4
+      ]
+    },
+    {
+      "case": "subsequent-installed-control",
+      "error": "HIP error: an illegal memory access was encountered\nSearch for `hipErrorIllegalAddress' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__HIPRT__TYPES.html for more information.\nHIP kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.\nFor debugging consider passing AMD_SERIALIZE_KERNEL=3\nCompile with `TORCH_USE_HIP_DSA` to enable device-side assertions.\n",
+      "error_type": "AcceleratorError",
+      "passed": false
+    }
+  ],
+  "timestamp_utc": "2026-09-10T04:07:12Z",
+  "timing_method": "time.perf_counter around one FlyDSL call with torch.cuda.synchronize before and after; first call includes JIT compilation",
+  "versions": {
+    "flydsl": "0.2.4",
+    "torch": "2.9.1+rocm7.2.0.lw.git7e1940d4",
+    "triton": "3.5.1+rocm7.2.0.gita272dfa8"
+  }
+}

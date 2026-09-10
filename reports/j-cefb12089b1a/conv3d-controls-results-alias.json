@@ -1,0 +1,254 @@
+{
+  "campaign": "repo-e2e-20260909",
+  "candidate_commit": "19f7acc4e61f06f99742ffcb326585be43fb685a",
+  "commands": [
+    "PYTHONPATH=/tmp/flydsl-cache-j-cefb12089b1a/wheel-0.3.2:/job/FlyDSL /opt/venv/bin/python /tmp/conv3d_controls.py",
+    "PYTHONPATH=/tmp/flydsl-cache-j-cefb12089b1a/wheel-0.3.2:/job/FlyDSL /opt/venv/bin/python -m pytest -q tests/kernels/test_conv3d_implicit.py --disable-warnings"
+  ],
+  "finite_matrix": {
+    "atol": 0.02,
+    "impulse_channels": 4,
+    "output_channels": 4,
+    "rtol": 0.02,
+    "sentinel_bound": 32.0,
+    "splitk": [
+      1,
+      2
+    ],
+    "superposition_shape": [
+      2,
+      2,
+      3,
+      4,
+      3
+    ],
+    "values": [
+      -1.0,
+      -0.5,
+      0.0,
+      0.5,
+      1.0
+    ]
+  },
+  "first_gpu_execution_elapsed_s": 0.3370858021080494,
+  "gpu": {
+    "capability": [
+      9,
+      5
+    ],
+    "count": 1,
+    "name": "AMD Instinct MI350X"
+  },
+  "image": {
+    "container_id": "7e85beda40605dd99d2c56dcba5737ed167ab49afc7219ee0d2030c98de33af2",
+    "local_image_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7",
+    "qualified_name": "amdpilotv2/open-job:gbt350-20260909"
+  },
+  "interpreter": "/opt/venv/bin/python",
+  "label": "candidate PR 315 GPU controls; current main already has legacy layout support",
+  "api_mode": "layout/out_layout",
+  "passed": true,
+  "paths": {
+    "flydsl_native": "/tmp/flydsl-cache-j-cefb12089b1a/wheel-0.3.2/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so",
+    "flydsl_python": "/tmp/flydsl-cache-j-cefb12089b1a/wheel-0.3.2/flydsl/__init__.py",
+    "flydsl_rocdl_native": "/tmp/flydsl-cache-j-cefb12089b1a/wheel-0.3.2/flydsl/_mlir/_mlir_libs/_mlirDialectsFlyROCDL.cpython-312-x86_64-linux-gnu.so",
+    "source": "/job/FlyDSL/kernels/conv/conv3d_implicit.py",
+    "torch_native": "/opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so"
+  },
+  "reference": "independent CPU float32 torch.nn.functional.conv3d cross-correlation; bias subtracted once on each superposition side",
+  "results": [
+    {
+      "case": "superposition-a-splitk-1",
+      "elapsed_s": 0.3370858021080494,
+      "finite": true,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "passed": true,
+      "splitk": 1,
+      "within_sentinel_bound": true
+    },
+    {
+      "case": "superposition-b-splitk-1",
+      "elapsed_s": 0.0004802532494068146,
+      "finite": true,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "passed": true,
+      "splitk": 1,
+      "within_sentinel_bound": true
+    },
+    {
+      "case": "superposition-sum-splitk-1",
+      "elapsed_s": 0.0006476864218711853,
+      "finite": true,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "passed": true,
+      "splitk": 1,
+      "within_sentinel_bound": true
+    },
+    {
+      "case": "superposition-bias-subtracted-splitk-1",
+      "elapsed_s": null,
+      "finite": true,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "passed": true,
+      "splitk": 1,
+      "within_sentinel_bound": true
+    },
+    {
+      "case": "superposition-a-splitk-2",
+      "elapsed_s": 0.0003572935238480568,
+      "finite": true,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "passed": true,
+      "splitk": 2,
+      "within_sentinel_bound": true
+    },
+    {
+      "case": "superposition-b-splitk-2",
+      "elapsed_s": 0.0004147840663790703,
+      "finite": true,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "passed": true,
+      "splitk": 2,
+      "within_sentinel_bound": true
+    },
+    {
+      "case": "superposition-sum-splitk-2",
+      "elapsed_s": 0.0004078345373272896,
+      "finite": true,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "passed": true,
+      "splitk": 2,
+      "within_sentinel_bound": true
+    },
+    {
+      "case": "superposition-bias-subtracted-splitk-2",
+      "elapsed_s": null,
+      "finite": true,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "passed": true,
+      "splitk": 2,
+      "within_sentinel_bound": true
+    },
+    {
+      "case": "impulse-channel-0-splitk-1",
+      "elapsed_s": 0.07422536425292492,
+      "finite": true,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "other_channel_bias_error": 0.0,
+      "passed": true,
+      "splitk": 1,
+      "target_channel_error": 0.0,
+      "within_sentinel_bound": true
+    },
+    {
+      "case": "impulse-channel-1-splitk-1",
+      "elapsed_s": 0.00035928282886743546,
+      "finite": true,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "other_channel_bias_error": 0.0,
+      "passed": true,
+      "splitk": 1,
+      "target_channel_error": 0.0,
+      "within_sentinel_bound": true
+    },
+    {
+      "case": "impulse-channel-2-splitk-1",
+      "elapsed_s": 0.00032701343297958374,
+      "finite": true,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "other_channel_bias_error": 0.0,
+      "passed": true,
+      "splitk": 1,
+      "target_channel_error": 0.0,
+      "within_sentinel_bound": true
+    },
+    {
+      "case": "impulse-channel-3-splitk-1",
+      "elapsed_s": 0.00037207361310720444,
+      "finite": true,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "other_channel_bias_error": 0.0,
+      "passed": true,
+      "splitk": 1,
+      "target_channel_error": 0.0,
+      "within_sentinel_bound": true
+    },
+    {
+      "case": "impulse-channel-0-splitk-2",
+      "elapsed_s": 0.0003244131803512573,
+      "finite": true,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "other_channel_bias_error": 0.0,
+      "passed": true,
+      "splitk": 2,
+      "target_channel_error": 0.0,
+      "within_sentinel_bound": true
+    },
+    {
+      "case": "impulse-channel-1-splitk-2",
+      "elapsed_s": 0.00026870332658290863,
+      "finite": true,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "other_channel_bias_error": 0.0,
+      "passed": true,
+      "splitk": 2,
+      "target_channel_error": 0.0,
+      "within_sentinel_bound": true
+    },
+    {
+      "case": "impulse-channel-2-splitk-2",
+      "elapsed_s": 0.00042366329580545425,
+      "finite": true,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "other_channel_bias_error": 0.0,
+      "passed": true,
+      "splitk": 2,
+      "target_channel_error": 0.0,
+      "within_sentinel_bound": true
+    },
+    {
+      "case": "impulse-channel-3-splitk-2",
+      "elapsed_s": 0.00032638292759656906,
+      "finite": true,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "other_channel_bias_error": 0.0,
+      "passed": true,
+      "splitk": 2,
+      "target_channel_error": 0.0,
+      "within_sentinel_bound": true
+    },
+    {
+      "case": "sentinel-finite-bound",
+      "elapsed_s": 1.7295011822134256,
+      "finite": true,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "passed": true,
+      "splitk": 1,
+      "within_sentinel_bound": true
+    }
+  ],
+  "timestamp_utc": "2026-09-10T04:14:26Z",
+  "timing_method": "time.perf_counter around one FlyDSL call with torch.cuda.synchronize before and after; first call includes JIT compilation",
+  "versions": {
+    "flydsl": "0.3.2",
+    "torch": "2.9.1+rocm7.2.0.lw.git7e1940d4",
+    "triton": "3.5.1+rocm7.2.0.gita272dfa8"
+  }
+}
