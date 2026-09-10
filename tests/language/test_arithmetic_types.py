@@ -418,11 +418,49 @@ class TestOperators:
 
         assert "arith.floordivsi" in source_ir(body)
 
+    @pytest.mark.parametrize(
+        ("dtype", "uses_native_floor_div"),
+        [
+            (fx.Int4, True),
+            (fx.Int8, True),
+            (fx.Int16, True),
+            (fx.Int32, True),
+            (fx.Int64, True),
+            (fx.Int128, False),
+        ],
+    )
+    def test_floordiv_all_signed_widths(self, dtype, uses_native_floor_div):
+        def body():
+            _ = vec(dtype) // vec(dtype)
+
+        ir_text = source_ir(body)
+        if uses_native_floor_div:
+            assert "arith.floordivsi" in ir_text
+        else:
+            assert "arith.divsi" in ir_text
+            assert "arith.subi" in ir_text
+            assert "arith.select" in ir_text
+            assert "arith.floordivsi" not in ir_text
+
     def test_mod_int(self):
         def body():
             _ = vec(Int32) % vec(Int32)
 
         assert "arith.remsi" in source_ir(body)
+
+    @pytest.mark.parametrize(
+        "dtype",
+        [fx.Int4, fx.Int8, fx.Int16, fx.Int32, fx.Int64, fx.Int128],
+    )
+    def test_mod_adjusts_truncated_remainder_to_floor(self, dtype):
+        def body():
+            _ = vec(dtype) % vec(dtype)
+
+        ir_text = source_ir(body)
+        assert "arith.remsi" in ir_text
+        assert "arith.xori" in ir_text
+        assert "arith.select" in ir_text
+        assert "arith.floordivsi" not in ir_text
 
     def test_neg_int(self):
         """Negating an integer Vector should produce arith.subi (0 - x)."""
@@ -591,6 +629,23 @@ class TestScalarUnaryOps:
             assert int(q) == 2
             assert int(r) == 1
             assert dtype_of(q) is Int32
+
+        run(body)
+
+    def test_divmod_scalar_negative_operands(self):
+        def body():
+            q, r = divmod(Int32(-7), Int32(3))
+            assert int(q) == -3
+            assert int(r) == 2
+
+        run(body)
+
+    def test_static_integer_division_and_remainder_reject_zero(self):
+        def body():
+            with pytest.raises(ZeroDivisionError):
+                Int32(7) // Int32(0)
+            with pytest.raises(ZeroDivisionError):
+                Int32(7) % Int32(0)
 
         run(body)
 
