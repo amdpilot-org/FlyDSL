@@ -24,6 +24,7 @@ callers want:
 
 from types import SimpleNamespace
 
+from .block import exchange as _block_exchange
 from .block import reduce as _block_reduce
 from .block import scan as _block_scan
 from .warp import reduce as _warp_reduce
@@ -36,6 +37,9 @@ __all__ = [
     "warp_exclusive_scan",
     "warp_scan",
     "warp_scan_with_aggregate",
+    # block exchange
+    "blocked_to_striped",
+    "striped_to_blocked",
     # block scope
     "BlockReduceAlgorithm",
     "BlockReduce",
@@ -49,6 +53,8 @@ warp_inclusive_scan = _warp_scan.warp_inclusive_scan
 warp_exclusive_scan = _warp_scan.warp_exclusive_scan
 warp_scan = _warp_scan.warp_scan
 warp_scan_with_aggregate = _warp_scan.warp_scan_with_aggregate
+blocked_to_striped = _block_exchange.blocked_to_striped
+striped_to_blocked = _block_exchange.striped_to_blocked
 
 
 # What the block classes below fold through, in place of the dispatched warp
