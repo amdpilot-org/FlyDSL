@@ -1,0 +1,448 @@
+{
+  "passed": true,
+  "scope": {
+    "operation": "plain FlyDSL RMSNorm",
+    "input_dtypes": [
+      "bf16",
+      "f16"
+    ],
+    "weight_dtype": "f32",
+    "M": 512,
+    "hidden_sizes": [
+      512,
+      4096,
+      4097,
+      8191,
+      8192
+    ],
+    "eps": 1e-05,
+    "autograd_reference": "independent Torch FP32 autograd",
+    "non_default_current_stream": true,
+    "warm_cache_reuse": true
+  },
+  "environment": {
+    "delivery_image": {
+      "requested_tag": "amdpilotv2/open-job:gbt350-20260909",
+      "operator_provided_local_image_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7"
+    },
+    "python": "/opt/venv/bin/python",
+    "python_version": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]",
+    "platform": "Linux-4.18.0-513.1.1.el8_9.g12b5.x86_64-x86_64-with-glibc2.39",
+    "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+    "torch_path": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+    "torch_native_path": "/opt/venv/lib/python3.12/site-packages/torch/_C.cpython-312-x86_64-linux-gnu.so",
+    "triton": "3.5.1+rocm7.2.0.gita272dfa8",
+    "triton_path": "/opt/venv/lib/python3.12/site-packages/triton/__init__.py",
+    "flydsl": "0.2.4",
+    "flydsl_path": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+    "flydsl_native_paths": [
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFly.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFlyROCDL.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsGPU.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsLLVM.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirExecutionEngine.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirGPUPasses.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirRegisterEverything.cpython-312-x86_64-linux-gnu.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libMLIRPythonSupport-mlir.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libmlir_c_runner_utils.so",
+      "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libnanobind-mlir.so"
+    ],
+    "source_commit": "d651eaa00337f4fc66c348930a0d0ebdb8e69900",
+    "pr_base_commit": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+    "source_paths": {
+      "repository": "/job/FlyDSL",
+      "kernel": "/job/FlyDSL/kernels/norm/rmsnorm_kernel.py",
+      "shared_helpers": "/job/FlyDSL/kernels/norm/rmsnorm_common.py",
+      "tests": "/job/FlyDSL/tests/kernels/test_rmsnorm.py"
+    },
+    "gpu_name": "AMD Instinct MI350X",
+    "gpu_arch": "gfx950",
+    "gpu_device_count": 1,
+    "gpu_uuid": "66613535-6361-3863-3635-306466656662",
+    "gpu_multi_processor_count": 256
+  },
+  "results": [
+    {
+      "dtype": "bf16",
+      "M": 512,
+      "N": 512,
+      "weight_dtype": "f32",
+      "backward_path": "two_stage",
+      "num_programs": 256,
+      "non_default_stream": true,
+      "default_stream_raw": 0,
+      "execution_stream_raw": 256582368,
+      "forward_cache_reused": true,
+      "backward_cache_reused": true,
+      "forward_cache_size_before": 0,
+      "forward_cache_size_after": 1,
+      "backward_cache_size_before": 0,
+      "backward_cache_size_after": 1,
+      "tolerances": {
+        "output_and_x_grad": {
+          "rtol": 0.1,
+          "atol": 0.2
+        },
+        "weight_grad": {
+          "rtol": 0.005,
+          "atol": 0.05
+        },
+        "rstd": {
+          "rtol": 0.0,
+          "atol": 0.001
+        }
+      },
+      "max_abs_errors": {
+        "output": 0.008431434631347656,
+        "rstd": 1.1920928955078125e-07,
+        "x_grad": 0.007812023162841797,
+        "weight_grad": 1.239776611328125e-05
+      },
+      "passed": true
+    },
+    {
+      "dtype": "bf16",
+      "M": 512,
+      "N": 4096,
+      "weight_dtype": "f32",
+      "backward_path": "two_stage",
+      "num_programs": 256,
+      "non_default_stream": true,
+      "default_stream_raw": 0,
+      "execution_stream_raw": 292137392,
+      "forward_cache_reused": true,
+      "backward_cache_reused": true,
+      "forward_cache_size_before": 1,
+      "forward_cache_size_after": 2,
+      "backward_cache_size_before": 1,
+      "backward_cache_size_after": 2,
+      "tolerances": {
+        "output_and_x_grad": {
+          "rtol": 0.1,
+          "atol": 0.2
+        },
+        "weight_grad": {
+          "rtol": 0.005,
+          "atol": 0.05
+        },
+        "rstd": {
+          "rtol": 0.0,
+          "atol": 0.001
+        }
+      },
+      "max_abs_errors": {
+        "output": 0.014569759368896484,
+        "rstd": 1.1920928955078125e-07,
+        "x_grad": 0.013972282409667969,
+        "weight_grad": 1.9073486328125e-05
+      },
+      "passed": true
+    },
+    {
+      "dtype": "bf16",
+      "M": 512,
+      "N": 4097,
+      "weight_dtype": "f32",
+      "backward_path": "two_stage",
+      "num_programs": 256,
+      "non_default_stream": true,
+      "default_stream_raw": 0,
+      "execution_stream_raw": 315359616,
+      "forward_cache_reused": true,
+      "backward_cache_reused": true,
+      "forward_cache_size_before": 2,
+      "forward_cache_size_after": 3,
+      "backward_cache_size_before": 2,
+      "backward_cache_size_after": 3,
+      "tolerances": {
+        "output_and_x_grad": {
+          "rtol": 0.1,
+          "atol": 0.2
+        },
+        "weight_grad": {
+          "rtol": 0.005,
+          "atol": 0.05
+        },
+        "rstd": {
+          "rtol": 0.0,
+          "atol": 0.001
+        }
+      },
+      "max_abs_errors": {
+        "output": 0.013051033020019531,
+        "rstd": 1.1920928955078125e-07,
+        "x_grad": 0.008388996124267578,
+        "weight_grad": 1.71661376953125e-05
+      },
+      "passed": true
+    },
+    {
+      "dtype": "bf16",
+      "M": 512,
+      "N": 8191,
+      "weight_dtype": "f32",
+      "backward_path": "two_stage",
+      "num_programs": 256,
+      "non_default_stream": true,
+      "default_stream_raw": 0,
+      "execution_stream_raw": 324875088,
+      "forward_cache_reused": true,
+      "backward_cache_reused": true,
+      "forward_cache_size_before": 3,
+      "forward_cache_size_after": 4,
+      "backward_cache_size_before": 3,
+      "backward_cache_size_after": 4,
+      "tolerances": {
+        "output_and_x_grad": {
+          "rtol": 0.1,
+          "atol": 0.2
+        },
+        "weight_grad": {
+          "rtol": 0.005,
+          "atol": 0.05
+        },
+        "rstd": {
+          "rtol": 0.0,
+          "atol": 0.001
+        }
+      },
+      "max_abs_errors": {
+        "output": 0.014811038970947266,
+        "rstd": 1.1920928955078125e-07,
+        "x_grad": 0.01258707046508789,
+        "weight_grad": 2.288818359375e-05
+      },
+      "passed": true
+    },
+    {
+      "dtype": "bf16",
+      "M": 512,
+      "N": 8192,
+      "weight_dtype": "f32",
+      "backward_path": "two_stage",
+      "num_programs": 256,
+      "non_default_stream": true,
+      "default_stream_raw": 0,
+      "execution_stream_raw": 328575088,
+      "forward_cache_reused": true,
+      "backward_cache_reused": true,
+      "forward_cache_size_before": 4,
+      "forward_cache_size_after": 5,
+      "backward_cache_size_before": 4,
+      "backward_cache_size_after": 5,
+      "tolerances": {
+        "output_and_x_grad": {
+          "rtol": 0.1,
+          "atol": 0.2
+        },
+        "weight_grad": {
+          "rtol": 0.005,
+          "atol": 0.05
+        },
+        "rstd": {
+          "rtol": 0.0,
+          "atol": 0.001
+        }
+      },
+      "max_abs_errors": {
+        "output": 0.01540994644165039,
+        "rstd": 1.1920928955078125e-07,
+        "x_grad": 0.014839649200439453,
+        "weight_grad": 2.384185791015625e-05
+      },
+      "passed": true
+    },
+    {
+      "dtype": "f16",
+      "M": 512,
+      "N": 512,
+      "weight_dtype": "f32",
+      "backward_path": "two_stage",
+      "num_programs": 256,
+      "non_default_stream": true,
+      "default_stream_raw": 0,
+      "execution_stream_raw": 332082976,
+      "forward_cache_reused": true,
+      "backward_cache_reused": true,
+      "forward_cache_size_before": 5,
+      "forward_cache_size_after": 6,
+      "backward_cache_size_before": 5,
+      "backward_cache_size_after": 6,
+      "tolerances": {
+        "output_and_x_grad": {
+          "rtol": 0.03,
+          "atol": 0.03
+        },
+        "weight_grad": {
+          "rtol": 0.005,
+          "atol": 0.05
+        },
+        "rstd": {
+          "rtol": 0.0,
+          "atol": 0.001
+        }
+      },
+      "max_abs_errors": {
+        "output": 0.0009760856628417969,
+        "rstd": 1.1920928955078125e-07,
+        "x_grad": 0.0015344619750976562,
+        "weight_grad": 1.52587890625e-05
+      },
+      "passed": true
+    },
+    {
+      "dtype": "f16",
+      "M": 512,
+      "N": 4096,
+      "weight_dtype": "f32",
+      "backward_path": "two_stage",
+      "num_programs": 256,
+      "non_default_stream": true,
+      "default_stream_raw": 0,
+      "execution_stream_raw": 335629488,
+      "forward_cache_reused": true,
+      "backward_cache_reused": true,
+      "forward_cache_size_before": 6,
+      "forward_cache_size_after": 7,
+      "backward_cache_size_before": 6,
+      "backward_cache_size_after": 7,
+      "tolerances": {
+        "output_and_x_grad": {
+          "rtol": 0.03,
+          "atol": 0.03
+        },
+        "weight_grad": {
+          "rtol": 0.005,
+          "atol": 0.05
+        },
+        "rstd": {
+          "rtol": 0.0,
+          "atol": 0.001
+        }
+      },
+      "max_abs_errors": {
+        "output": 0.0016880035400390625,
+        "rstd": 1.1920928955078125e-07,
+        "x_grad": 0.0019268989562988281,
+        "weight_grad": 1.9073486328125e-05
+      },
+      "passed": true
+    },
+    {
+      "dtype": "f16",
+      "M": 512,
+      "N": 4097,
+      "weight_dtype": "f32",
+      "backward_path": "two_stage",
+      "num_programs": 256,
+      "non_default_stream": true,
+      "default_stream_raw": 0,
+      "execution_stream_raw": 338510528,
+      "forward_cache_reused": true,
+      "backward_cache_reused": true,
+      "forward_cache_size_before": 7,
+      "forward_cache_size_after": 8,
+      "backward_cache_size_before": 7,
+      "backward_cache_size_after": 8,
+      "tolerances": {
+        "output_and_x_grad": {
+          "rtol": 0.03,
+          "atol": 0.03
+        },
+        "weight_grad": {
+          "rtol": 0.005,
+          "atol": 0.05
+        },
+        "rstd": {
+          "rtol": 0.0,
+          "atol": 0.001
+        }
+      },
+      "max_abs_errors": {
+        "output": 0.0017981529235839844,
+        "rstd": 1.1920928955078125e-07,
+        "x_grad": 0.0018815994262695312,
+        "weight_grad": 1.71661376953125e-05
+      },
+      "passed": true
+    },
+    {
+      "dtype": "f16",
+      "M": 512,
+      "N": 8191,
+      "weight_dtype": "f32",
+      "backward_path": "two_stage",
+      "num_programs": 256,
+      "non_default_stream": true,
+      "default_stream_raw": 0,
+      "execution_stream_raw": 342703152,
+      "forward_cache_reused": true,
+      "backward_cache_reused": true,
+      "forward_cache_size_before": 8,
+      "forward_cache_size_after": 9,
+      "backward_cache_size_before": 8,
+      "backward_cache_size_after": 9,
+      "tolerances": {
+        "output_and_x_grad": {
+          "rtol": 0.03,
+          "atol": 0.03
+        },
+        "weight_grad": {
+          "rtol": 0.005,
+          "atol": 0.05
+        },
+        "rstd": {
+          "rtol": 0.0,
+          "atol": 0.001
+        }
+      },
+      "max_abs_errors": {
+        "output": 0.0014395713806152344,
+        "rstd": 1.1920928955078125e-07,
+        "x_grad": 0.0017576217651367188,
+        "weight_grad": 2.288818359375e-05
+      },
+      "passed": true
+    },
+    {
+      "dtype": "f16",
+      "M": 512,
+      "N": 8192,
+      "weight_dtype": "f32",
+      "backward_path": "two_stage",
+      "num_programs": 256,
+      "non_default_stream": true,
+      "default_stream_raw": 0,
+      "execution_stream_raw": 346373664,
+      "forward_cache_reused": true,
+      "backward_cache_reused": true,
+      "forward_cache_size_before": 9,
+      "forward_cache_size_after": 10,
+      "backward_cache_size_before": 9,
+      "backward_cache_size_after": 10,
+      "tolerances": {
+        "output_and_x_grad": {
+          "rtol": 0.03,
+          "atol": 0.03
+        },
+        "weight_grad": {
+          "rtol": 0.005,
+          "atol": 0.05
+        },
+        "rstd": {
+          "rtol": 0.0,
+          "atol": 0.001
+        }
+      },
+      "max_abs_errors": {
+        "output": 0.0018243789672851562,
+        "rstd": 1.1920928955078125e-07,
+        "x_grad": 0.0019259452819824219,
+        "weight_grad": 1.71661376953125e-05
+      },
+      "passed": true
+    }
+  ]
+}
