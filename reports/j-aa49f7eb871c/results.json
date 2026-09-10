@@ -1,0 +1,56 @@
+{
+  "campaign": "repo-e2e-20260909",
+  "scope": "AOT non-default stream ordering",
+  "pr_base": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+  "gpu": {
+    "name": "AMD Instinct MI350X",
+    "arch": "gfx950",
+    "uuid": "GPU-fa55ca8c650dfefb"
+  },
+  "image": {
+    "qualified_name": "amdpilotv2/open-job:gbt350-20260909",
+    "expected_local_image_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7"
+  },
+  "baseline": {
+    "label": "installed-source baseline; not proof for checkout changes",
+    "kernel": "baseline_copy_i32",
+    "numel": 4096,
+    "default_stream_handle": 0,
+    "first_gpu_execution_elapsed_seconds": 0.297022557,
+    "max_abs_error": 0,
+    "passed": true
+  },
+  "non_default_stream": {
+    "api": "flyc.compile positional stream argument",
+    "producer_binding": "non-default stream; handle asserted nonzero",
+    "consumer_binding": "non-default stream; handle asserted nonzero and distinct from producer",
+    "ordering": "producer event recorded; consumer waits event; default stream waits consumer event",
+    "reference": "independent CPU tensor arithmetic",
+    "numerical_gate": "torch.allclose atol=1e-5 rtol=1e-5",
+    "focused_result": "1 passed in 2.46s",
+    "focused_wall_seconds": 4.789168,
+    "affected_set_result": "4 passed, 4 deselected in 2.61s",
+    "affected_set_wall_seconds": 4.931653,
+    "unsupported_refusal": null
+  },
+  "documented_api_refusal": {
+    "attempt": "flyc.compile(..., stream=producer)",
+    "error": "TypeError: CompileCallable.__call__() got an unexpected keyword argument 'stream'",
+    "resolution": "pass stream positionally as documented"
+  },
+  "checkout_runtime_mismatch": {
+    "checkout_python_version": "0.3.3",
+    "installed_native_version": "0.2.4",
+    "error": "ValueError: 'convert-rocdl-fastmath-ops' does not refer to a registered pass or pass pipeline",
+    "occurred_before_launch": true,
+    "real_gpu_cases_used": "delivery checkout test files with qualified installed FlyDSL runtime"
+  },
+  "upstream_context": {
+    "issue_621_state": "open",
+    "issue_621_comments": 0,
+    "related_pr_455_commit": "4643be1e84fe03d161f3c95ea32423db27747e00",
+    "related_pr_672_commit": "3e7f66e713c72b03cefddf3bb1cb26f8992288d4",
+    "already_fixed_on_main": true,
+    "upstream_posts_or_changes": 0
+  }
+}
