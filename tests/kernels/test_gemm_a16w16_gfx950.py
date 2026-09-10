@@ -154,6 +154,44 @@ def get_rotary_inputs(sample_inputs: torch.Tensor, sample_outputs: torch.Tensor)
     return max(1, int(rotary_inputs))
 
 
+def get_acc_tolerance(args: _TestArgs):
+    k_scale = (args.k / 8192) ** 0.5
+    k_scale *= args.split_k * args.k_waves
+    atol_scale = 1.5 if args.has_bias else 1.0
+    if args.dtype is torch.bfloat16:
+        return 2e-1 * k_scale * atol_scale, 2e-1
+    return 5e-2 * k_scale * atol_scale, 5e-2
+
+
+def assert_no_overflow(output: torch.Tensor, label: str):
+    if bool(torch.isfinite(output).all()):
+        return
+    inf_count = int(torch.isinf(output).sum().item())
+    nan_count = int(torch.isnan(output).sum().item())
+    raise AssertionError(f"{label} produced non-finite output: inf={inf_count}, nan={nan_count}")
+
+
+def make_accumulation_inputs(case: str, dtype: torch.dtype, m: int, n: int, k: int):
+    input_a = torch.ones((m, k), dtype=dtype, device="cuda")
+    input_b = torch.ones((k, n), dtype=dtype, device="cuda")
+    if case == "finite_cancellation":
+        signs = torch.ones((k, 1), dtype=dtype, device="cuda")
+        signs[k // 2 :] = -1
+        input_b.copy_(signs.expand(k, n))
+    elif case == "mixed_magnitude":
+        exponents = torch.arange(k, device="cuda") % 10
+        scales = torch.pow(2.0, -exponents.to(torch.float32))
+        input_a.copy_(scales.expand(m, k).to(dtype))
+    elif case == "small_residual":
+        signs = torch.ones(k, dtype=torch.float32, device="cuda")
+        signs[1::2] = -1
+        residual = 1.0 - 2.0**-7.0
+        input_b.copy_((signs * residual).unsqueeze(1).expand(k, n).to(dtype))
+    else:
+        raise ValueError(f"unknown accumulation case: {case}")
+    return input_a.contiguous(), input_b.contiguous()
+
+
 def check_acc(args: _TestArgs):
     _skip_unsupported_accuracy_layout(args)
     kwargs = {
@@ -175,15 +213,7 @@ def check_acc(args: _TestArgs):
     ref_inouts = inputs + ref_outputs
     maxdiff_out_ = []
 
-    def get_tol(args):
-        k_scale = (args.k / 8192) ** 0.5
-        k_scale *= args.split_k * args.k_waves
-        atol_scale = 1.5 if args.has_bias else 1.0
-        if args.dtype is torch.bfloat16:
-            return 2e-1 * k_scale * atol_scale, 2e-1
-        return 5e-2 * k_scale * atol_scale, 5e-2
-
-    atol, rtol = get_tol(args)
+    atol, rtol = get_acc_tolerance(args)
     for _ in range(5):
         func(*(inouts + (kwargs, args.layout)))
         ref_func(*(ref_inouts + (args.layout,)))
@@ -583,6 +613,52 @@ def test_gemm_a16w16_acc_fp32_output(
         out_dtype=torch.float32,
     )
     check_acc(args)
+
+
+@pytest.mark.parametrize("case", ["finite_cancellation", "mixed_magnitude", "small_residual"])
+@pytest.mark.parametrize("dtype", [torch.bfloat16, torch.float16])
+def test_gemm_a16w16_accumulation_numerics(case: str, dtype: torch.dtype):
+    args = _TestArgs(
+        dtype=dtype,
+        m=64,
+        n=64,
+        k=768,
+        block_m=64,
+        block_n=64,
+        block_k=64,
+        stages=2,
+        m_waves=2,
+        n_waves=2,
+        k_waves=1,
+        group_m=0,
+        has_bias=False,
+        use_half_tile_interleaved=False,
+        layout="nn",
+        split_k=1,
+        out_dtype=torch.float32,
+    )
+    input_a, input_b = make_accumulation_inputs(case, dtype, args.m, args.n, args.k)
+    output = torch.empty((args.m, args.n), dtype=torch.float32, device="cuda")
+    kwargs = {
+        "block_m": args.block_m,
+        "block_n": args.block_n,
+        "block_k": args.block_k,
+        "stages": args.stages,
+        "m_waves": args.m_waves,
+        "n_waves": args.n_waves,
+        "k_waves": args.k_waves,
+        "group_m": args.group_m,
+        "use_half_tile_interleaved": args.use_half_tile_interleaved,
+        "split_k": args.split_k,
+    }
+    gemm_a16w16(input_a, input_b, output, user_kwargs=kwargs, layout=args.layout)
+    torch.cuda.synchronize()
+    reference = torch.mm(input_a.cpu().double(), input_b.cpu().double()).to(device="cuda", dtype=torch.float32)
+    assert_no_overflow(output, f"{case} {dtype}")
+    atol, rtol = get_acc_tolerance(args)
+    max_abs_diff = (output - reference).abs().max().item()
+    print(f"{case} {dtype}: max_abs_diff={max_abs_diff:.9g}, atol={atol:.9g}, rtol={rtol:.9g}")
+    torch.testing.assert_close(output, reference, atol=atol, rtol=rtol, check_dtype=True)
 
 
 @pytest.mark.parametrize("layout", ["nn", "nt", "tn", "tt"])
