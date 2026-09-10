@@ -1,0 +1,60 @@
+{
+  "campaign": "repo-e2e-20260909",
+  "job_id": "j-7f374048054d",
+  "gpu": {
+    "model": "AMD Instinct MI350X",
+    "architecture": "gfx950",
+    "uuid": "GPU-5e94f9cc641f4027"
+  },
+  "image": {
+    "qualified_image": "amdpilotv2/open-job:gbt350-20260909",
+    "local_image_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7"
+  },
+  "source": {
+    "mirror_base": "ed70142704e1a6d5563fb53e1607e3a4b85d7111",
+    "installed_aiter_commit": "d9e5ef7ce08ee7045d583aed768cff41aa9210fe",
+    "python": "/opt/venv/bin/python",
+    "installed_flydsl": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+    "installed_aiter": "/opt/aiter/aiter/__init__.py"
+  },
+  "first_gpu_execution": {
+    "elapsed_seconds": 10.233,
+    "result": "unsupported",
+    "error": "ModuleNotFoundError: No module named 'aiter.jit.module_aiter_core'",
+    "supported_control_elapsed_seconds": 47.820,
+    "supported_control_result": "pass"
+  },
+  "large_token_correctness": {
+    "tokens": [512, 1024, 2048],
+    "shape": {"model_dim": 512, "inter_dim": 256, "experts": 64, "topk": 4, "block_m": 32},
+    "elapsed_seconds": 10.533,
+    "cosine": 0.99999,
+    "relative_l2": 0.0035,
+    "max_delta": 0.0010,
+    "close_percent": 100.0,
+    "result": "pass"
+  },
+  "gemm2_bottleneck": {
+    "tokens": 2048,
+    "timing": "CUDA events, zero-fill excluded, 5 warmups, 3 rounds x 20 samples",
+    "elapsed_seconds": 17.785,
+    "results": [
+      {"candidate": "tm32_tn128_tk256_default", "mean_us": 43.08586654563745, "median_us": 42.24099963903427, "stdev_us": 4.389928410616571, "cv_percent": 10.188789880706397, "tflops": 49.84195097307235, "correctness_pass": true},
+      {"candidate": "tm64_tn128_tk256_default", "mean_us": 46.29190011570851, "median_us": 46.18050158023834, "stdev_us": 1.0677982710515848, "cv_percent": 2.3066633004533816, "tflops": 46.39005188018371, "correctness_pass": true},
+      {"candidate": "tm128_tn128_tk256_default", "mean_us": 52.18596663326025, "median_us": 51.90099962055683, "stdev_us": 1.9774723403799204, "cv_percent": 3.789279892574791, "tflops": 41.15059634885293, "correctness_pass": true},
+      {"candidate": "tm64_tn128_tk128_persistent", "mean_us": 40.147050097584724, "median_us": 39.700498804450035, "stdev_us": 1.7737013663372518, "cv_percent": 4.41801168959101, "tflops": 53.49044681440229, "correctness_pass": true}
+    ]
+  },
+  "reference": "torch_moe_stage2 dequantized MXFP4/E8M0 reference",
+  "shuffle_semantics": {
+    "weight": "shuffle_weight_a16w4(..., gate_up=False)",
+    "scale": "e8m0_shuffle(...)"
+  },
+  "upstream_context": {
+    "issue": "ROCm/FlyDSL#708",
+    "state": "open",
+    "related_pr": "ROCm/FlyDSL#736",
+    "related_pr_state": "closed and unmerged",
+    "related_pr_scope": "tuning infrastructure only; no production kernel logic change"
+  }
+}
