@@ -86,6 +86,8 @@ an improvement outside the band still wins normally. Softmax uses 10 warmup and
 100 measured launches, split into five backlogged event windows; the larger
 sample stabilized bandwidth-scale rows that moved by more than the tie band with
 the generic 25-launch default.
+The generic selector resolves exact timing ties by canonical config content, not
+by candidate order.
 
 ## Adopters
 

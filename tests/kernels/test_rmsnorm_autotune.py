@@ -20,6 +20,7 @@ if torch is None or not torch.cuda.is_available():
     pytest.skip("CUDA/ROCm not available. Skipping GPU tests.", allow_module_level=True)
 
 import flydsl.compiler as flyc  # noqa: E402
+from flydsl.autotune import Config  # noqa: E402
 from kernels.norm.rmsnorm_autotune import _SEARCH_CONFIGS, _rmsnorm_tuner, rmsnorm_autotuned  # noqa: E402
 from kernels.norm.rmsnorm_kernel import rmsnorm_direct  # noqa: E402
 
@@ -188,6 +189,52 @@ def test_rmsnorm_autotuned_search_then_cache_hit(monkeypatch):
 
     assert completed == len(_SEARCH_CONFIGS)
     _assert_close(offline, ref)
+
+
+def test_rmsnorm_equal_timing_tie_is_independent_of_candidate_order(monkeypatch):
+    candidates = (
+        Config(BLOCK_THREADS=128, waves_per_eu=1),
+        Config(BLOCK_THREADS=256, waves_per_eu=1),
+        Config(BLOCK_THREADS=512, waves_per_eu=1),
+    )
+    x, g, ref = _inputs(M=8)
+    stream = torch.cuda.Stream()
+    stream.wait_stream(torch.cuda.current_stream())
+    raw_stream = stream.cuda_stream
+
+    def search_and_cache(order):
+        _rmsnorm_tuner.cache.clear()
+        _rmsnorm_tuner._artifact_cache.clear()
+        monkeypatch.setattr(_rmsnorm_tuner, "configs", lambda *_args, **_kwargs: list(order))
+        monkeypatch.setattr(_rmsnorm_tuner, "_do_bench", lambda call, warmup, rep: 1.0)
+        monkeypatch.setenv("FLYDSL_AUTOTUNE", "1")
+        out = torch.empty_like(x)
+        rmsnorm_autotuned(x, g, out, x.shape[0], stream=raw_stream)
+        stream.synchronize()
+        selected = next(iter(_rmsnorm_tuner.cache.values()))
+
+        monkeypatch.delenv("FLYDSL_AUTOTUNE")
+        monkeypatch.setattr(
+            _rmsnorm_tuner,
+            "configs",
+            lambda *_args, **_kwargs: pytest.fail("cache hit should not search"),
+        )
+        cached = torch.empty_like(x)
+        rmsnorm_autotuned(x, g, cached, x.shape[0], stream=raw_stream)
+        stream.synchronize()
+        return selected, out, cached
+
+    monkeypatch.delenv("FLYDSL_AUTOTUNE_CONFIG_DIR")
+    forward, forward_out, forward_cached = search_and_cache(candidates)
+    reverse, reverse_out, reverse_cached = search_and_cache(tuple(reversed(candidates)))
+
+    assert forward is reverse
+    assert forward.kwargs["BLOCK_THREADS"] == 128
+    assert forward.waves_per_eu == 1
+    _assert_close(forward_out, ref)
+    _assert_close(forward_cached, ref)
+    _assert_close(reverse_out, ref)
+    _assert_close(reverse_cached, ref)
 
 
 def test_rmsnorm_weight_dtype_has_distinct_tuning_identity():

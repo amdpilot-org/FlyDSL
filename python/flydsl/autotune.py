@@ -190,6 +190,20 @@ class Config:
         )
 
 
+def _config_rank(config: Config) -> tuple:
+    """Canonical tie-break for configs with equal measured times."""
+    serialized = json.dumps(
+        config.to_dict(),
+        sort_keys=True,
+        separators=(",", ":"),
+        default=repr,
+    )
+    return (
+        serialized,
+        repr(config.pre_hook),
+    )
+
+
 def _bench_batch_sizes(rep: int) -> List[int]:
     """Split ``rep`` calls into a few non-empty timing windows.
 
@@ -696,7 +710,10 @@ class Autotuner:
             raise RuntimeError("All autotune configs failed") from last_error
 
         if self.select_config is None:
-            best_config, best_time = min(results, key=lambda x: x[1])
+            best_config, best_time = min(
+                results,
+                key=lambda result: (result[1], _config_rank(result[0])),
+            )
         else:
             best_config, best_time = self.select_config(results)
             if not any(best_config is config and best_time == elapsed for config, elapsed in results):
