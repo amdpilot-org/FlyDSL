@@ -1,0 +1,56 @@
+{
+  "image": {
+    "name": "amdpilotv2/open-job:gbt350-20260909",
+    "local_id": "sha256:bd1e01173a8f79133863f0f9a482eebfbf6abc1cfca34909fcaf487ee63c74e7"
+  },
+  "gpu": {
+    "name": "AMD Instinct MI350X",
+    "architecture": "gfx950",
+    "device_id": 0,
+    "total_memory_bytes": 270566162432,
+    "multiprocessor_count": 256
+  },
+  "python": {
+    "executable": "/opt/venv/bin/python3",
+    "version": "3.12.3"
+  },
+  "flydsl": {
+    "source_path": "/opt/venv/lib/python3.12/site-packages/flydsl/__init__.py",
+    "version": "0.2.4",
+    "compile_backend": "rocm",
+    "backend_class": "RocmBackend",
+    "runtime_kind": "rocm",
+    "target_architecture": "gfx950",
+    "device_count": 2,
+    "current_device_id": 0
+  },
+  "hip_library": {
+    "probed_sonames": [
+      "libamdhip64.so",
+      "libamdhip64.so.6",
+      "libamdhip64.so.5"
+    ],
+    "loaded_path": "/opt/rocm-7.2.0/lib/libamdhip64.so.7.2.70200"
+  },
+  "torch": {
+    "source_path": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+    "version": "2.9.1+rocm7.2.0.git7e1940d4",
+    "hip_version": "7.2.26015-fc0010cf6a"
+  },
+  "kernel": {
+    "operation": "vector_add",
+    "shape": [100, 1000],
+    "dtype": "float32",
+    "torch_equal": true,
+    "max_abs_difference": 0.0
+  },
+  "override_diagnostics": {
+    "missing_compile_backend": "ValueError: No device-runtime kind mapped for compile backend 'missing'. Register a mapping with register_compile_runtime_mapping().",
+    "invalid_runtime_kind": "RuntimeError: Compile backend 'rocm' requires device runtime kind 'rocm', but FLYDSL_RUNTIME_KIND (and registration) resolve to 'invalid'. Align FLYDSL_COMPILE_BACKEND with FLYDSL_RUNTIME_KIND (and extension mappings), or use a matching pair of register_backend / register_device_runtime."
+  },
+  "packaging_untested": [
+    "wheel build",
+    "auditwheel repair",
+    "SDK-free packaging path"
+  ]
+}
