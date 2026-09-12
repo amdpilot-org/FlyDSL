@@ -218,6 +218,8 @@ Features:
 - Device memory profiling to determine rotation count
 - Torch CUDA event timing
 - HIPGraph capture mode (`testGraph=True`)
+- The default `torch.profiler` result processing requires pandas; importing
+  `flydsl.testing` and using non-profiler helpers does not.
 - Cache-aware iteration calculation
 
 **`checkAllclose()` function:**

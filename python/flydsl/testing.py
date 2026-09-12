@@ -14,7 +14,6 @@ import logging
 import os
 
 import numpy as np
-import pandas as pd
 import torch
 
 logger = logging.getLogger("flydsl")
@@ -35,13 +34,15 @@ __all__ = [
     "verify_output",
 ]
 
-pd.set_option("display.max_rows", 200)
-## debug ##
-# pd.set_option("display.max_rows", None)
-# pd.set_option("display.max_columns", None)
-# pd.set_option("display.width", None)
-# pd.set_option("display.max_colwidth", None)
-# pd.set_option("display.expand_frame_repr", False)
+def _get_pandas():
+    """Import the optional dataframe dependency only for profiler processing."""
+    try:
+        import pandas as pd
+    except ImportError as exc:
+        raise ImportError("get_trace_perf requires the optional 'pandas' package") from exc
+
+    pd.set_option("display.max_rows", 200)
+    return pd
 
 
 def perftest(num_iters=20, num_warmup=3, testGraph=False, num_rotate_args=0, needTrace=False):
@@ -300,6 +301,7 @@ def post_process_data(df, num_iters, warm_iter=1):
 
 
 def get_trace_perf(prof, num_iters):
+    pd = _get_pandas()
     assert num_iters > 1
     warm_iter = 1
     num_iters -= warm_iter

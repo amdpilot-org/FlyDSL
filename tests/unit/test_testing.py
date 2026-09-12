@@ -2,12 +2,45 @@
 # Copyright (c) 2025 FlyDSL Project Contributors
 
 import inspect
+import subprocess
+import sys
+import textwrap
 
 import pytest
 import torch
 
 import flydsl.testing as testing
 import tests.test_common as legacy_testing
+
+
+def test_primary_helpers_import_without_optional_pandas_dependency():
+    script = textwrap.dedent(
+        """
+        import importlib.abc
+        import sys
+
+        class BlockPandas(importlib.abc.MetaPathFinder):
+            def find_spec(self, fullname, path=None, target=None):
+                if fullname == "pandas" or fullname.startswith("pandas."):
+                    raise ModuleNotFoundError(
+                        "No module named 'pandas' (simulated clean FlyDSL runtime)",
+                        name="pandas",
+                    )
+                return None
+
+        sys.meta_path.insert(0, BlockPandas())
+        from flydsl.testing import checkAllclose, run_perftest
+
+        assert callable(checkAllclose)
+        assert callable(run_perftest)
+        print(checkAllclose.__name__, run_perftest.__name__)
+        """
+    )
+
+    result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "checkAllclose run_perftest"
 
 
 def test_public_testing_api_is_importable_from_installed_namespace():

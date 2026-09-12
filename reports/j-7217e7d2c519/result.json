@@ -1,0 +1,47 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/304",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Preserved PR 672's public flydsl.testing extraction and corrected the independently reviewed import failure by loading pandas only when profiler dataframe processing is requested. The exact checkAllclose/run_perftest import now works when pandas is unavailable.",
+  "tests": [
+    {
+      "command": "PYTHONPATH=$PWD/python:$PWD /tmp/amdpilot-repo-j-7217e7d2c519/venv/bin/python -c '<meta-path blocks pandas; import checkAllclose and run_perftest>' (candidate 0ee04fd2)",
+      "exit_code": 1,
+      "what_was_measured": "Failing-before reproduction of the review counterexample: eager pandas import prevented the requested helpers from being imported."
+    },
+    {
+      "command": "PYTHONPATH=$PWD/python:$PWD /tmp/amdpilot-repo-j-7217e7d2c519/venv/bin/python -c '<meta-path blocks pandas; import checkAllclose and run_perftest>' (corrected checkout)",
+      "exit_code": 0,
+      "what_was_measured": "Passing-after exact public import contract with pandas unavailable."
+    },
+    {
+      "command": "PYTHONPATH=$PWD/python:$PWD HIP_VISIBLE_DEVICES=0 /tmp/amdpilot-repo-j-7217e7d2c519/venv/bin/python -m pytest tests/unit/test_testing.py tests/unit/test_compile_hints.py tests/kernels/test_vec_add.py -q",
+      "exit_code": 0,
+      "what_was_measured": "Public/legacy API compatibility, adversarial tensor metadata handling, helper behavior, compile hints, and three real compiled GPU vector-add cases; 29 passed and 2 architecture/feature skips."
+    },
+    {
+      "command": "PYTHONPATH=$PWD/python:$PWD HIP_VISIBLE_DEVICES=0 FLYDSL_PERFTEST_USE_EVENTS=1 /tmp/amdpilot-repo-j-7217e7d2c519/venv/bin/python -c '<run_perftest torch.add and compare against NumPy CPU reference>'",
+      "exit_code": 0,
+      "what_was_measured": "HIP-event benchmark on 4096 float32 elements on AMD Instinct MI355X with exact independent NumPy CPU agreement (max_abs_error=0.0)."
+    },
+    {
+      "command": "PYTHONPATH=$PWD/python:$PWD /tmp/amdpilot-repo-j-7217e7d2c519/venv/bin/python -c 'import flydsl.testing as t; pd=t._get_pandas(); print(pd.__version__, pd.get_option(\"display.max_rows\"))'",
+      "exit_code": 0,
+      "what_was_measured": "The deferred optional pandas path remains usable and retains the prior display option."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-7217e7d2c519/venv/bin/python -m compileall -q python/flydsl/testing.py tests/unit/test_testing.py && git diff --check",
+      "exit_code": 0,
+      "what_was_measured": "Python syntax compilation and whitespace integrity. Ruff/Black were unavailable in the prepared interpreter."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_evidence": "AMD Instinct MI355X/gfx950 executed three FlyDSL vector-add tests and a direct HIP-event torch.add benchmark; the latter matched an independently generated NumPy CPU reference exactly.",
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "No C++, MLIR, or LLVM source changed, so the prepared native rebuild was not applicable; native imports used /opt/venv/lib/python3.12/site-packages/flydsl/_mlir.",
+    "CUDA/NVIDIA hardware, HIP graph mode, and the torch.profiler timing mode were not independently exercised.",
+    "Two compile-hint cases retained their existing architecture/feature skips.",
+    "pandas remains required only when get_trace_perf or the default torch.profiler timing path performs dataframe processing; that path now raises a focused optional-dependency ImportError when pandas is absent."
+  ]
+}

@@ -1,0 +1,2 @@
+pandas_version=3.0.0
+display.max_rows=200
