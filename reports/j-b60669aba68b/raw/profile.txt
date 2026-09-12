@@ -1,0 +1,3 @@
+[W912 03:48:36.642754269 collection.cpp:1133] Warning: ROCTracer produced duplicate flow start: 1 (function operator())
+ncdhw_transpose_events=['transpose_kernel_0']
+ndhwc_transpose_events=[]

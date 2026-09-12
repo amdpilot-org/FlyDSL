@@ -1,0 +1,3 @@
+python_source=/job/repo/kernels/conv/conv3d_implicit.py
+flydsl=/job/repo/python/flydsl/__init__.py
+native_pkg=_NamespacePath(['/job/repo/python/flydsl/_mlir'])

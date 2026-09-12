@@ -1,0 +1,16 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0 -- /tmp/amdpilot-repo-j-b60669aba68b/venv/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collecting ... collected 62 items / 57 deselected / 5 selected
+
+tests/kernels/test_conv3d_implicit.py::test_conv3d_layout_contract_vs_torch[NCDHW-NDHWC] PASSED [ 20%]
+tests/kernels/test_conv3d_implicit.py::test_conv3d_layout_contract_vs_torch[NDHWC-None] PASSED [ 40%]
+tests/kernels/test_conv3d_implicit.py::test_conv3d_layout_contract_vs_torch[NDHWC-NCDHW] PASSED [ 60%]
+tests/kernels/test_conv3d_implicit.py::test_conv3d_ndhwc_chain_skips_input_transposes PASSED [ 80%]
+tests/kernels/test_conv3d_implicit.py::test_conv3d_ndhwc_splitk_vs_torch PASSED [100%]
+
+======================= 5 passed, 57 deselected in 9.39s =======================
