@@ -459,6 +459,19 @@ dumps/my_func_name/
 └── 21_final_isa.s                    # AMD ISA assembly (best-effort)
 ```
 
+Analyze the final file with the built-in, machine-readable ISA analyzer:
+
+```bash
+python -m flydsl.tools.isa_analyzer --pretty dumps/my_func_name/21_final_isa.s
+```
+
+The JSON report contains exact opcode counts, grouped MFMA/WMMA, VMEM,
+LDS, wait and barrier counts, plus each kernel's assembler-reported VGPR,
+SGPR, LDS and scratch high-water marks. Counts come from final assembly, not
+MLIR, so they reflect LLVM scheduling and register allocation. The tool does
+not claim cycle timing, dependency correctness, occupancy, or physical
+register pinning; use a profiler and the target ISA reference for those.
+
 If `FLYDSL_DEBUG_ENABLE_DEBUG_INFO=1`, the debug-info pass adds an extra numbered dump before `gpu_module_to_binary`.
 
 ---
