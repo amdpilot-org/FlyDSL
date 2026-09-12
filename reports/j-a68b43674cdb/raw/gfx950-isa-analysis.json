@@ -1,0 +1,34 @@
+{
+  "families": {
+    "barrier": 0,
+    "lds_read": 0,
+    "lds_write": 0,
+    "mfma_wmma": 0,
+    "vmem_load": 1,
+    "vmem_store": 1,
+    "waitcnt": 2
+  },
+  "instruction_count": 28,
+  "kernels": {
+    "kernel_0": {
+      "lds_bytes": 0,
+      "next_free_sgpr": 6,
+      "next_free_vgpr": 4,
+      "scratch_bytes": 0
+    }
+  },
+  "opcodes": {
+    "global_load_dword": 1,
+    "global_store_dword": 1,
+    "s_endpgm": 1,
+    "s_load_dwordx2": 2,
+    "s_nop": 8,
+    "s_waitcnt": 2,
+    "v_add_f32_dpp": 4,
+    "v_add_f32_e32": 2,
+    "v_lshlrev_b32_e32": 1,
+    "v_mov_b32_dpp": 2,
+    "v_mov_b32_e32": 3,
+    "v_readlane_b32": 1
+  }
+}
