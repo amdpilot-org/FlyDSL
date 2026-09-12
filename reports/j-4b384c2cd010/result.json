@@ -1,0 +1,53 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/453",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/655",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/652",
+  "candidate_commit": "84e026797bbce124b3a207b1c5736c3cea256073",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "recommendation": "request_changes",
+  "fully_resolves_original": false,
+  "summary": "The exact candidate is a substantive partial fix. It fixes the current paged-attention factory's stale wrapper after an ordinary helper rebind and fixes the prior review's shared-code closure, __defaults__, and __kwdefaults__ counterexamples. It still reuses stale wrappers when relevant state changes inside a custom object used as a helper default or inside a callable helper instance.",
+  "tests": [
+    {
+      "command": "git checkout amdpilot/j-4b384c2cd010 (acf7e67b7d22847e345938ca54fcc137bd7b2a1f) && ROCR_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 PYTHONPATH=/job/repo/python:/job/repo /tmp/amdpilot-repo-j-4b384c2cd010/venv/bin/python /job/review-evidence-j-4b384c2cd010/pa_factory_repro.py",
+      "exit_code": 0,
+      "what_was_measured": "The actual base compile_pa_decode_tile factory returned the identical wrapper after exp2_f32_fast was rebound, and returned a new wrapper only after cache_clear(). Raw output: /job/review-evidence-j-4b384c2cd010/base-pa-factory.log"
+    },
+    {
+      "command": "git checkout --detach 84e026797bbce124b3a207b1c5736c3cea256073 && ROCR_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 PYTHONPATH=/job/repo/python:/job/repo /tmp/amdpilot-repo-j-4b384c2cd010/venv/bin/python /job/review-evidence-j-4b384c2cd010/pa_factory_candidate.py",
+      "exit_code": 0,
+      "what_was_measured": "The actual candidate compile_pa_decode_tile factory returned a new wrapper automatically after exp2_f32_fast was rebound. Raw output: /job/review-evidence-j-4b384c2cd010/candidate-pa-factory.log"
+    },
+    {
+      "command": "FLYDSL_RUNTIME_ENABLE_CACHE=0 PYTHONPATH=/job/repo/python:/job/repo /tmp/amdpilot-repo-j-4b384c2cd010/venv/bin/python /job/review-evidence-j-4b384c2cd010/candidate_adversarial.py",
+      "exit_code": 1,
+      "what_was_measured": "Ordinary rebinding, shared-code distinct closures, __defaults__, and __kwdefaults__ passed. Mutable custom default-object state and callable-instance state each returned the identical stale wrapper with value v1 after mutation to v2. Raw output: /job/review-evidence-j-4b384c2cd010/candidate-adversarial.log"
+    },
+    {
+      "command": "FLYDSL_RUNTIME_ENABLE_CACHE=0 PYTHONPATH=/job/repo/python:/job/repo /tmp/amdpilot-repo-j-4b384c2cd010/venv/bin/python -m pytest -q tests/unit/test_dependency_cache.py tests/unit/test_jit_cache_key_completeness.py",
+      "exit_code": 0,
+      "what_was_measured": "All 24 candidate and adjacent cache-key regressions passed. Raw output: /job/review-evidence-j-4b384c2cd010/candidate-focused.log"
+    },
+    {
+      "command": "FLYDSL_RUNTIME_ENABLE_CACHE=0 PYTHONPATH=/job/repo/python:/job/repo /tmp/amdpilot-repo-j-4b384c2cd010/venv/bin/python -m pytest -q tests/unit",
+      "exit_code": 0,
+      "what_was_measured": "Complete unit suite: 1107 passed, 17 skipped. Raw output: /job/review-evidence-j-4b384c2cd010/candidate-unit.log"
+    },
+    {
+      "command": "ROCR_VISIBLE_DEVICES=0 PYTHONPATH=/job/repo/python:/job/repo /tmp/amdpilot-repo-j-4b384c2cd010/venv/bin/python < recorded Torch matmul script",
+      "exit_code": 0,
+      "what_was_measured": "AMD Instinct MI350X (gfx950) float32 GPU matmul compared with an independent CPU float64 reference; max_abs_diff=1.1444091796875e-05. Environment evidence only. Raw output: /job/review-evidence-j-4b384c2cd010/gpu-sanity.log"
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "One assigned AMD Instinct MI350X (gfx950) ran the recorded CPU-referenced numerical sanity check. The cache regression itself is architecture-independent and was measured by wrapper identity and captured values."
+  },
+  "native_rebuilt": false,
+  "remaining_counterexamples": [
+    "A statically referenced helper whose default is a mutable custom object remains stale when an attribute of that default object changes: the same wrapper is returned and retains the old captured result.",
+    "A statically referenced callable helper instance remains stale when state used by its __call__ method changes: __call__ is not traversed and the callable snapshot contains only stable identity/no code."
+  ],
+  "remaining_limitations": "The candidate is Python-only, so native rebuilding was not applicable. Python loaded from /job/repo/python and native code from /job/repo/python/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so. The issue-era compile_pa_decode_ps function and supplied end-to-end script are absent at the recorded base; the current compile_pa_decode_tile factory was used for repository-level failing-before/passing-after wrapper evidence. No end-to-end PA numerical launch was claimed. Automatic dependency discovery also documents/retains limitations around dynamic getattr and descriptor-hidden state."
+}
