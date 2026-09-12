@@ -1,0 +1,32 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/400",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "summary": "PR 554 at 383ee41aaa252f8f081d0b6a860f2c8f051f1cb0 preserves both branches in a useful single-scf.if characterization, but it is not a fix for the reported six-instance production failure. The exact test passes unchanged on the prepared base and candidate with identical gfx950 LLVM IR and ISA: 32 vector phis, 160 MFMAs, 33 unique MFMA destination groups, 138 VGPRs, and zero spills. The production MLA test is environment-blocked by the prepared aiter requiring Triton >=3.6.0 while the pinned environment provides 3.5.1+rocm7.2.0.gita272dfa8. No speculative lowering change was made.",
+  "tests": [
+    {
+      "command": "PYTHONPATH=/job/repo:/job/repo/python JOB_WORKDIR=/job/evidence-j-20d874fecb6e FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/evidence-j-20d874fecb6e/base/gfx950 /tmp/amdpilot-repo-j-20d874fecb6e/venv/bin/python /tmp/test_ssa_phi_divergence.py",
+      "exit_code": 0,
+      "what_was_measured": "Untouched base on assigned gfx950: exact analytical numerical match; 32 phi <4 x float>; 160 MFMAs; 33 unique MFMA destination groups; 138 VGPRs; zero spills."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo:/job/repo/python JOB_WORKDIR=/job/evidence-j-20d874fecb6e ARCH=gfx942 COMPILE_ONLY=1 FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/evidence-j-20d874fecb6e/base/gfx942 /tmp/amdpilot-repo-j-20d874fecb6e/venv/bin/python /tmp/test_ssa_phi_divergence.py",
+      "exit_code": 0,
+      "what_was_measured": "Untouched base gfx942 cross-codegen: 32 vector phis; 160 MFMAs; 33 unique destinations; 138 VGPRs; zero spills. No gfx942 execution."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo:/job/repo/python JOB_WORKDIR=/job/evidence-j-20d874fecb6e FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/evidence-j-20d874fecb6e/candidate/gfx950 /tmp/amdpilot-repo-j-20d874fecb6e/venv/bin/python -m pytest -q -s tests/kernels/test_ssa_phi_divergence.py",
+      "exit_code": 0,
+      "what_was_measured": "Exact candidate commit on gfx950: same numerical and compiler metrics as base. Base/candidate SHA-256 matched for LLVM IR (635bbb55...) and final ISA (95638592...)."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-20d874fecb6e/venv/bin/python -m pytest --collect-only -q tests/kernels/test_mla_decode.py",
+      "exit_code": 2,
+      "what_was_measured": "Production MLA collection is blocked because prepared aiter requires triton>=3.6.0 but the pinned environment has 3.5.1+rocm7.2.0.gita272dfa8."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "The retained single-if characterization executed on the assigned gfx950 GPU and exactly matched an independently constructed Torch result. The production MLA kernel and gfx942 were not executed.",
+  "native_rebuilt": false,
+  "remaining_limitations": "The production pattern has six branch instances and surrounding register pressure absent from the retained characterization. Its test cannot be collected in the prepared environment because of the pinned aiter/Triton mismatch. Thus production register/spill counts and numerical output remain unverified. gfx942 evidence is cross-compiled only. No failing-before/passing-after compiler regression exists, and mutable physical-register semantics for memref_alloca(Register) are not implemented."
+}
