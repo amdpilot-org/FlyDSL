@@ -1,0 +1,8 @@
+flydsl /job/repo/python/flydsl/__init__.py
+expr /job/repo/python/flydsl/expr/__init__.py
+runtime /job/repo/python/flydsl/runtime/__init__.py
+stdio /job/repo/python/flydsl/runtime/stdio.py
+torch 2.9.1+rocm7.2.0.git7e1940d4
+gpu AMD Instinct MI350X
+native_module_path None
+native_package_path ['/job/repo/python/flydsl/_mlir']

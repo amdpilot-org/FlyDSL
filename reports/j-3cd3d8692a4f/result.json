@@ -1,0 +1,53 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/653",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "summary": "The candidate's explicit flush_device_printf() helper works after synchronization on gfx950, including repeated launches, but the unchanged original hello(); torch.cuda.synchronize() reproduction still exposes 0/4 lines while the child is alive and flushes only at teardown. The candidate is a verified workaround/subset, not a fix for the original behavior.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-3cd3d8692a4f/venv/bin/python /job/review-evidence/j-3cd3d8692a4f/run_pipe_probe.py none (base)",
+      "exit_code": 0,
+      "what_was_measured": "After GPU synchronization, 0/4 device printf lines were pipe-visible before releasing the live child; 4/4 appeared after exit."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-3cd3d8692a4f/venv/bin/python /job/review-evidence/j-3cd3d8692a4f/run_pipe_probe.py libc (base)",
+      "exit_code": 0,
+      "what_was_measured": "Independent libc fflush(NULL) made 4/4 exact thread lines visible while the synchronized child remained alive."
+    },
+    {
+      "command": "stdbuf -oL /tmp/amdpilot-repo-j-3cd3d8692a4f/venv/bin/python /job/review-evidence/j-3cd3d8692a4f/pipe_probe.py none (base, driven by run_pipe_probe.py)",
+      "exit_code": 0,
+      "what_was_measured": "Line buffering made 4/4 device printf lines visible before child release."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-3cd3d8692a4f/venv/bin/python -m pytest -q tests/system/test_device_printf_pipe.py -s (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Candidate subprocess regression passed on the real GPU: 1 test passed."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-3cd3d8692a4f/venv/bin/python /job/review-evidence/j-3cd3d8692a4f/run_pipe_probe.py candidate --launches 3 (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Candidate helper made all 12 expected lines visible before release across three launches."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-3cd3d8692a4f/venv/bin/python /job/review-evidence/j-3cd3d8692a4f/run_pipe_probe.py none (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Adversarial unchanged original sequence still had 0/4 lines visible before release and 4/4 only after exit."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-3cd3d8692a4f/venv/bin/python -m pytest -q tests/unit/test_device_runtime.py (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Existing runtime unit suite passed: 9 tests passed."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "One AMD Instinct MI350X (gfx950/capability 9.5) executed the four-thread FlyDSL kernels; exact thread lines 0,1,2,3 were captured, including 12 lines across three launches.",
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "Only gfx950 was verified; other GPU architectures remain unverified.",
+    "An actual Jupyter frontend was not available; the equivalent piped stdout behavior was tested.",
+    "Live upstream issue access was blocked by ROCm organization token policy; the supplied snapshot and accessible mirror issue were used.",
+    "The candidate contains no native C++ changes, so no native rebuild was applicable.",
+    "The candidate does not make the original unchanged synchronize-only call sequence prompt; callers must add its explicit helper."
+  ]
+}
