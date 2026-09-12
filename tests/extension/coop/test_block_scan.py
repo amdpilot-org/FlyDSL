@@ -417,3 +417,45 @@ def test_block_scan_integer_add():
     out = run_block_scan(values, "torch.int32", fx.Int32, block_size=(256, 1, 1), inclusive=True)
 
     assert torch.equal(out, values.cpu().cumsum(0, dtype=torch.int32))
+
+
+@pytest.mark.l2_device
+@pytest.mark.rocm_lower
+@pytest.mark.skipif(torch is None or not torch.cuda.is_available(), reason="requires GPU")
+@pytest.mark.parametrize("inclusive", (True, False), ids=("inclusive", "exclusive"))
+def test_block_scan_restarts_at_each_block_and_crosses_warp_boundaries(inclusive):
+    """Each block owns an independent sequence, including at wave boundaries."""
+    BLOCK = 128
+    GRID = 3
+
+    @flyc.kernel(known_block_size=[BLOCK, 1, 1])
+    def kernel(A: fx.Tensor, Out: fx.Tensor):
+        block_scan = fx.coop.BlockScan[fx.Int32, BLOCK]
+        storage = fx.SharedAllocator().allocate(block_scan.SharedStorage).peek()
+        offset = fx.block_idx.x * BLOCK
+        index = offset + fx.thread_idx.x
+        form = block_scan.inclusive if inclusive else block_scan.exclusive
+        Out[index] = form(A[index], fx.ReductionOp.ADD, storage=storage)
+
+    @flyc.jit
+    def launch(A: fx.Tensor, Out: fx.Tensor, stream: fx.Stream = fx.Stream(None)):
+        kernel(A, Out).launch(grid=(GRID, 1, 1), block=(BLOCK, 1, 1), stream=stream)
+
+    # Different values per block make an accidental grid-wide carry visible.
+    values = torch.arange(1, GRID * BLOCK + 1, dtype=torch.int32, device="cuda")
+    out = torch.empty_like(values)
+    launch(values, out, stream=torch.cuda.Stream())
+    torch.cuda.synchronize()
+
+    # This host-side construction is deliberately independent of BlockScan.
+    host = values.cpu().reshape(GRID, BLOCK)
+    expected = host.cumsum(dim=1)
+    if not inclusive:
+        expected = torch.cat([torch.zeros((GRID, 1), dtype=torch.int32), expected[:, :-1]], dim=1)
+    assert torch.equal(out.cpu(), expected.flatten())
+
+    # Pin both sides of every wave64 boundary, not merely the final sequence.
+    for block in range(GRID):
+        base = block * BLOCK
+        for lane in (0, WARP_SIZE - 1, WARP_SIZE, BLOCK - 1):
+            assert out.cpu()[base + lane] == expected[block, lane]

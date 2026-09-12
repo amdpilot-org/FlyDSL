@@ -1,0 +1,3 @@
+Missing Python style tool(s): black ruff
+Install them with: python3 -m pip install --group style
+Or rerun this script with --install.

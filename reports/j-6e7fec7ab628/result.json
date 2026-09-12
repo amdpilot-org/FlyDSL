@@ -1,0 +1,40 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/1016",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_verified",
+  "summary": "The recorded base already contained a reusable flydsl.extension.coop BlockScan with explicit inclusive and exclusive forms, scalar and per-thread Vector inputs, optional initialization, and block aggregate variants. Its existing focused GPU suite passed before changes. This contribution adds an independent multi-block numerical regression that pins wave-boundary outputs and documents the public contract and current limitations; it does not claim the broader common-building-block proposal is complete.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-6e7fec7ab628/venv/bin/python -m pytest -q tests/extension/coop/test_block_scan.py (before changes)",
+      "exit_code": 0,
+      "what_was_measured": "The checked-out implementation's 62 existing block-scan tests passed on the assigned GPU before this contribution. Coverage included inclusive/exclusive scans, integer and float types, scalar and Vector inputs, block aggregates, initialization, 1-1024 power-of-two thread counts, multidimensional blocks, and universal/dispatched paths."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-6e7fec7ab628/venv/bin/python -m pytest -q tests/extension/coop/test_block_scan.py",
+      "exit_code": 0,
+      "what_was_measured": "64 GPU tests passed after adding inclusive and exclusive multi-block regressions. The new reference uses host torch.cumsum independently per block and explicitly checks lanes 0, 63, 64, and 127 on gfx950. Raw output: reports/j-6e7fec7ab628/raw/test_block_scan.txt"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-6e7fec7ab628/venv/bin/python -m pytest -q tests/extension/coop",
+      "exit_code": 0,
+      "what_was_measured": "All 326 cooperative extension tests passed, covering the block-scan change alongside warp scans and block reductions. Raw output: reports/j-6e7fec7ab628/raw/test_coop.txt"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-6e7fec7ab628/venv/bin/python examples/extension/coop/02-block_scan.py",
+      "exit_code": 0,
+      "what_was_measured": "The real GPU stream-compaction example passed by comparing scan-derived output positions and values with an independent CPU boolean-filter reference. Raw output: reports/j-6e7fec7ab628/raw/block_scan_example.txt"
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "One assigned AMD Instinct MI355X (gfx950:sramecc+:xnack-) executed the numerical tests and example with torch 2.9.1+rocm7.2.0.git7e1940d4. Device evidence: reports/j-6e7fec7ab628/raw/gpu_environment.txt",
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "The base already contained the BlockScan implementation, so no failing implementation defect was found; this PR strengthens independent boundary coverage and public documentation rather than duplicating the implementation.",
+    "BlockScan currently requires a power-of-two number of threads and all threads in the specialized block to participate together.",
+    "Only the WARP_SCANS block policy is implemented; RAKING and RAKING_MEMOIZE remain explicitly unimplemented.",
+    "The public operation set is limited to associative ReductionOp ADD, MUL, MIN, and MAX rather than arbitrary callables.",
+    "Validation was performed only on the assigned gfx950 GPU; other AMD architectures remain unverified in this job.",
+    "No native C++ source changed, so the prepared native rebuild was not applicable and was not run.",
+    "The optional Python style checker could not run because black and ruff are absent from the prepared interpreter; git diff --check passed and the focused/full GPU tests passed."
+  ]
+}
