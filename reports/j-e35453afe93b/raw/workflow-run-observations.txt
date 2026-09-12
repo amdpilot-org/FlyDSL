@@ -1,0 +1,16 @@
+Public upstream API observations on 2026-09-12 UTC:
+
+vLLM run 34672351781 (acf7e67b7d22): completed failure
+https://github.com/ROCm/FlyDSL/actions/runs/34672351781
+job 103495974433: Build aiter wheel for vLLM
+failed step: Checkout upstream aiter repo
+downstream matrix job: skipped
+
+SGLang run 34561410233 (8e725c6ca483): completed failure
+https://github.com/ROCm/FlyDSL/actions/runs/34561410233
+Select SGLang tests: success
+six downstream matrix jobs: failed
+failed step in each: Prepare SGLang workspace
+
+The GitHub public job-log endpoint returned HTTP 403, so the step-level causes
+could not be established and no source change was inferred from these runs.

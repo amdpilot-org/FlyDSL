@@ -1,0 +1,6 @@
+sglang None
+vllm None
+aiter /opt/aiter/aiter/__init__.py
+flydsl /job/repo/python/flydsl/__init__.py
+triton /opt/venv/lib/python3.12/site-packages/triton/__init__.py
+triton_version 3.5.1+rocm7.2.0.gita272dfa8

@@ -1,0 +1,39 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/603",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "summary": "Reproduced the independent review at candidate commit 5fad5553f7f542c723c492379e5c4e7a9f80736a. The candidate fails during AITER import on the pinned Triton version, does not exercise SGLang or vLLM, and is not registered in CI. The prepared base already contains real SGLang and vLLM downstream workflows, so retaining the candidate's unregistered AITER-only test would not correct the reviewed scope gap. No FlyDSL source defect was established.",
+  "tests": [
+    {
+      "command": "XDG_CACHE_HOME=/job/cache-j-e35453afe93b/xdg TORCH_EXTENSIONS_DIR=/job/cache-j-e35453afe93b/torch FLYDSL_CACHE_DIR=/job/cache-j-e35453afe93b/flydsl /tmp/amdpilot-repo-j-e35453afe93b/venv/bin/python tests/integration/test_aiter_flydsl_hgemm.py (at 5fad5553f7f542c723c492379e5c4e7a9f80736a)",
+      "exit_code": 1,
+      "what_was_measured": "Candidate executable reached AITER import but failed before tensor allocation, stream launch, or GPU numerical output because AITER requires Triton >=3.6.0 and the pinned interpreter has 3.5.1+rocm7.2.0.gita272dfa8."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-e35453afe93b/venv/bin/python importlib.util.find_spec probe for sglang, vllm, aiter, flydsl, triton",
+      "exit_code": 0,
+      "what_was_measured": "sglang and vllm were absent; AITER resolved to /opt/aiter, FlyDSL Python to /job/repo/python/flydsl, and Triton to the pinned 3.5.1 installation."
+    },
+    {
+      "command": "rg -n 'test_aiter_flydsl_hgemm|aiter|sglang|vllm' .github/workflows tests/integration (at candidate commit)",
+      "exit_code": 0,
+      "what_was_measured": "The candidate test had no workflow invocation or test registration and imported AITER/FlyDSL only. Existing workflows independently clone and execute SGLang and invoke the vLLM latency CLI."
+    },
+    {
+      "command": "GitHub public Actions API queries for upstream SGLang run 34561410233 and vLLM run 34672351781",
+      "exit_code": 0,
+      "what_was_measured": "The vLLM run failed during AITER checkout before downstream execution; SGLang matrix jobs failed preparing the external workspace. Public full log downloads returned HTTP 403, so neither was used as evidence for a source change."
+    }
+  ],
+  "gpu_execution": {
+    "value": false,
+    "evidence": "The candidate aborted during import before any torch.cuda operation. No SGLang/vLLM package or model was available for an actual downstream GPU boundary."
+  },
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "The pinned environment cannot import AITER until its Triton >=3.6.0 prerequisite is satisfied without replacing the prepared Torch/ROCm stack.",
+    "Neither SGLang nor vLLM is installed in the prepared interpreter, and required downstream model assets are unavailable locally.",
+    "Recent upstream nightly failures occur before useful downstream execution, but full job logs were inaccessible via the supplied credentials/public endpoint; their causes remain unverified.",
+    "No failing-before/passing-after source regression exists because the reviewed candidate never reaches the claimed boundary and no concrete FlyDSL defect was found."
+  ]
+}
