@@ -1,0 +1,10 @@
+{
+  "checksum": 38.46857421845198,
+  "device_count": 1,
+  "device_index": 0,
+  "device_name": "AMD Instinct MI355X",
+  "dtype": "torch.float32",
+  "finite": true,
+  "max_abs_error_vs_cpu_float64": 2.384185791015625e-07,
+  "size": 4099
+}
