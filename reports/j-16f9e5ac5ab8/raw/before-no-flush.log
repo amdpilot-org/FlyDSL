@@ -1,0 +1,4 @@
+1.328389 stderr b'SYNCHRONIZED\n'
+4.328514 stderr b'EXITING\n'
+4.558322 stdout b'hello from thread 0\nhello from thread 1\nhello from thread 2\nhello from thread 3\n'
+4.735042 exit 0

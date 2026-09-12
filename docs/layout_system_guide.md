@@ -455,6 +455,12 @@ The Fly dialect provides a `printf` op for kernel debugging:
 fx.printf("tid={} bid={} val={}", tid, bid, value)
 ```
 
+Device output is delivered when the relevant GPU work completes, but libc may
+block-buffer it when stdout is piped or redirected. Synchronize first, then call
+`flydsl.runtime.flush_device_printf()` to make completed output visible before
+process teardown. The helper flushes host C stdio; it does not synchronize GPU
+work.
+
 Supports:
 - `ir.Value` — dynamic values
 - `int`, `float`, `bool` — auto-converted to constants

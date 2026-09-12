@@ -1,0 +1,5 @@
+source=/job/printf_repro.py
+observer=/job/observe_pipe.py
+python=/tmp/amdpilot-repo-j-16f9e5ac5ab8/venv/bin/python
+native=/opt/venv/lib/python3.12/site-packages/flydsl/_mlir
+compiler_dump=/tmp/flydsl-j-16f9e5ac5ab8-dump.75wWMA/hello_kernel_0
