@@ -269,7 +269,16 @@ class ASTRewriter:
 
         context = types.SimpleNamespace(python_globals=f.__globals__)
         context.filename = f.__code__.co_filename
+        # Most kernels use only a subset of the control-flow syntax handled by
+        # the registered rewriters.  Inventory the original tree once so that
+        # rewriters which cannot apply do not each traverse the whole function.
+        # Individual passes include any source nodes which can make an earlier
+        # pass generate one of their target nodes (for example BoolOp -> IfExp
+        # and For -> Yield), keeping the decision conservative.
+        source_node_types = {type(node) for node in ast.walk(module.body[0])}
         for transformer_ctor in cls.transformers:
+            if not transformer_ctor.is_applicable(source_node_types):
+                continue
             orig_code = ast.unparse(module) if env.debug.ast_diff else None
             func_node = module.body[0]
             rewriter = transformer_ctor(context=context, first_lineno=f.__code__.co_firstlineno - 1)
@@ -395,11 +404,17 @@ class SymbolScopeTracker:
 
 
 class Transformer(ast.NodeTransformer):
+    target_node_types = None
+
     def __init__(self, context, first_lineno):
         super().__init__()
         self.context = context
         self.first_lineno = first_lineno
         self.symbol_scopes = SymbolScopeTracker()
+
+    @classmethod
+    def is_applicable(cls, source_node_types):
+        return cls.target_node_types is None or not cls.target_node_types.isdisjoint(source_node_types)
 
     def _record_target_symbols(self, target):
         if isinstance(target, ast.Name):
@@ -488,6 +503,8 @@ class Transformer(ast.NodeTransformer):
 
 @ASTRewriter.register
 class RewriteBoolOps(Transformer):
+    target_node_types = frozenset((ast.BoolOp, ast.Compare, ast.UnaryOp))
+
     @staticmethod
     def dsl_and_(lhs, rhs):
         if hasattr(lhs, "__dsl_and__"):
@@ -588,6 +605,9 @@ class RewriteBoolOps(Transformer):
 
 @ASTRewriter.register
 class ReplaceIfWithDispatch(Transformer):
+    # RewriteBoolOps can turn BoolOp and chained Compare into IfExp nodes.
+    target_node_types = frozenset((ast.If, ast.IfExp, ast.BoolOp, ast.Compare))
+
     _counter = 0
 
     @staticmethod
@@ -960,6 +980,8 @@ class ReplaceIfWithDispatch(Transformer):
 
 @ASTRewriter.register
 class InsertEmptyYieldForSCFFor(Transformer):
+    target_node_types = frozenset((ast.For,))
+
     _counter = 0
 
     @staticmethod
@@ -1301,6 +1323,9 @@ class InsertEmptyYieldForSCFFor(Transformer):
 
 @ASTRewriter.register
 class ReplaceYieldWithSCFYield(Transformer):
+    # InsertEmptyYieldForSCFFor can add Yield nodes to a source For loop.
+    target_node_types = frozenset((ast.Yield, ast.For))
+
     @staticmethod
     def scf_yield_(*args):
         if len(args) == 1 and isinstance(args[0], (list, ir.OpResultList)):
@@ -1339,6 +1364,8 @@ class ReplaceYieldWithSCFYield(Transformer):
 
 @ASTRewriter.register
 class CanonicalizeWhile(Transformer):
+    target_node_types = frozenset((ast.While,))
+
     _counter = 0
 
     @staticmethod
