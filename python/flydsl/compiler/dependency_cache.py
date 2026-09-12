@@ -68,13 +68,18 @@ def _dependency_refs(func: Callable) -> tuple[tuple, ...]:
 
             attrs = []
             for following in instructions[index + 1 :]:
-                if following.opname == "LOAD_ATTR":
+                if following.opname in ("LOAD_ATTR", "LOAD_METHOD"):
                     attrs.append(following.argval)
                 else:
                     break
             key = (kind, module_name, name, tuple(attrs))
             refs.setdefault(key, (kind, name, module_name, source, tuple(attrs)))
 
+            try:
+                for attr in attrs:
+                    value = inspect.getattr_static(value, attr)
+            except (AttributeError, TypeError):
+                continue
             underlying = getattr(value, "__func__", value)
             nested_code = getattr(underlying, "__code__", None)
             if nested_code is not None:
@@ -127,15 +132,16 @@ def dependency_lru_cache(maxsize: Optional[int] = 128, typed: bool = False):
 
     def decorate(func: Callable) -> Callable:
         cached = functools.lru_cache(maxsize=maxsize, typed=typed)(func)
-        refs = _dependency_refs(func)
         lock = threading.RLock()
         baseline = None
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             nonlocal baseline
-            current = _snapshot_refs(refs)
             with lock:
+                # Rebuild the dependency graph so a rebound helper can add or
+                # remove globals, closure cells, and attributed call targets.
+                current = _snapshot_refs(_dependency_refs(func))
                 if baseline is None:
                     baseline = current
                 elif current != baseline:
