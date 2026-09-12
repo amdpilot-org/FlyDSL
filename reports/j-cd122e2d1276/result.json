@@ -1,0 +1,39 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/701",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Pointer and Tensor reconstruction now carries the logical integer dtype from PointerJitArg, TorchTensorJitArg, and DLTensorJitArg exemplars instead of re-inferring signedness from signless MLIR storage types. Pointer indexing and Tensor scalar loads also preserve that dtype. Before the fix, Uint32 0x80000000 >> 1 produced 0xC0000000 and Uint8 0x80 >> 1 produced 0xC0 for both Pointer and Tensor; after the fix they produce 0x40000000 and 0x40.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-cd122e2d1276/venv/bin/python /tmp/repro_signedness.py",
+      "exit_code": 0,
+      "what_was_measured": "Before-fix Pointer reproduction on the actual checkout: Uint32 and Uint8 reconstructed as Int32 and Int8 at both JIT and kernel boundaries and produced arithmetic-shift results 0xC0000000 and 0xC0. Raw output: /job/artifacts/before/pointer_gpu.txt"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-cd122e2d1276/venv/bin/python /tmp/repro_tensor.py",
+      "exit_code": 0,
+      "what_was_measured": "Before-fix Tensor reproduction through DLPack and torch adapters: Uint32 and Uint8 reconstructed as signed and produced arithmetic-shift results. Raw output: /job/artifacts/before/tensor_gpu.txt"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-cd122e2d1276/venv/bin/python -m pytest -q tests/system/test_integer_signedness_e2e.py -s",
+      "exit_code": 0,
+      "what_was_measured": "12 real-GPU cases covering Pointer, Torch Tensor, and DLPack Tensor reconstruction for Uint8, Int8, Uint32, and Int32 boundary values. FlyDSL GPU results were compared exactly with independent PyTorch ROCm GPU calculations. Raw output: /job/artifacts/after/signedness_e2e_final.txt"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-cd122e2d1276/venv/bin/python -m pytest -q tests/language/test_composite_types.py tests/language/test_arithmetic_types.py tests/unit/test_tensor_cache_signature.py",
+      "exit_code": 0,
+      "what_was_measured": "488 focused language, reconstruction, arithmetic, and tensor cache-signature regressions passed. Raw output: /job/artifacts/after/focused_pytest.txt"
+    },
+    {
+      "command": "FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/artifacts/ir-<dtype> FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-cd122e2d1276/venv/bin/python -m pytest -q tests/system/test_integer_signedness_e2e.py -k <dtype> -s",
+      "exit_code": 0,
+      "what_was_measured": "Compiler and ISA dumps show Uint32 uses arith.shrui, LLVM lshr, and s_lshr_b32 while Int32 uses arith.shrsi, LLVM ashr, and s_ashr_i32. Uint8 and Int8 final ISA similarly differ as v_lshrrev_b32 and v_ashrrev_i32. Evidence: /job/artifacts/after/shift_ir_isa_by_dtype.txt; complete dumps: /job/artifacts/ir-Uint32, /job/artifacts/ir-Int32, /job/artifacts/ir-Uint8, /job/artifacts/ir-Int8"
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "Executed on one AMD Instinct MI350X with torch 2.9.1+rocm7.2.0.git7e1940d4 and HIP 7.2.26015-fc0010cf6a. Environment evidence: /job/artifacts/after/gpu_environment.txt"
+  },
+  "native_rebuilt": false,
+  "remaining_limitations": "No C++ or native extension source changed, so the prepared native rebuild command was not applicable. PyTorch ROCm does not implement direct uint32 right shift; the independent GPU reference widens inputs to int64, shifts on the GPU, and converts back. Full raw artifacts are retained under /job/artifacts. Source imported from /job/repo/python/flydsl; the unchanged pinned native extension remains at /opt/venv/lib/python3.12/site-packages/flydsl/_mlir."
+}
