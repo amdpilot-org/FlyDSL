@@ -1,0 +1,18 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 1 item
+
+tests/system/test_device_printf_pipe.py F
+
+=================================== FAILURES ===================================
+_____________ test_device_printf_visible_in_pipe_after_synchronize _____________
+tests/system/test_device_printf_pipe.py:59: in test_device_printf_visible_in_pipe_after_synchronize
+    assert events, (
+E   AssertionError: timed out waiting for synchronized device printf output; observed='', stderr='READY\n'
+E   assert []
+=========================== short test summary info ============================
+FAILED tests/system/test_device_printf_pipe.py::test_device_printf_visible_in_pipe_after_synchronize
+============================== 1 failed in 32.75s ==============================
