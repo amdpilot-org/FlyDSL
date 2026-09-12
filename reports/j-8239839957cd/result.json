@@ -1,0 +1,22 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/400",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "not_reproduced",
+  "summary": "Ported the original 32 x f32x4, structurally different scf.IfOp reproducer and corrected its wave64-unreachable else predicate. With both branches present, the pinned compiler emitted 32 vector phis and 160 MFMAs but only 33 unique MFMA destination groups, 138 VGPRs, and zero spills for both gfx942 and gfx950 code generation. Added a regression that verifies the structural pattern, register/spill bounds, and exact gfx950 numerical output. No lowering change was justified: FlyDSL's register-memory promotion intentionally produces vector SSA across scf.if, while true mutable physical-register semantics would require a late machine-level/LLVM facility and the observed compiler already coalesces this case near-ideally.",
+  "tests": [
+    {
+      "command": "PYTHONPATH=/job/repo:/job/repo/python JOB_WORKDIR=/job FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/artifacts/final-gfx950 /tmp/amdpilot-repo-j-8239839957cd/venv/bin/python -m pytest -q -s tests/kernels/test_ssa_phi_divergence.py",
+      "exit_code": 0,
+      "what_was_measured": "gfx950 execution exactly matched an analytical Torch reference; LLVM IR contained 32 phi <4 x float>; ISA contained 160 MFMAs, 33 unique MFMA destination groups, 138 VGPRs, and vgpr_spill_count 0. Raw log: /job/artifacts/logs/gfx950-pytest.txt; IR/ISA: /job/artifacts/final-gfx950/ssa_phi_accu_kernel_0/"
+    },
+    {
+      "command": "PYTHONPATH=/job/repo:/job/repo/python JOB_WORKDIR=/job ARCH=gfx942 COMPILE_ONLY=1 FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/artifacts/final-gfx942 /tmp/amdpilot-repo-j-8239839957cd/venv/bin/python tests/kernels/test_ssa_phi_divergence.py",
+      "exit_code": 0,
+      "what_was_measured": "gfx942 cross-compilation retained both structural branches: 32 phi <4 x float>, 160 MFMAs, 33 unique MFMA destination groups, 138 VGPRs, and vgpr_spill_count 0. Raw log: /job/artifacts/logs/gfx942-compile.txt; IR/ISA: /job/artifacts/final-gfx942/ssa_phi_accu_kernel_0/"
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "Executed on the assigned AMD Instinct MI350X (gfx950); exact output was 1536 for even blocks and 512 for odd blocks over the written region, with zeros elsewhere, matching an independently constructed Torch tensor.",
+  "native_rebuilt": false,
+  "remaining_limitations": "No gfx942 GPU was available, so gfx942 evidence is compiler LLVM IR/ISA only. The production six-branch MLA kernel and its historical pinned LLVM revision were not present in the checkout, so the reported 71 destination groups and 170 spills could not be rerun. The current compiler result does not establish which LLVM change removed the historical behavior. A true mutable-register implementation would require late LLVM machine-level semantics and was not attempted without a failing current regression."
+}
