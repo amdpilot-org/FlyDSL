@@ -10,8 +10,15 @@ from typing import List, Tuple
 class GPUTarget:
     """Immutable description of a GPU compilation target.
 
-    Modeled after Triton's GPUTarget — carries just enough info for the
-    compile pipeline and cache-key logic.
+    Args:
+        backend: Compiler backend identifier, such as ``"rocm"``.
+        arch: Target architecture, such as ``"gfx950"``.
+        warp_size: Number of lanes in a hardware warp or wavefront.
+
+    Example:
+        from flydsl.compiler.backends.base import GPUTarget
+        target = GPUTarget("rocm", "gfx950", 64)
+        assert target.arch == "gfx950"
     """
 
     backend: str  # e.g. "rocm"
@@ -22,12 +29,13 @@ class GPUTarget:
 class BaseBackend(metaclass=ABCMeta):
     """Abstract compile-backend interface.
 
-    Each backend provides:
-    * target detection and arch defaults,
-    * MLIR pass-pipeline fragments for lowering Fly IR to device binary,
-    * gpu.module target attributes,
-    * native-library patterns for toolchain fingerprinting (cache key),
-    * runtime shared-library basenames for the JIT ExecutionEngine.
+    Args:
+        target: GPU target accepted by the concrete backend.
+
+    Example:
+        import inspect
+        from flydsl.compiler.backends.base import BaseBackend
+        assert inspect.isabstract(BaseBackend)
     """
 
     def __init__(self, target: GPUTarget) -> None:
