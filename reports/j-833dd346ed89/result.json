@@ -1,0 +1,65 @@
+{
+  "job_id": "j-833dd346ed89",
+  "completed_at_utc": "2026-09-12T07:45:27Z",
+  "scope": "bounded AMDPilot PR-receipt recovery platform qualification using real FlyDSL GPU work",
+  "platform_context": "https://github.com/amdpilot-org/amdpilotv2/pull/438",
+  "repository": "https://github.com/amdpilot-org/FlyDSL.git",
+  "branch": "amdpilot/j-833dd346ed89",
+  "base_revision": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "source_revision": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "paths": {
+    "checkout": "/job/repo",
+    "python": "/tmp/amdpilot-repo-j-833dd346ed89/venv/bin/python",
+    "source_module": "/job/repo/python/flydsl/expr/__init__.py",
+    "flydsl_package": "/job/repo/python/flydsl/__init__.py",
+    "native_root": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir",
+    "native_extension": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so"
+  },
+  "software": {
+    "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+    "torch_path": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+    "hip": "7.2.26015-fc0010cf6a"
+  },
+  "device": {
+    "count": 1,
+    "index": 0,
+    "name": "AMD Instinct MI355X",
+    "architecture": "gfx950",
+    "torch_capability": [9, 5],
+    "unique_id": "0xc7f45338dc68744c",
+    "serial": "692517019277",
+    "vram_total_bytes": 309220868096
+  },
+  "runs": [
+    {
+      "name": "prepared pointer argument vector-add test",
+      "command": "/tmp/amdpilot-repo-j-833dd346ed89/venv/bin/python -m pytest -vv -s tests/unit/test_pointer_argument_vec_add.py",
+      "exit_code": 0,
+      "result": "1 passed in 1.00s",
+      "raw_output": "reports/j-833dd346ed89/raw/pytest-pointer-argument-vec-add.log"
+    },
+    {
+      "name": "independent deterministic FlyDSL numerical control",
+      "command": "/tmp/amdpilot-repo-j-833dd346ed89/venv/bin/python - <<'PY' (imports tests/unit/test_pointer_argument_vec_add.py, launches pointer_vec_add on 1027 deterministic FP32 values, compares copied GPU output with CPU reference)",
+      "exit_code": 0,
+      "elements": 1027,
+      "max_abs_error_vs_cpu": 0.0,
+      "allclose": {
+        "rtol": 1e-6,
+        "atol": 1e-6,
+        "passed": true
+      },
+      "gpu_output_sum": 1303.9260690659285,
+      "cpu_reference_sum": 1303.9260690659285,
+      "raw_output": "reports/j-833dd346ed89/raw/independent-gpu-control.log"
+    }
+  ],
+  "limitations": [
+    "This report qualifies only the observed FlyDSL raw-pointer vector-add path on one assigned MI355X GPU and the recorded software revisions.",
+    "The prepared pytest uses random inputs and reports only its assertion result; the separate deterministic control records numerical measurements.",
+    "No native C++ source was changed or rebuilt, and no broader FlyDSL suite was run.",
+    "The external receipt-loss fault occurs after this work; this report does not claim that platform recovery succeeded."
+  ],
+  "torch_rocm_modified": false,
+  "upstream_modified": false
+}
