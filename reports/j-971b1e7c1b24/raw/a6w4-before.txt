@@ -1,0 +1,20 @@
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-971b1e7c1b24/cache/aiter/module_aiter_core.so
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 1 item
+
+tests/kernels/test_preshuffle_gemm.py [W912 03:14:39.739794894 collection.cpp:1133] Warning: ROCTracer produced duplicate flow start: 1 (function operator())
+================================================================================
+MFMA W4A6 (MXFP6 A × MXFP4 B) GEMM Test (Tile: 32x128x256)
+================================================================================
+✓ Compiled (waves_per_eu=None)
+[flyc] W4A6 Throughput: 29.2 us, 147.29 TFLOPS, BW: 1.250 TB/s
+.
+
+============================== 1 passed in 4.30s ===============================
+
+EXIT_CODE=0

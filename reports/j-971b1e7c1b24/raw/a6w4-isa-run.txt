@@ -1,0 +1,43 @@
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-971b1e7c1b24/cache/aiter/module_aiter_core.so
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 1 item
+
+tests/kernels/test_preshuffle_gemm.py [W912 03:16:58.777513665 collection.cpp:1133] Warning: ROCTracer produced duplicate flow start: 1 (function operator())
+================================================================================
+MFMA W4A6 (MXFP6 A × MXFP4 B) GEMM Test (Tile: 32x128x256)
+================================================================================
+✓ Compiled (waves_per_eu=None)
+[flydsl.compile] FLYDSL_DUMP_IR=1 dir=/tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0
+[flydsl.compile] dump 00_origin -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/00_origin.mlir
+[flydsl.compile] dump 01_fly_rewrite_func_signature -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/01_fly_rewrite_func_signature.mlir
+[flydsl.compile] dump 02_fly_canonicalize -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/02_fly_canonicalize.mlir
+[flydsl.compile] dump 03_fly_layout_lowering -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/03_fly_layout_lowering.mlir
+[flydsl.compile] dump 04_fly_int_swizzle_simplify -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/04_fly_int_swizzle_simplify.mlir
+[flydsl.compile] dump 05_canonicalize -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/05_canonicalize.mlir
+[flydsl.compile] dump 06_fly_convert_atom_call_to_ssa_form -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/06_fly_convert_atom_call_to_ssa_form.mlir
+[flydsl.compile] dump 07_fly_promote_regmem_to_vectorssa -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/07_fly_promote_regmem_to_vectorssa.mlir
+[flydsl.compile] dump 08_convert_fly_to_rocdl -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/08_convert_fly_to_rocdl.mlir
+[flydsl.compile] dump 09_canonicalize -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/09_canonicalize.mlir
+[flydsl.compile] dump 10_convert_scf_to_cf_cse_convert_rocdl_fastmath_ops_convert_gpu_to_rocdl -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/10_convert_scf_to_cf_cse_convert_rocdl_fastmath_ops_convert_gpu_to_rocdl.mlir
+[flydsl.compile] dump 11_rocdl_attach_target -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/11_rocdl_attach_target.mlir
+[flydsl.compile] dump 12_convert_scf_to_cf -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/12_convert_scf_to_cf.mlir
+[flydsl.compile] dump 13_convert_cf_to_llvm -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/13_convert_cf_to_llvm.mlir
+[flydsl.compile] dump 14_gpu_to_llvm -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/14_gpu_to_llvm.mlir
+[flydsl.compile] dump 15_convert_vector_to_llvm -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/15_convert_vector_to_llvm.mlir
+[flydsl.compile] dump 16_convert_arith_to_llvm -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/16_convert_arith_to_llvm.mlir
+[flydsl.compile] dump 17_convert_func_to_llvm -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/17_convert_func_to_llvm.mlir
+[flydsl.compile] dump 18_reconcile_unrealized_casts -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/18_reconcile_unrealized_casts.mlir
+[flydsl.compile] dump 19_gpu_module_to_binary -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/19_gpu_module_to_binary.mlir
+[flydsl.compile] dump 20_llvm_ir -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/20_llvm_ir.ll
+[flydsl.compile] dump 21_final_isa -> /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0/21_final_isa.s
+[flyc] W4A6 Throughput: 29.6 us, 145.05 TFLOPS, BW: 1.231 TB/s
+.
+
+============================== 1 passed in 3.78s ===============================
+
+EXIT_CODE=0
