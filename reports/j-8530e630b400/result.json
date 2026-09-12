@@ -1,0 +1,52 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/739",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Imported the relevant source and regression changes from candidate PR 493, reproduced review PR 537's remaining exit-134 failure on the exact candidate-native build, and fixed zipped_divide for the accepted nested lower-rank tiler ((8, 4), None, 40). The original three flat cases and the nested boundary now compile with the rebuilt native library and preserve independently enumerated source offsets.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-8530e630b400/venv/bin/python /job/repro_issue_739.py (prepared base)",
+      "exit_code": 134,
+      "what_was_measured": "Actual prepared-base behavior for the three reported tilers; reproduced the native intTupleZip2By assertion on (32, None, None). Raw output: /job/base-repro.log."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-8530e630b400/venv/bin/python /opt/amdpilot/rebuild-native.py /job (exact PR 493 source plus the new regression, before the nested fix)",
+      "exit_code": 0,
+      "what_was_measured": "Pinned-LLVM native candidate build and real vector-add GPU smoke; the rebuilt native path was /tmp/amdpilot-repo-j-8530e630b400/native-build/python_packages/flydsl/_mlir."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-8530e630b400/venv/bin/python -m pytest -q tests/unit/test_layout_algebra.py -k issue_739_nested_lower_rank_tiler (before fix)",
+      "exit_code": 134,
+      "what_was_measured": "Preserved failing-before regression for ((8, 4), None, 40) against the exact candidate implementation; abort occurred at tupleRank >= tileRank. Raw output: /job/candidate-nested-failing.log."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-8530e630b400/venv/bin/python /opt/amdpilot/rebuild-native.py /job (final source)",
+      "exit_code": 0,
+      "what_was_measured": "Final native C++ rebuild with pinned LLVM e2a39f504fee836e4def9581bed817ecc327b9dc and a real GPU vector-add smoke on one AMD Instinct MI355X gfx950. Evidence: /job/native-build.json and /job/native-build-attempts/1789186168988651280."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-8530e630b400/venv/bin/python -m pytest -q tests/unit/test_layout_algebra.py",
+      "exit_code": 0,
+      "what_was_measured": "Final rebuilt-native focused suite: 35 passed and 1 skipped. It includes compiler layout-type checks and independent exhaustive enumeration of all 256,000 source offsets for each original case and the nested boundary. Raw output: /job/fixed-layout-suite.log."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-8530e630b400/venv/bin/python /job/repro_issue_739.py; /tmp/amdpilot-repo-j-8530e630b400/venv/bin/python /job/repro_nested_739.py zipped",
+      "exit_code": 0,
+      "what_was_measured": "Direct final compiler output for all three original tilers and nested ((8, 4), None, 40), using the rebuilt native library. Raw output: /job/fixed-repro.log and /job/fixed-nested-script.log."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-8530e630b400/venv/bin/python /job/probe_tiler_739.py <tiler> (six-case nested boundary sweep)",
+      "exit_code": 0,
+      "what_was_measured": "Additional accepted nested, None, mixed-mode, and deeper-nesting tilers all completed logical_divide and zipped_divide without aborting. Raw output: /job/nested-boundary-sweep.log."
+    }
+  ],
+  "gpu_execution": true,
+  "native_rebuilt": true,
+  "remaining_limitations": [
+    "The compiler-metadata divide itself does not execute a GPU kernel; GPU evidence is the rebuild tool's real numerical vector-add smoke.",
+    "The reporter's MI308X was unavailable; validation used the assigned MI355X gfx950.",
+    "PyCuTe was not installed, so expected mappings were validated by independent exhaustive coordinate enumeration rather than a live NVIDIA CuTe run.",
+    "For a nested tile applied to a scalar source mode, logical_divide currently consumes only as many nested modes as the source exposes; zipped_divide now mirrors that accepted behavior. Thus the trailing 4 in ((8, 4), None, 40) does not affect the current logical result.",
+    "A sole (None,) tiler is rejected by the existing Python make_tile binding before native zipped_divide and remains outside this native fix."
+  ]
+}

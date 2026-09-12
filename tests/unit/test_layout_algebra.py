@@ -10,6 +10,7 @@ Each test corresponds to a specific cell in the reference layout-algebra noteboo
 """
 
 import sys
+from itertools import product
 
 import pytest
 
@@ -301,6 +302,103 @@ def test_zipped_divide(frontend_only_jit):
         _assert_size(fx.zipped_divide(fx.make_layout((4, 8), (1, 4)), fx.make_layout((2, 4), (1, 2))), 32)
 
     build()
+
+
+@pytest.mark.parametrize(
+    ("tiler", "logical_type", "zipped_type", "tile_shape", "rest_shape"),
+    [
+        (
+            (32,),
+            "!fly.layout<(32,(2,50,80)):(16000,(512000,160,1))>",
+            "!fly.layout<((32),(2,50,80)):((16000),(512000,160,1))>",
+            (32,),
+            (2, 50, 80),
+        ),
+        (
+            (32, None, None),
+            "!fly.layout<((32,2),50,80):((16000,512000),160,1)>",
+            "!fly.layout<((32,1,1),(2,50,80)):((16000,0,0),(512000,160,1))>",
+            (32, 1, 1),
+            (2, 50, 80),
+        ),
+        (
+            (32, None, 40),
+            "!fly.layout<((32,2),50,(40,2)):((16000,512000),160,(1,40))>",
+            "!fly.layout<((32,1,40),(2,50,2)):((16000,0,1),(512000,160,40))>",
+            (32, 1, 40),
+            (2, 50, 2),
+        ),
+    ],
+)
+def test_issue_739_lower_rank_and_none_tilers(
+    frontend_only_jit, tiler, logical_type, zipped_type, tile_shape, rest_shape
+):
+    """The three reported divides preserve the independently enumerated index mapping."""
+
+    @flyc.jit
+    def build():
+        layout = fx.make_layout((64, 50, 80), (16000, 160, 1))
+        fx.logical_divide(layout, tiler)
+        fx.zipped_divide(layout, tiler)
+
+    build()
+    compact_ir = _source_ir(build).replace(" ", "")
+    assert logical_type in compact_ir
+    assert zipped_type in compact_ir
+
+    # Reference the transformed coordinates directly, independently of FlyDSL.
+    offsets = []
+    for tile_coord in product(*(range(size) for size in tile_shape)):
+        for rest_coord in product(*(range(size) for size in rest_shape)):
+            if len(tiler) == 1:
+                original = (tile_coord[0] + 32 * rest_coord[0], rest_coord[1], rest_coord[2])
+            else:
+                original = (
+                    tile_coord[0] + 32 * rest_coord[0],
+                    rest_coord[1],
+                    (tile_coord[2] + 40 * rest_coord[2])
+                    if tiler[2] is not None
+                    else rest_coord[2],
+                )
+            offsets.append(original[0] * 16000 + original[1] * 160 + original[2])
+    original_offsets = [
+        i * 16000 + j * 160 + k
+        for i, j, k in product(range(64), range(50), range(80))
+    ]
+    assert sorted(offsets) == sorted(original_offsets)
+
+
+def test_issue_739_nested_lower_rank_tiler(frontend_only_jit):
+    """Nested tile profiles accepted by logical_divide must also zip without aborting."""
+
+    @flyc.jit
+    def build():
+        layout = fx.make_layout((64, 50, 80), (16000, 160, 1))
+        tiler = ((8, 4), None, 40)
+        fx.logical_divide(layout, tiler)
+        fx.zipped_divide(layout, tiler)
+
+    build()
+    compact_ir = _source_ir(build).replace(" ", "")
+    assert "!fly.layout<(((8,8)),50,(40,2)):(((16000,128000)),160,(1,40))>" in compact_ir
+    assert "!fly.layout<(((8),1,40),((8),50,2)):(((16000),0,1),((128000),160,40))>" in compact_ir
+
+    # logical_divide currently consumes the first nested factor for this scalar
+    # source mode. Independently enumerate the resulting zipped coordinate map.
+    offsets = []
+    for tile_coord in product(range(8), range(1), range(40)):
+        for rest_coord in product(range(8), range(50), range(2)):
+            original = (
+                tile_coord[0] + 8 * rest_coord[0],
+                rest_coord[1],
+                tile_coord[2] + 40 * rest_coord[2],
+            )
+            offsets.append(original[0] * 16000 + original[1] * 160 + original[2])
+    original_offsets = [
+        i * 16000 + j * 160 + k
+        for i, j, k in product(range(64), range(50), range(80))
+    ]
+    assert sorted(offsets) == sorted(original_offsets)
 
 
 def test_tiled_divide(frontend_only_jit):
