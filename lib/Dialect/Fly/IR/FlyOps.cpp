@@ -136,11 +136,23 @@ LogicalResult validateComposition(std::optional<Location> location, LayoutAttr o
   flattenStaticLeaves(inner.getStride(), innerStrides, allStatic);
   if (!outerSize || !allStatic)
     return success();
+  if (*outerSize <= 0)
+    return emitOptionalError(location,
+                             "CompositionOp: outer layout domain must have positive static size");
+  int64_t maxInnerCoordinate = 0;
   for (auto [shape, stride] : llvm::zip(innerShapes, innerStrides)) {
-    if (shape < 0 || stride < 0 || (shape > 1 && stride > 0 && (shape - 1) * stride >= *outerSize))
+    if (shape < 0 || stride < 0)
       return emitOptionalError(location,
                                "CompositionOp: inner layout addresses coordinates outside the "
                                "outer layout domain");
+    if (shape > 1 && stride > 0) {
+      int64_t extent = shape - 1;
+      if (extent > (*outerSize - 1 - maxInnerCoordinate) / stride)
+        return emitOptionalError(location,
+                                 "CompositionOp: inner layout addresses coordinates outside the "
+                                 "outer layout domain");
+      maxInnerCoordinate += extent * stride;
+    }
     int64_t restShape = shape;
     int64_t restStride = stride;
     if (outerStatic) {
@@ -164,6 +176,45 @@ LogicalResult validateComposition(std::optional<Location> location, LayoutAttr o
         restStride = nextStride;
       }
     }
+  }
+  return success();
+}
+
+LogicalResult validateTileComposition(std::optional<Location> location, LayoutAttr outer,
+                                      TileAttr inner) {
+  if (failed(validateLayoutStructure(location, "CompositionOp outer layout", outer)))
+    return failure();
+
+  auto outerShape = outer.getShape();
+  auto outerStride = outer.getStride();
+  if (inner.rank() > outerShape.rank())
+    return emitOptionalError(location,
+                             "CompositionOp: inner tile rank exceeds outer layout rank");
+
+  for (int32_t i = 0; i < inner.rank(); ++i) {
+    if (inner.isNoneMode(i))
+      continue;
+
+    auto subOuter = LayoutAttr::get(outer.getContext(), outerShape.at(i), outerStride.at(i));
+    Attribute tileMode = inner.at(i);
+    if (auto nestedTile = dyn_cast<TileAttr>(tileMode)) {
+      if (failed(validateTileComposition(location, subOuter, nestedTile)))
+        return failure();
+      continue;
+    }
+
+    LayoutAttr modeLayout;
+    if (auto layout = dyn_cast<LayoutAttr>(tileMode)) {
+      modeLayout = layout;
+    } else if (auto extent = dyn_cast<IntAttr>(tileMode)) {
+      modeLayout = LayoutAttr::get(outer.getContext(), IntTupleAttr::get(extent),
+                                   IntTupleAttr::getLeafStatic(outer.getContext(), 1));
+    } else {
+      return emitOptionalError(location, "CompositionOp: unsupported inner tile mode");
+    }
+
+    if (failed(validateComposition(location, subOuter, modeLayout)))
+      return failure();
   }
   return success();
 }
@@ -1283,9 +1334,11 @@ FLY_INFER_RETURN_TYPES(CompositionOp) {
   LayoutBuilder<LayoutAttr> layoutBuilder(context);
   Type innerTy = operands[1].getType();
   LayoutAttr inferred;
-  if (auto tileTy = dyn_cast<TileType>(innerTy))
+  if (auto tileTy = dyn_cast<TileType>(innerTy)) {
+    if (failed(validateTileComposition(location, outerLayoutAttr, tileTy.getAttr())))
+      return failure();
     inferred = layoutComposition(layoutBuilder, outerLayoutAttr, tileTy.getAttr());
-  else if (auto innerLayoutTy = dyn_cast<LayoutType>(innerTy)) {
+  } else if (auto innerLayoutTy = dyn_cast<LayoutType>(innerTy)) {
     if (failed(validateComposition(location, outerLayoutAttr, innerLayoutTy.getAttr())))
       return failure();
     inferred = layoutComposition(layoutBuilder, outerLayoutAttr, innerLayoutTy.getAttr());
@@ -1382,11 +1435,12 @@ LogicalResult MakeLayoutOp::verify() {
 }
 
 LogicalResult CompositionOp::verify() {
-  auto inner = dyn_cast<LayoutType>(getOperand(1).getType());
-  if (!inner)
-    return success();
-  return validateComposition(getLoc(), GetLayoutAttrFromLayoutLikeType(getOperand(0).getType()),
-                             inner.getAttr());
+  LayoutAttr outer = GetLayoutAttrFromLayoutLikeType(getOperand(0).getType());
+  if (auto inner = dyn_cast<LayoutType>(getOperand(1).getType()))
+    return validateComposition(getLoc(), outer, inner.getAttr());
+  if (auto inner = dyn_cast<TileType>(getOperand(1).getType()))
+    return validateTileComposition(getLoc(), outer, inner.getAttr());
+  return success();
 }
 
 LogicalResult RightInverseOp::verify() {

@@ -1,0 +1,60 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/583",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Imported the structural layout-algebra validation from candidate PR 508 at c2a301580864ac6235af57156f4b22d61ed29edb, independently confirmed the two gaps reported by review PR 548, and completed composition validation. Static multi-mode inner layouts are now rejected when their combined maximum coordinate leaves the outer domain, and TileType inner operands are recursively validated against the corresponding outer modes. The original candidate make_layout, composition, logical_divide, right_inverse, and dynamic-control cases remain covered.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-93aee99559d9/venv/bin/python /opt/amdpilot/rebuild-native.py /job (candidate c2a301580864ac6235af57156f4b22d61ed29edb plus new expected-diagnostic tests, before completion fix)",
+      "exit_code": 0,
+      "what_was_measured": "Pinned-LLVM native build of the reviewed candidate state and a real GPU vector-add numerical smoke; native working-tree digest 53050b9db7b3d9f41349ee4351c2fb0cc329abecad017c768b6c1b1d02315b7a."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-93aee99559d9/native-build/bin/fly-opt tests/mlir/LayoutAlgebra/invalid_structural_inputs.mlir -verify-diagnostics (before completion fix)",
+      "exit_code": 1,
+      "what_was_measured": "Failing-before regression: the rebuilt exact candidate produced neither expected diagnostic for the combined multi-mode out-of-domain composition nor the oversized TileType composition."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-93aee99559d9/venv/bin/python /opt/amdpilot/rebuild-native.py /job (final working tree)",
+      "exit_code": 0,
+      "what_was_measured": "Pinned-LLVM native rebuild of the completed implementation, distinct working-tree digest 19cb8e6cafb4b8f24ca1661cd800a931f6e2f23e6913db666d5773e7dae5f52b, native import switch, and real GPU vector-add numerical smoke."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-93aee99559d9/native-build/bin/fly-opt tests/mlir/LayoutAlgebra/invalid_structural_inputs.mlir -verify-diagnostics",
+      "exit_code": 0,
+      "what_was_measured": "Passing-after diagnostics for the candidate's original invalid cases, both reviewed boundary cases, and acceptance of the legal dynamic controls."
+    },
+    {
+      "command": "Run every RUN line in tests/mlir/LayoutAlgebra/*.mlir with /tmp/amdpilot-repo-j-93aee99559d9/native-build/bin/fly-opt and /opt/amdpilot/llvm-project/mlir_install/bin/FileCheck",
+      "exit_code": 0,
+      "what_was_measured": "All 11 LayoutAlgebra files passed against the final rebuilt native compiler, including composition, divide, construction, and the expanded structural regression."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-93aee99559d9/native-build/bin/fly-opt tests/mlir/Transforms/layout_lowering.mlir --fly-layout-lowering | /opt/amdpilot/llvm-project/mlir_install/bin/FileCheck tests/mlir/Transforms/layout_lowering.mlir",
+      "exit_code": 0,
+      "what_was_measured": "The nearby layout-lowering compiler regression passed with the rebuilt native compiler."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_evidence": "The final native rebuild manifest reports PASS for FlyDSL vector_add 100x1000 (predicated border blocks) on one AMD Instinct MI350X, gfx950, with Torch 2.9.1+rocm7.2.0.git7e1940d4 and HIP 7.2.26015-fc0010cf6a. This validates loading and executing the rebuilt library; the focused structural claims are established by compiler diagnostic tests.",
+  "native_rebuilt": true,
+  "remaining_limitations": [
+    "Static validation operates on type profiles. Composition reachability involving dynamic SSA extents remains runtime-dependent.",
+    "This supersedes the reviewed candidate for make_layout, composition, logical_divide, and right_inverse validation. Other layout-algebra operations mentioned broadly by the source issue but not implemented by candidate PR 508 remain outside this patch and are not claimed fixed.",
+    "The GPU smoke validates the rebuilt native library but does not independently prove MLIR verifier boundaries; those are measured by the failing-before and passing-after fly-opt regressions.",
+    "No LLVM change was required."
+  ],
+  "evidence_directory": "/job/evidence-j-93aee99559d9",
+  "source_paths": {
+    "checkout": "/job/repo",
+    "python_package": "/job/repo/python/flydsl",
+    "regression": "/job/repo/tests/mlir/LayoutAlgebra/invalid_structural_inputs.mlir"
+  },
+  "native_paths": {
+    "manifest": "/job/native-build.json",
+    "rebuilt_native": "/tmp/amdpilot-repo-j-93aee99559d9/native-build/python_packages/flydsl/_mlir",
+    "fly_opt": "/tmp/amdpilot-repo-j-93aee99559d9/native-build/bin/fly-opt",
+    "filecheck": "/opt/amdpilot/llvm-project/mlir_install/bin/FileCheck",
+    "llvm_revision": "e2a39f504fee836e4def9581bed817ecc327b9dc"
+  }
+}
