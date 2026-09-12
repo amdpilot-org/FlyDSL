@@ -1,0 +1,63 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/946",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/645",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/644",
+  "candidate_commit": "cace24273ede0742f57b4ef6d716485384721a9b",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "recommendation": "request_changes",
+  "fully_resolves_original": false,
+  "summary": "The exact candidate is a substantive partial fix: it fixes a space-containing alternate ROCm root in the real gpu-module-to-binary path and provides deterministic discovery and explicit diagnostics, but real compilation still fails for otherwise valid roots containing a quote or backslash, despite parser-only tests claiming those values are escaped. An arbitrary private-bin PATH linker is also ignored unless it has the exact toolkit/llvm/bin layout.",
+  "tests": [
+    {
+      "command": "ROCM_PATH=<private-missing-root> FLYDSL_RUNTIME_CACHE_DIR=<private-cache> python -m pytest 'tests/kernels/test_vec_add.py::test_benchmark_vector_add[4]' -q -s --tb=short",
+      "exit_code": 1,
+      "what_was_measured": "Recorded-base reproduction in the actual gpu-module-to-binary path; failed with lld invocation failed."
+    },
+    {
+      "command": "python -m pytest tests/unit/test_rocm_toolkit_discovery.py tests/unit/test_external_llvm_codegen.py -q",
+      "exit_code": 0,
+      "what_was_measured": "Exact-candidate regression and related backend coverage; 19 passed."
+    },
+    {
+      "command": "FLYDSL_ROCM_TOOLKIT_PATH=<private-valid-root-with-space> FLYDSL_DUMP_IR=1 python -m pytest 'tests/kernels/test_vec_add.py::test_benchmark_vector_add[4]' -q -s --tb=short",
+      "exit_code": 0,
+      "what_was_measured": "Real compilation, ISA generation, and numerical GPU execution on gfx950; maximum error 0.00e+00 against Torch."
+    },
+    {
+      "command": "FLYDSL_ROCM_TOOLKIT_PATH=<private-valid-root-containing-double-quote> python -m pytest 'tests/kernels/test_vec_add.py::test_benchmark_vector_add[4]' -q -s --tb=short",
+      "exit_code": 1,
+      "what_was_measured": "Independent adversarial real-compilation case; gpu-module-to-binary failed with lld invocation failed although the candidate parser-only test passes."
+    },
+    {
+      "command": "FLYDSL_ROCM_TOOLKIT_PATH=<private-valid-root-containing-backslash> python -m pytest 'tests/kernels/test_vec_add.py::test_benchmark_vector_add[4]' -q -s --tb=short",
+      "exit_code": 1,
+      "what_was_measured": "Independent adversarial real-compilation case; gpu-module-to-binary failed with lld invocation failed although the candidate parser-only test passes."
+    },
+    {
+      "command": "PATH=<arbitrary-private-bin-containing-ld.lld> python <discovery-probe>",
+      "exit_code": 0,
+      "what_was_measured": "shutil.which selected the private linker, but candidate discovery ignored it and returned /opt/rocm because the lexical path was not under llvm/bin."
+    },
+    {
+      "command": "python -m pytest tests/unit -q",
+      "exit_code": 0,
+      "what_was_measured": "Exact-candidate full unit suite; 1106 passed and 17 skipped."
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "The space-containing valid toolkit compiled and ran vector add on AMD Instinct MI350X gfx950 with max error 0.00e+00; dumped ISA names gfx950 and vecAddKernel_0 and contains s_endpgm and AMDHSA metadata."
+  },
+  "native_rebuilt": false,
+  "remaining_counterexamples": [
+    "A valid alternate ROCm toolkit root containing a double quote passes candidate validation and textual pipeline parsing but real gpu-module-to-binary compilation fails with lld invocation failed.",
+    "A valid alternate ROCm toolkit root containing a backslash passes candidate validation and textual pipeline parsing but real gpu-module-to-binary compilation fails with lld invocation failed.",
+    "A working ld.lld found in an arbitrary process-local private bin directory is ignored unless its lexical path has the exact <toolkit>/llvm/bin/ld.lld shape; discovery falls through to /opt/rocm."
+  ],
+  "remaining_limitations": [
+    "The reported gfx1250 GPU and ROCm 6 environment were unavailable; execution and toolkit-layout compatibility there remain unverified.",
+    "GPU and ISA validation used the assigned gfx950 GPU with ROCm 7.2.",
+    "No native rebuild was needed because the candidate changes only Python; the prepared pinned native extension and LLVM were used."
+  ]
+}
