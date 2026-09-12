@@ -1,0 +1,52 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/652",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Preserved PR 620's validated Pointer/Tensor/layout documentation and corrected the four concrete compiler/utils counterexamples from PR 626. Independent reproduction matched the reported 510 missing-docstring total, but established that GPUTarget, BaseBackend, EnvOption, and EnvManager already had docstrings and specifically lacked required runnable Example sections. All four now have terse contract documentation and examples of at most five lines, guarded by an execution regression. This is a bounded correction, not package-wide completion.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-4f24adc52a03/venv/bin/python reports/j-4f24adc52a03/audit_public_docs.py aa3c22c8110937562cf3690f8e380da32e5012dd",
+      "exit_code": 0,
+      "what_was_measured": "Failing-before audit at the exact candidate: 510 public symbols lacked docstrings (expr 374, compiler 127, utils 9), and all four reviewed symbols were present but classified missing_example. The independent example counts were expr 205, compiler 65, utils 23 because this audit includes all syntactically public methods."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-4f24adc52a03/venv/bin/python reports/j-4f24adc52a03/audit_public_docs.py HEAD",
+      "exit_code": 0,
+      "what_was_measured": "Passing-after audit: the four reviewed symbols are complete; compiler missing-example count dropped 65 to 63 and utils dropped 23 to 21. The broader missing-docstring counts are unchanged."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-4f24adc52a03/venv/bin/python -m pytest tests/unit/test_public_doc_examples.py -q",
+      "exit_code": 0,
+      "what_was_measured": "1 passed; extracted and executed each new compiler/utils example in a fresh namespace and enforced the five-line limit."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-4f24adc52a03/venv/bin/python -m pytest tests/unit/test_layout_algebra.py -q",
+      "exit_code": 0,
+      "what_was_measured": "32 passed, 1 skipped; retained candidate regression executed all 38 Pointer/Tensor/layout docstring examples."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-4f24adc52a03/venv/bin/python -m pytest tests/unit/test_pointer_argument_vec_add.py -q",
+      "exit_code": 0,
+      "what_was_measured": "1 passed on the assigned AMD GPU, preserving real Pointer runtime validation."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-4f24adc52a03/venv/bin/python examples/01-vectorAdd.py",
+      "exit_code": 0,
+      "what_was_measured": "Printed PASS for Tensor/layout vector addition against its PyTorch numerical reference on the assigned AMD GPU."
+    },
+    {
+      "command": "git diff --check acf7e67b7d22847e345938ca54fcc137bd7b2a1f..HEAD",
+      "exit_code": 0,
+      "what_was_measured": "No whitespace errors in the consolidated correction."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_evidence": "The Pointer GPU regression passed and examples/01-vectorAdd.py printed PASS against its PyTorch reference using the prepared ROCm environment.",
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "This bounded correction does not complete the original package-wide request. The post-change AST audit still finds 374 expr, 127 compiler, and 9 utils public symbols without docstrings, plus many documented symbols without Example sections.",
+    "The review's four named classes were not missing docstrings at aa3c22c8110937562cf3690f8e380da32e5012dd; their reproducible defect was missing Example sections. No speculative source behavior was changed.",
+    "The review's missing-example totals use a different syntactic selection than the included independent audit; both agree on the concrete four omissions and the exact 510 missing-docstring total.",
+    "No native C++ source changed, so a native rebuild was not applicable. Only the assigned GPU architecture was exercised."
+  ]
+}
