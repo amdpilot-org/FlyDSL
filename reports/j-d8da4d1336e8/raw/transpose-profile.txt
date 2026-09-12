@@ -1,0 +1,38 @@
+[W912 03:16:11.557889103 collection.cpp:1133] Warning: ROCTracer produced duplicate flow start: 1 (function operator())
+gpu AMD Instinct MI355X gfx950:sramecc+:xnack-
+shape (1, 32, 6, 24, 40) out (1, 48, 6, 24, 40)
+ncdhw_vs_ref_max_abs 16.0 allclose False
+ndhwc_vs_ref_max_abs 16.0 allclose False
+{
+  "NCDHW": {
+    "transpose_events": [
+      [
+        "transpose_kernel_0",
+        10,
+        28.83000000000004
+      ]
+    ],
+    "device_events": [
+      [
+        "conv3d_implicit_kernel_0",
+        10,
+        83.22999999999985
+      ],
+      [
+        "transpose_kernel_0",
+        10,
+        28.83000000000004
+      ]
+    ]
+  },
+  "NDHWC": {
+    "transpose_events": [],
+    "device_events": [
+      [
+        "conv3d_implicit_kernel_0",
+        10,
+        76.42999999999998
+      ]
+    ]
+  }
+}

@@ -1,0 +1,195 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 62 items
+
+tests/kernels/test_conv3d_implicit.py ............................FFFFFF [ 54%]
+FFFFF....................FFF                                             [100%]
+
+=================================== FAILURES ===================================
+___________________ test_conv2d_vs_torch[kernel_shape0-1-1] ____________________
+tests/kernels/test_conv3d_implicit.py:251: in test_conv2d_vs_torch
+    y = conv3d_implicit(x, weight, bias=bias, stride=stride, padding=padding)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+kernels/conv/conv3d_implicit.py:1358: in conv3d_implicit
+    y = impl(
+kernels/conv/conv3d_implicit.py:1210: in _conv2d_impl
+    _check_layouts(2, input_layout, output_layout)
+kernels/conv/conv3d_implicit.py:96: in _check_layouts
+    assert v in names, f"{what} must be one of {names}, got {v!r}"
+           ^^^^^^^^^^
+E   AssertionError: input_layout must be one of ('NCHW', 'NHWC'), got 'NCDHW'
+___________________ test_conv2d_vs_torch[kernel_shape1-1-0] ____________________
+tests/kernels/test_conv3d_implicit.py:251: in test_conv2d_vs_torch
+    y = conv3d_implicit(x, weight, bias=bias, stride=stride, padding=padding)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+kernels/conv/conv3d_implicit.py:1358: in conv3d_implicit
+    y = impl(
+kernels/conv/conv3d_implicit.py:1210: in _conv2d_impl
+    _check_layouts(2, input_layout, output_layout)
+kernels/conv/conv3d_implicit.py:96: in _check_layouts
+    assert v in names, f"{what} must be one of {names}, got {v!r}"
+           ^^^^^^^^^^
+E   AssertionError: input_layout must be one of ('NCHW', 'NHWC'), got 'NCDHW'
+___________________ test_conv2d_vs_torch[kernel_shape2-1-2] ____________________
+tests/kernels/test_conv3d_implicit.py:251: in test_conv2d_vs_torch
+    y = conv3d_implicit(x, weight, bias=bias, stride=stride, padding=padding)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+kernels/conv/conv3d_implicit.py:1358: in conv3d_implicit
+    y = impl(
+kernels/conv/conv3d_implicit.py:1210: in _conv2d_impl
+    _check_layouts(2, input_layout, output_layout)
+kernels/conv/conv3d_implicit.py:96: in _check_layouts
+    assert v in names, f"{what} must be one of {names}, got {v!r}"
+           ^^^^^^^^^^
+E   AssertionError: input_layout must be one of ('NCHW', 'NHWC'), got 'NCDHW'
+___________________ test_conv2d_vs_torch[kernel_shape3-2-1] ____________________
+tests/kernels/test_conv3d_implicit.py:251: in test_conv2d_vs_torch
+    y = conv3d_implicit(x, weight, bias=bias, stride=stride, padding=padding)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+kernels/conv/conv3d_implicit.py:1358: in conv3d_implicit
+    y = impl(
+kernels/conv/conv3d_implicit.py:1210: in _conv2d_impl
+    _check_layouts(2, input_layout, output_layout)
+kernels/conv/conv3d_implicit.py:96: in _check_layouts
+    assert v in names, f"{what} must be one of {names}, got {v!r}"
+           ^^^^^^^^^^
+E   AssertionError: input_layout must be one of ('NCHW', 'NHWC'), got 'NCDHW'
+___ test_conv2d_unaligned_channels_and_spatial[3-32-32-64-kernel_shape0-1-1] ___
+tests/kernels/test_conv3d_implicit.py:278: in test_conv2d_unaligned_channels_and_spatial
+    y = conv3d_implicit(x, weight, stride=stride, padding=padding)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+kernels/conv/conv3d_implicit.py:1358: in conv3d_implicit
+    y = impl(
+kernels/conv/conv3d_implicit.py:1210: in _conv2d_impl
+    _check_layouts(2, input_layout, output_layout)
+kernels/conv/conv3d_implicit.py:96: in _check_layouts
+    assert v in names, f"{what} must be one of {names}, got {v!r}"
+           ^^^^^^^^^^
+E   AssertionError: input_layout must be one of ('NCHW', 'NHWC'), got 'NCDHW'
+___ test_conv2d_unaligned_channels_and_spatial[3-24-28-32-kernel_shape1-2-3] ___
+tests/kernels/test_conv3d_implicit.py:278: in test_conv2d_unaligned_channels_and_spatial
+    y = conv3d_implicit(x, weight, stride=stride, padding=padding)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+kernels/conv/conv3d_implicit.py:1358: in conv3d_implicit
+    y = impl(
+kernels/conv/conv3d_implicit.py:1210: in _conv2d_impl
+    _check_layouts(2, input_layout, output_layout)
+kernels/conv/conv3d_implicit.py:96: in _check_layouts
+    assert v in names, f"{what} must be one of {names}, got {v!r}"
+           ^^^^^^^^^^
+E   AssertionError: input_layout must be one of ('NCHW', 'NHWC'), got 'NCDHW'
+___ test_conv2d_unaligned_channels_and_spatial[1-24-24-32-kernel_shape2-1-1] ___
+tests/kernels/test_conv3d_implicit.py:278: in test_conv2d_unaligned_channels_and_spatial
+    y = conv3d_implicit(x, weight, stride=stride, padding=padding)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+kernels/conv/conv3d_implicit.py:1358: in conv3d_implicit
+    y = impl(
+kernels/conv/conv3d_implicit.py:1210: in _conv2d_impl
+    _check_layouts(2, input_layout, output_layout)
+kernels/conv/conv3d_implicit.py:96: in _check_layouts
+    assert v in names, f"{what} must be one of {names}, got {v!r}"
+           ^^^^^^^^^^
+E   AssertionError: input_layout must be one of ('NCHW', 'NHWC'), got 'NCDHW'
+__ test_conv2d_unaligned_channels_and_spatial[12-16-16-32-kernel_shape3-1-1] ___
+tests/kernels/test_conv3d_implicit.py:278: in test_conv2d_unaligned_channels_and_spatial
+    y = conv3d_implicit(x, weight, stride=stride, padding=padding)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+kernels/conv/conv3d_implicit.py:1358: in conv3d_implicit
+    y = impl(
+kernels/conv/conv3d_implicit.py:1210: in _conv2d_impl
+    _check_layouts(2, input_layout, output_layout)
+kernels/conv/conv3d_implicit.py:96: in _check_layouts
+    assert v in names, f"{what} must be one of {names}, got {v!r}"
+           ^^^^^^^^^^
+E   AssertionError: input_layout must be one of ('NCHW', 'NHWC'), got 'NCDHW'
+__ test_conv2d_unaligned_channels_and_spatial[64-33-33-64-kernel_shape4-2-0] ___
+tests/kernels/test_conv3d_implicit.py:278: in test_conv2d_unaligned_channels_and_spatial
+    y = conv3d_implicit(x, weight, stride=stride, padding=padding)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+kernels/conv/conv3d_implicit.py:1358: in conv3d_implicit
+    y = impl(
+kernels/conv/conv3d_implicit.py:1210: in _conv2d_impl
+    _check_layouts(2, input_layout, output_layout)
+kernels/conv/conv3d_implicit.py:96: in _check_layouts
+    assert v in names, f"{what} must be one of {names}, got {v!r}"
+           ^^^^^^^^^^
+E   AssertionError: input_layout must be one of ('NCHW', 'NHWC'), got 'NCDHW'
+__ test_conv2d_unaligned_channels_and_spatial[128-17-17-64-kernel_shape5-2-0] __
+tests/kernels/test_conv3d_implicit.py:278: in test_conv2d_unaligned_channels_and_spatial
+    y = conv3d_implicit(x, weight, stride=stride, padding=padding)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+kernels/conv/conv3d_implicit.py:1358: in conv3d_implicit
+    y = impl(
+kernels/conv/conv3d_implicit.py:1210: in _conv2d_impl
+    _check_layouts(2, input_layout, output_layout)
+kernels/conv/conv3d_implicit.py:96: in _check_layouts
+    assert v in names, f"{what} must be one of {names}, got {v!r}"
+           ^^^^^^^^^^
+E   AssertionError: input_layout must be one of ('NCHW', 'NHWC'), got 'NCDHW'
+___ test_conv2d_unaligned_channels_and_spatial[6-21-21-32-kernel_shape6-1-1] ___
+tests/kernels/test_conv3d_implicit.py:278: in test_conv2d_unaligned_channels_and_spatial
+    y = conv3d_implicit(x, weight, stride=stride, padding=padding)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+kernels/conv/conv3d_implicit.py:1358: in conv3d_implicit
+    y = impl(
+kernels/conv/conv3d_implicit.py:1210: in _conv2d_impl
+    _check_layouts(2, input_layout, output_layout)
+kernels/conv/conv3d_implicit.py:96: in _check_layouts
+    assert v in names, f"{what} must be one of {names}, got {v!r}"
+           ^^^^^^^^^^
+E   AssertionError: input_layout must be one of ('NCHW', 'NHWC'), got 'NCDHW'
+_________________________ test_conv1d_vs_torch[3-1-1] __________________________
+tests/kernels/test_conv3d_implicit.py:319: in test_conv1d_vs_torch
+    y = conv3d_implicit(x, weight, bias=bias, stride=stride, padding=padding)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+kernels/conv/conv3d_implicit.py:1358: in conv3d_implicit
+    y = impl(
+kernels/conv/conv3d_implicit.py:1249: in _conv1d_impl
+    _check_layouts(1, input_layout, output_layout)
+kernels/conv/conv3d_implicit.py:96: in _check_layouts
+    assert v in names, f"{what} must be one of {names}, got {v!r}"
+           ^^^^^^^^^^
+E   AssertionError: input_layout must be one of ('NCW', 'NWC'), got 'NCDHW'
+_________________________ test_conv1d_vs_torch[1-1-0] __________________________
+tests/kernels/test_conv3d_implicit.py:319: in test_conv1d_vs_torch
+    y = conv3d_implicit(x, weight, bias=bias, stride=stride, padding=padding)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+kernels/conv/conv3d_implicit.py:1358: in conv3d_implicit
+    y = impl(
+kernels/conv/conv3d_implicit.py:1249: in _conv1d_impl
+    _check_layouts(1, input_layout, output_layout)
+kernels/conv/conv3d_implicit.py:96: in _check_layouts
+    assert v in names, f"{what} must be one of {names}, got {v!r}"
+           ^^^^^^^^^^
+E   AssertionError: input_layout must be one of ('NCW', 'NWC'), got 'NCDHW'
+_________________________ test_conv1d_vs_torch[5-2-2] __________________________
+tests/kernels/test_conv3d_implicit.py:319: in test_conv1d_vs_torch
+    y = conv3d_implicit(x, weight, bias=bias, stride=stride, padding=padding)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+kernels/conv/conv3d_implicit.py:1358: in conv3d_implicit
+    y = impl(
+kernels/conv/conv3d_implicit.py:1249: in _conv1d_impl
+    _check_layouts(1, input_layout, output_layout)
+kernels/conv/conv3d_implicit.py:96: in _check_layouts
+    assert v in names, f"{what} must be one of {names}, got {v!r}"
+           ^^^^^^^^^^
+E   AssertionError: input_layout must be one of ('NCW', 'NWC'), got 'NCDHW'
+=========================== short test summary info ============================
+FAILED tests/kernels/test_conv3d_implicit.py::test_conv2d_vs_torch[kernel_shape0-1-1]
+FAILED tests/kernels/test_conv3d_implicit.py::test_conv2d_vs_torch[kernel_shape1-1-0]
+FAILED tests/kernels/test_conv3d_implicit.py::test_conv2d_vs_torch[kernel_shape2-1-2]
+FAILED tests/kernels/test_conv3d_implicit.py::test_conv2d_vs_torch[kernel_shape3-2-1]
+FAILED tests/kernels/test_conv3d_implicit.py::test_conv2d_unaligned_channels_and_spatial[3-32-32-64-kernel_shape0-1-1]
+FAILED tests/kernels/test_conv3d_implicit.py::test_conv2d_unaligned_channels_and_spatial[3-24-28-32-kernel_shape1-2-3]
+FAILED tests/kernels/test_conv3d_implicit.py::test_conv2d_unaligned_channels_and_spatial[1-24-24-32-kernel_shape2-1-1]
+FAILED tests/kernels/test_conv3d_implicit.py::test_conv2d_unaligned_channels_and_spatial[12-16-16-32-kernel_shape3-1-1]
+FAILED tests/kernels/test_conv3d_implicit.py::test_conv2d_unaligned_channels_and_spatial[64-33-33-64-kernel_shape4-2-0]
+FAILED tests/kernels/test_conv3d_implicit.py::test_conv2d_unaligned_channels_and_spatial[128-17-17-64-kernel_shape5-2-0]
+FAILED tests/kernels/test_conv3d_implicit.py::test_conv2d_unaligned_channels_and_spatial[6-21-21-32-kernel_shape6-1-1]
+FAILED tests/kernels/test_conv3d_implicit.py::test_conv1d_vs_torch[3-1-1] - A...
+FAILED tests/kernels/test_conv3d_implicit.py::test_conv1d_vs_torch[1-1-0] - A...
+FAILED tests/kernels/test_conv3d_implicit.py::test_conv1d_vs_torch[5-2-2] - A...
+================== 14 failed, 48 passed in 151.13s (0:02:31) ===================

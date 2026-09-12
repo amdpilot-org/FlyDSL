@@ -60,6 +60,74 @@ def test_conv3d_vs_torch(n, c, t, h, w, k, stride, padding):
 
 
 @_skip_non_cdna4
+@pytest.mark.parametrize("layout,out_layout", [("NCDHW", "NDHWC"), ("NDHWC", None), ("NDHWC", "NCDHW")])
+def test_conv3d_layout_contract_vs_torch(layout, out_layout):
+    """The public layout API preserves values while avoiding intermediate round-trips."""
+    torch.manual_seed(2993)
+    x_ncdhw = torch.randn((1, 16, 5, 9, 11), device="cuda", dtype=torch.bfloat16)
+    weight = torch.randn((32, 16, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    bias = torch.randn((32,), device="cuda", dtype=torch.float32)
+    x = x_ncdhw if layout == "NCDHW" else x_ncdhw.permute(0, 2, 3, 4, 1).contiguous()
+
+    y = conv3d_implicit(x, weight, bias=bias, padding=1, layout=layout, out_layout=out_layout)
+    y_ref = F.conv3d(x_ncdhw, weight, bias=bias.to(torch.bfloat16), padding=1)
+    expected_layout = layout if out_layout is None else out_layout
+    if expected_layout == "NDHWC":
+        y_ref = y_ref.permute(0, 2, 3, 4, 1).contiguous()
+    torch.cuda.synchronize()
+
+    assert y.shape == y_ref.shape
+    assert torch.allclose(y, y_ref, rtol=2e-2, atol=2e-2)
+
+
+@_skip_non_cdna4
+def test_conv3d_ndhwc_chain_skips_input_transposes(monkeypatch):
+    """Two NDHWC convolutions stay channels-last and never call the transpose kernel."""
+    from kernels.conv import conv3d_implicit as conv_module
+
+    calls = 0
+    original = conv_module._ncdhw_to_ndhwc
+
+    def counted(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(conv_module, "_ncdhw_to_ndhwc", counted)
+    torch.manual_seed(3993)
+    x_ncdhw = torch.randn((1, 16, 5, 9, 11), device="cuda", dtype=torch.bfloat16)
+    w1 = 0.1 * torch.randn((32, 16, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    w2 = 0.1 * torch.randn((24, 32, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    x_ndhwc = x_ncdhw.permute(0, 2, 3, 4, 1).contiguous()
+
+    y1 = conv3d_implicit(x_ndhwc, w1, padding=1, layout="NDHWC")
+    y2 = conv3d_implicit(y1, w2, padding=1, layout="NDHWC")
+    y_ref = F.conv3d(F.conv3d(x_ncdhw, w1, padding=1), w2, padding=1)
+    torch.cuda.synchronize()
+
+    assert calls == 0
+    assert y1.shape == (1, 5, 9, 11, 32)
+    assert y2.shape == (1, 5, 9, 11, 24)
+    assert torch.allclose(y2.permute(0, 4, 1, 2, 3), y_ref, rtol=3e-2, atol=3e-2)
+
+
+@_skip_non_cdna4
+def test_conv3d_ndhwc_splitk_vs_torch():
+    """Split-K reduction can return NDHWC, though it still uses an fp32 staging buffer."""
+    torch.manual_seed(4993)
+    x_ncdhw = torch.randn((1, 64, 4, 8, 8), device="cuda", dtype=torch.bfloat16)
+    weight = torch.randn((64, 64, 3, 3, 3), device="cuda", dtype=torch.bfloat16)
+    x_ndhwc = x_ncdhw.permute(0, 2, 3, 4, 1).contiguous()
+
+    y = conv3d_implicit(x_ndhwc, weight, padding=1, splitk=2, layout="NDHWC")
+    y_ref = F.conv3d(x_ncdhw, weight, padding=1).permute(0, 2, 3, 4, 1).contiguous()
+    torch.cuda.synchronize()
+
+    assert y.shape == y_ref.shape
+    assert torch.allclose(y, y_ref, rtol=3e-2, atol=3e-2)
+
+
+@_skip_non_cdna4
 @pytest.mark.parametrize(
     "kernel_shape,padding",
     [
