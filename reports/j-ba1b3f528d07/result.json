@@ -1,0 +1,32 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/861",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "summary": "The performance gap reproduced on the prepared base and remains at exact candidate 2c6b394d75deb3f19d660f762b2ab02fd60c4eea. The candidate adds only reports and benchmarks, with no implementation change.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-ba1b3f528d07/venv/bin/python /job/review-evidence-j-ba1b3f528d07/review_bench.py /job/review-evidence-j-ba1b3f528d07/base.json",
+      "exit_code": 0,
+      "what_was_measured": "Base GPU accuracy against Torch and convolution/equivalent-GEMM event-time ratios for three issue-derived and three adversarial boundary shapes; ratios 1.47x-1.93x."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-ba1b3f528d07/venv/bin/python reports/j-5916dc8d5733/bench_conv_gap.py --output /job/review-evidence-j-ba1b3f528d07/candidate_regression.json --warmup 10 --repetitions 100",
+      "exit_code": 0,
+      "what_was_measured": "Exact-candidate GPU regression with independent Torch convolution references and all shipped tiles; convolution/GEMM ratios 1.51x, 1.45x, and 1.66x."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-ba1b3f528d07/venv/bin/python /job/review-evidence-j-ba1b3f528d07/review_bench.py /job/review-evidence-j-ba1b3f528d07/candidate_boundaries.json",
+      "exit_code": 0,
+      "what_was_measured": "Candidate accuracy and timings for M/tile boundaries, output-channel tails, and stride-2 spatial tails; all accurate at rtol=atol=2e-2, ratios 1.76x-1.96x."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-ba1b3f528d07/venv/bin/python -m pytest -q tests/kernels/test_conv3d_implicit.py -k tile_configs",
+      "exit_code": 0,
+      "what_was_measured": "Eight focused convolution tile regression cases on the candidate."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "AMD Instinct MI350X gfx950 device 0; ROCm SMI unique ID 0x5fb42ff90866060e recorded before and after the candidate benchmark.",
+  "native_rebuilt": false,
+  "remaining_limitations": "No production shape set or acceptance threshold was supplied; Torch GEMM is a compute-density reference with different memory access; only MI350X/gfx950 was verified; candidate contains no implementation fix or compiler/ISA evidence."
+}
