@@ -1,0 +1,35 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/732",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "The prepared base reproduces the reported retile rank-mismatch abort. Exact candidate 0d04a0606079e3dce8bad3e888db4c28bac9d05b fixes the original 64x64 GPU case and minimum/larger tile boundaries on gfx950.",
+  "tests": [
+    {
+      "command": "FLYDSL_RUNTIME_CACHE_DIR=/job/review-cache-j-b4a36e12a657/base /tmp/amdpilot-repo-j-b4a36e12a657/venv/bin/python /job/review-evidence-j-b4a36e12a657/repro_original.py",
+      "exit_code": 134,
+      "what_was_measured": "Base native compiler abort in intTupleZip2ByImpl with the reported mismatched-ranks assertion."
+    },
+    {
+      "command": "TILE_M={32,64,64,128} TILE_N={64,64,128,128} SEED={1,0,2,3} FLYDSL_DUMP_IR=1 /tmp/amdpilot-repo-j-b4a36e12a657/venv/bin/python /job/review-evidence-j-b4a36e12a657/repro_original.py",
+      "exit_code": 0,
+      "what_was_measured": "Candidate GPU atomic sums versus independent CPU float64 references; maximum absolute error 1.7599101e-05. LLVM/ISA dumps show 16 atomicrmw fadd and 16 gfx950 global_atomic_cmpswap instructions for 64x64."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-b4a36e12a657/venv/bin/python -m pytest -q -s tests/kernels/test_retile_atomic.py",
+      "exit_code": 0,
+      "what_was_measured": "Candidate regression: 2 passed, including retiled execution and focused no-retile diagnostic."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-b4a36e12a657/venv/bin/python -m pytest -q tests/unit",
+      "exit_code": 0,
+      "what_was_measured": "Candidate unit suite: 1098 passed, 17 skipped."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_evidence": "AMD Instinct MI350X/gfx950 executed the numerical kernels; generated ISA declares amdgcn-amd-amdhsa-unknown-gfx950 and contains global atomic compare-swap instructions.",
+  "native_rebuilt": true,
+  "remaining_limitations": [
+    "The reported MI308X was unavailable, so that exact architecture remains unverified.",
+    "The candidate regression tolerance is looser than the independently observed numerical errors."
+  ]
+}
