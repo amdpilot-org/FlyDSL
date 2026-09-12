@@ -1,0 +1,4 @@
+head f6910a2058dd6eea405d30ecd4f23acf3c7b8d34
+flydsl /job/repo/python/flydsl/__init__.py
+_mlir None
+gpu AMD Instinct MI350X gfx950:sramecc+:xnack-
