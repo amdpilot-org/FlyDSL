@@ -293,6 +293,7 @@ def Fly_CompositionOp : Fly_Op<"composition", [Pure, DeclareOpInterfaceMethods<I
 def Fly_ComplementOp : Fly_Op<"complement", [Pure, DeclareOpInterfaceMethods<InferTypeOpInterface>]> {
   let arguments = (ins Fly_NarrowLayoutType:$layout, Optional<Fly_IntTuple>:$codomain_size);
   let results = (outs Fly_NarrowLayoutType:$result);
+  let hasVerifier = 1;
   let assemblyFormat = "`(` $layout (`,` $codomain_size^)? `)` attr-dict `:` functional-type(operands, results)";
 }
 
@@ -304,6 +305,7 @@ def Fly_RightInverseOp : Fly_Op<"right_inverse", [Pure, DeclareOpInterfaceMethod
 def Fly_LeftInverseOp : Fly_Op<"left_inverse", [Pure, DeclareOpInterfaceMethods<InferTypeOpInterface>]> {
   let arguments = (ins Fly_NarrowLayoutType:$layout);
   let results = (outs Fly_NarrowLayoutType:$result);
+  let hasVerifier = 1;
 }
 
 class Fly_LayoutDivideOp<string mnemonic>
