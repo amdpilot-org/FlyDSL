@@ -1,0 +1,7 @@
+BASE_TEST_START
+ERROR: file or directory not found: tests/kernels/test_pa_swa.py::test_multi_case_set[global_window_accuracy]
+
+
+no tests ran in 0.45s
+
+exit_code=4

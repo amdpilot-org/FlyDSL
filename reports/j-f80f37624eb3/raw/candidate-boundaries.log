@@ -1,0 +1,26 @@
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-f80f37624eb3/cache/aiter/module_aiter_core.so
+/opt/aiter/aiter/ops/triton/gluon/__init__.py:16: UserWarning: [aiter] AITER_USE_SYSTEM_TRITON=1: aiter gluon kernels require triton>=3.6.0, found 3.5.1+rocm7.2.0.gita272dfa8. Please install a compatible version via .github/scripts/install_triton.sh, otherwise unexpected errors may occur.
+  warnings.warn(
+CASE 3000 1022
+
+FlyDSL PS vs Torch:
+FlyDSL PS vs Torch PASSED
+PASS {'compute_type': 'fp8', 'quant_mode': 'per_token', 'trans_v': True, 'kv_varlen': False, 'context_partition_size': 256, 'block_size': 1024, 'num_heads': (12, 2), 'context_length': 3000, 'batch_size': 16, 'query_length': 4, 'head_size': 128, 'sliding_window': 1022, 'quant_q': False, 'quant_kv': True, 'us_flydsl_ps': 100.77710151672363}
+CASE 3000 1024
+
+FlyDSL PS vs Torch:
+FlyDSL PS vs Torch PASSED
+PASS {'compute_type': 'fp8', 'quant_mode': 'per_token', 'trans_v': True, 'kv_varlen': False, 'context_partition_size': 256, 'block_size': 1024, 'num_heads': (12, 2), 'context_length': 3000, 'batch_size': 16, 'query_length': 4, 'head_size': 128, 'sliding_window': 1024, 'quant_q': False, 'quant_kv': True, 'us_flydsl_ps': 92.81700253486633}
+CASE 1024 1023
+
+FlyDSL PS vs Torch:
+FlyDSL PS vs Torch PASSED
+PASS {'compute_type': 'fp8', 'quant_mode': 'per_token', 'trans_v': True, 'kv_varlen': False, 'context_partition_size': 256, 'block_size': 1024, 'num_heads': (12, 2), 'context_length': 1024, 'batch_size': 16, 'query_length': 4, 'head_size': 128, 'sliding_window': 1023, 'quant_q': False, 'quant_kv': True, 'us_flydsl_ps': 87.12490200996399}
+CASE 1025 1023
+
+FlyDSL PS vs Torch:
+FlyDSL PS vs Torch PASSED
+PASS {'compute_type': 'fp8', 'quant_mode': 'per_token', 'trans_v': True, 'kv_varlen': False, 'context_partition_size': 256, 'block_size': 1024, 'num_heads': (12, 2), 'context_length': 1025, 'batch_size': 16, 'query_length': 4, 'head_size': 128, 'sliding_window': 1023, 'quant_q': False, 'quant_kv': True, 'us_flydsl_ps': 92.0611023902893}
+
+exit_code=0

@@ -1,0 +1,5 @@
+kernels/attention/pa_decode_swa.py
+python/flydsl/expr/utils/arith.py:481:        return arith.ExtUIOp(target_type, self).result
+python/flydsl/expr/utils/arith.py:486:        return arith.ExtSIOp(target_type, self).result
+python/flydsl/expr/extern.py:166:                            value = _arith.ExtSIOp(expected_type, value).result
+python/flydsl/expr/extern.py:168:                            value = _arith.ExtUIOp(expected_type, value).result

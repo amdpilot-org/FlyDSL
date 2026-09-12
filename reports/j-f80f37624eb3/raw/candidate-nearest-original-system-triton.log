@@ -1,0 +1,79 @@
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-f80f37624eb3/cache/aiter/module_aiter_core.so
+/opt/aiter/aiter/ops/triton/gluon/__init__.py:16: UserWarning: [aiter] AITER_USE_SYSTEM_TRITON=1: aiter gluon kernels require triton>=3.6.0, found 3.5.1+rocm7.2.0.gita272dfa8. Please install a compatible version via .github/scripts/install_triton.sh, otherwise unexpected errors may occur.
+  warnings.warn(
+Triton version: 3.5.1+rocm7.2.0.gita272dfa8
+
+Total test cases: 1
+Running all 1 cases
+
+[1/1] Testing: compute_type=torch.float8_e4m3fn, quant_mode=per_token, trans_v=True, kv_varlen=False, context_partition_size=256, block_size=1024, num_heads=(12, 2), context_length=3000, batch_size=128, query_length=4, head_size=128, sliding_window=1023
+Traceback (most recent call last):
+  File "/job/repo/tests/kernels/test_pa.py", line 1604, in <module>
+    parse_arg_and_run_test()
+  File "/job/repo/tests/kernels/test_pa.py", line 1068, in parse_arg_and_run_test
+    results_df = run_multi_pa_decode_ps_test(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/job/repo/tests/kernels/test_pa.py", line 1041, in run_multi_pa_decode_ps_test
+    results.append(_run_single_test((test_config, idx + 1, len(test_configs))))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/job/repo/tests/kernels/test_pa.py", line 979, in _run_single_test
+    return run_pa_decode_ps_test(**test_config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/job/repo/tests/kernels/test_pa.py", line 745, in run_pa_decode_ps_test
+    gluon_time = measure_us(gluon_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^
+  File "/job/repo/tests/kernels/test_pa.py", line 390, in measure_us
+    fn()
+  File "/job/repo/tests/kernels/test_pa.py", line 724, in gluon_call
+    run_gluon_ps(
+  File "/job/repo/tests/kernels/test_pa.py", line 468, in run_gluon_ps
+    torch.ops.aiter.pa_decode_gluon(
+  File "/opt/venv/lib/python3.12/site-packages/torch/_ops.py", line 1255, in __call__
+    return self._op(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/utils/_device.py", line 103, in __torch_function__
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/_ops.py", line 1255, in __call__
+    return self._op(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/aiter/csrc/cpp_itfs/torch_utils.py", line 114, in _op_func
+    return op_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/aiter/aiter/ops/triton/gluon/pa_decode_gluon.py", line 5522, in pa_decode_gluon
+    _paged_attention_decode_v2_with_dot_kernel_reshape_wrapper(
+  File "/opt/aiter/aiter/ops/triton/gluon/pa_decode_gluon.py", line 4439, in _paged_attention_decode_v2_with_dot_kernel_reshape_wrapper
+    paged_attention_kernel[grid](
+  File "/opt/venv/lib/python3.12/site-packages/triton/runtime/jit.py", line 419, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/triton/runtime/jit.py", line 733, in run
+    kernel = self._do_compile(key, signature, device, constexprs, options, attrs, warmup)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/triton/runtime/jit.py", line 861, in _do_compile
+    kernel = self.compile(src, target=target, options=options.__dict__)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/triton/compiler/compiler.py", line 300, in compile
+    module = src.make_ir(target, options, codegen_fns, module_map, context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/triton/experimental/gluon/_runtime.py", line 40, in make_ir
+    module = ast_to_ttir(self.fn, self, context=context, options=options, codegen_fns=codegen_fns,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+triton.compiler.errors.CompilationError: at 178:35:
+    )
+
+    # Key cache layout - optimized for CDNA3 architecture
+    blocked_key_layout: gl.constexpr = gl.BlockedLayout(
+        size_per_thread=[1, 1, CONTIGUOUS_KV_ELEMENTS_16B_LOAD],
+        threads_per_warp=[4, 16, 1],
+        warps_per_cta=[1, 4, 1],
+        order=[2, 1, 0],
+    )
+
+    # QK matrix multiplication layout using AMD MFMA instructions
+    qk_mfma_layout: gl.constexpr = gl.amd.AMDMFMALayout(
+                                   ^
+AssertionError('invalid intrinsic shape; accepted shapes are [[32, 32], [16, 16], [64, 4], [4, 64]]')
+
+exit_code=1

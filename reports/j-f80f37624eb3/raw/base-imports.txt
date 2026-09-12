@@ -1,0 +1,4 @@
+flydsl /job/repo/python/flydsl/__init__.py
+_mlir None
+torch 2.9.1+rocm7.2.0.git7e1940d4 7.2.26015-fc0010cf6a
+gpu AMD Instinct MI350X gfx950:sramecc+:xnack-
