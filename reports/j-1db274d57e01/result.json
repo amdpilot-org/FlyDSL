@@ -1,0 +1,46 @@
+{
+  "job_id": "j-1db274d57e01",
+  "outcome": "qualification",
+  "source": {
+    "repository": "amdpilot-org/FlyDSL",
+    "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+    "checkout": "/job/repo"
+  },
+  "gpu": {
+    "name": "AMD Instinct MI355X",
+    "arch": "gfx950",
+    "device_count": 1
+  },
+  "native_build": {
+    "command": "/tmp/amdpilot-repo-j-1db274d57e01/venv/bin/python /opt/amdpilot/rebuild-native.py /job",
+    "exit_code": 0,
+    "passed": true,
+    "wall_seconds": 46.745190432993695,
+    "native_path": "/tmp/amdpilot-repo-j-1db274d57e01/native-build/python_packages/flydsl/_mlir",
+    "smoke": {
+      "passed": true,
+      "operation": "FlyDSL vector_add 100x1000 (predicated border blocks)",
+      "wall_seconds": 1.2945506909163669
+    }
+  },
+  "tests": {
+    "suite": "tests/unit",
+    "command": "/tmp/amdpilot-repo-j-1db274d57e01/venv/bin/python -m pytest tests/unit",
+    "exit_code": 0,
+    "passed": 1098,
+    "skipped": 17,
+    "warnings": 2,
+    "failed": 0,
+    "duration_seconds": 7.39
+  },
+  "imports": {
+    "flydsl": "/job/repo/python/flydsl/__init__.py",
+    "native_extension": "/job/repo/python/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so",
+    "torch": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py"
+  },
+  "limitations": [
+    "Broader repository test suites were not run.",
+    "Seventeen unit tests were skipped by existing test conditions.",
+    "This report does not infer success of the host receipt-delivery platform."
+  ]
+}
