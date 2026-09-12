@@ -136,7 +136,7 @@ class TestLlvmWrapperIR:
     def test_public_exports(self):
         assert fx.generic_load.__module__ == "flydsl.expr.llvm"
         assert fx.generic_store.__module__ == "flydsl.expr.llvm"
-        assert not hasattr(fx, "global_load")
+        assert fx.global_load.__module__ == "flydsl.expr.primitive"
         assert not hasattr(fx, "global_store")
         assert fx.atomic_add.__module__ == "flydsl.expr.llvm"
         assert fx.memory_fence.__module__ == "flydsl.expr.llvm"

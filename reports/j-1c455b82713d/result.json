@@ -1,0 +1,29 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/548",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Added a first-class fx.global_load helper on fx.Tensor that supports scalar and vector results, mutually exclusive typed element or byte offsets, explicit alignment, and scalar or lane-wise masks with passthrough values. The base checkout reproduced the missing API through its public-export regression, which asserted that fx.global_load was absent.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-1c455b82713d/venv/bin/python -m pytest tests/unit/test_llvm_wrapper.py -q",
+      "exit_code": 0,
+      "what_was_measured": "27 LLVM wrapper/export tests passed, including the new public fx.global_load export expectation. Raw output: /job/artifacts/j-1c455b82713d/unit.log"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-1c455b82713d/venv/bin/python -m pytest tests/kernels/test_global_load.py -q -s",
+      "exit_code": 0,
+      "what_was_measured": "A real ROCm GPU kernel compared scalar element-offset loads, vector byte-offset loads, and masked scalar loads against independently indexed/generated Torch tensors. Raw output: /job/artifacts/j-1c455b82713d/gpu-rerun.log"
+    },
+    {
+      "command": "FLYDSL_DUMP_IR=1 FLYDSL_DEBUG_DUMP_ASM=1 FLYDSL_DUMP_DIR=/job/artifacts/j-1c455b82713d/ir FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-1c455b82713d/cache FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-1c455b82713d/venv/bin/python -m pytest tests/kernels/test_global_load.py -q -s",
+      "exit_code": 0,
+      "what_was_measured": "Fresh compilation plus GPU numerical execution. LLVM IR contains load i32 align 4, load <4 x i32> align 16, and llvm.masked.load.v1i32.p1 with -77 passthrough. Final gfx ISA contains global_load_dword and global_load_dwordx4. Raw output: /job/artifacts/j-1c455b82713d/gpu-ir.log; IR/ISA: /job/artifacts/j-1c455b82713d/ir/global_load_kernel_0/"
+    }
+  ],
+  "gpu_execution": true,
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "The helper intentionally accepts only global fx.Tensor values; existing fx.Pointer users continue to use fx.generic_load.",
+    "Cache-policy metadata was not added because it was optional in the proposal and the generic LLVM load path currently exposes only nontemporal metadata."
+  ]
+}
