@@ -1,0 +1,63 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/946",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "candidate_commit": "156ec2dd6d4d5e6944e53fe4dab32acc57aec00a",
+  "outcome": "candidate_rejected",
+  "recommendation": "request_changes",
+  "fully_resolves_original": false,
+  "summary": "The candidate fixes ordinary alternate ROCm roots and PATH layouts in the real gpu-module-to-binary path, but fails for a valid toolkit root containing a space because the discovered path is inserted into the textual MLIR pass pipeline without quoting or escaping.",
+  "tests": [
+    {
+      "command": "ROCM_PATH=<private-missing-root> FLYDSL_RUNTIME_CACHE_DIR=<private-cache> python -m pytest tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] -q -s --tb=short (recorded base)",
+      "exit_code": 1,
+      "what_was_measured": "Reproduced the original opaque lld invocation failure inside the actual gpu-module-to-binary path."
+    },
+    {
+      "command": "python -m pytest tests/unit/test_rocm_toolkit_discovery.py tests/unit/test_external_llvm_codegen.py -q (exact candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Candidate regression and adjacent backend tests: 15 passed."
+    },
+    {
+      "command": "FLYDSL_ROCM_TOOLKIT_PATH=<private-valid-root> ROCM_PATH=<private-invalid-root> python -m pytest tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] -q -s --tb=short",
+      "exit_code": 0,
+      "what_was_measured": "Explicit precedence, real fatbin compilation, gfx950 execution, and maximum numerical error 0.00e+00 against Torch a+b."
+    },
+    {
+      "command": "env -u FLYDSL_ROCM_TOOLKIT_PATH -u ROCM_PATH -u ROCM_ROOT -u ROCM_HOME PATH=<private-root>/llvm/bin:/usr/local/bin:/usr/bin:/bin python -m pytest tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] -q -s --tb=short",
+      "exit_code": 0,
+      "what_was_measured": "Process-local PATH discovery, compilation, GPU execution, and numerical correctness."
+    },
+    {
+      "command": "FLYDSL_ROCM_TOOLKIT_PATH=<private-missing-root> python -m pytest tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] -q --tb=short",
+      "exit_code": 1,
+      "what_was_measured": "Clear missing-linker diagnostic naming the variable and exact path."
+    },
+    {
+      "command": "FLYDSL_ROCM_TOOLKIT_PATH=<private-nonexec-root> python -m pytest tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] -q --tb=short",
+      "exit_code": 1,
+      "what_was_measured": "Clear non-executable-linker diagnostic naming the variable and exact path."
+    },
+    {
+      "command": "FLYDSL_ROCM_TOOLKIT_PATH='<private-root>/path-space root' python -m pytest tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] -q -s --tb=short",
+      "exit_code": 1,
+      "what_was_measured": "Independent adversarial valid-root case; real compilation failed in PassManager parsing because the toolkit path was not quoted or escaped."
+    },
+    {
+      "command": "FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=<private-dump> FLYDSL_ROCM_TOOLKIT_PATH=<private-valid-root> python -m pytest tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] -q -s --tb=short",
+      "exit_code": 0,
+      "what_was_measured": "Real gfx950 compiler and execution evidence, including a 4,227-byte ISA with target, kernel, s_endpgm, and AMDHSA metadata; maximum error 0.00e+00."
+    },
+    {
+      "command": "python -m pytest tests/unit -q",
+      "exit_code": 0,
+      "what_was_measured": "Full unit suite: 1102 passed, 17 skipped."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "The candidate compiled and executed vector add on one AMD Instinct MI350X gfx950 for explicit-root, PATH-discovered, and dump/ISA runs, each with maximum error 0.00e+00 against Torch a+b.",
+  "native_rebuilt": false,
+  "remaining_counterexamples": [
+    "A valid alternate ROCm toolkit root containing a space fails before compilation because its path is interpolated unquoted into gpu-module-to-binary pass options."
+  ],
+  "remaining_limitations": "gfx1250 and ROCm 6 were unavailable and remain unverified; hardware and ISA validation used gfx950 on ROCm 7.2. No C++ changed, so the prepared pinned native library was used without rebuilding."
+}
