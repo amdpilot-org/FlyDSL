@@ -23,7 +23,7 @@ import flydsl.expr as fx  # noqa: E402
 
 from flydsl.runtime.device import get_rocm_arch  # noqa: E402
 from kernels.gemm.gemm_bf16_gfx1250 import launch_gemm_bf16  # noqa: E402
-from tests.test_common import run_perftest  # noqa: E402
+from flydsl.testing import run_perftest  # noqa: E402
 
 _DT = {"bf16": torch.bfloat16, "f16": torch.float16}
 

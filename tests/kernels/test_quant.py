@@ -31,8 +31,8 @@ from flydsl.expr.arith import ArithValue
 from flydsl.expr.numeric import Float16, Float32, Int8
 from flydsl.expr.typing import Int32, ReductionOp, T, Vector, full
 from flydsl.runtime.device import get_rocm_arch
+from flydsl.testing import run_perftest
 from flydsl.utils.smem_allocator import SmemAllocator, SmemPtr
-from tests.test_common import run_perftest
 
 try:
     import torch

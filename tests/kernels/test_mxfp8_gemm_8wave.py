@@ -27,10 +27,10 @@ if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
 from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+from flydsl.testing import run_perftest, verify_output  # noqa: E402
 from kernels.gemm.fp8_gemm_utils import preshuffle_b  # noqa: E402
 from kernels.gemm.mxfp8_gemm_8wave import compile_mxfp8_gemm_8w  # noqa: E402
 from tests.kernels.utils import gemm_common_utils  # noqa: E402
-from tests.test_common import run_perftest, verify_output  # noqa: E402
 
 OUT_DTYPE = torch.bfloat16
 ARCH = str(get_rocm_arch())

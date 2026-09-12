@@ -46,8 +46,8 @@ except ImportError as _e:
     # the whole suite.
     pytest.skip(f"aiter.ops.attention API mismatch ({_e})", allow_module_level=True)
 
+from flydsl.testing import checkAllclose, run_perftest  # noqa: E402
 from kernels.attention.mla_fwd_decode import flydsl_mla_fwd_decode  # noqa: E402
-from tests.test_common import checkAllclose, run_perftest  # noqa: E402
 
 torch.set_default_device("cuda")
 

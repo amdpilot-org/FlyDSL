@@ -1,0 +1,488 @@
+Checking committed Python changes between acf7e67b7d22847e345938ca54fcc137bd7b2a1f and HEAD.
+Checking Python style for changes between acf7e67b7d22847e345938ca54fcc137bd7b2a1f and HEAD.
+No changed Python files to check.
+Checking uncommitted Python files:
+  python/flydsl/testing.py
+  tests/kernels/test_flash_attn_fwd.py
+  tests/kernels/test_fp4_gemm_4wave.py
+  tests/kernels/test_fp8_gemm_rowscale.py
+  tests/kernels/test_gemm_a16w16_gfx950.py
+  tests/kernels/test_gemm_bf16_gfx1250.py
+  tests/kernels/test_layernorm.py
+  tests/kernels/test_mla_decode.py
+  tests/kernels/test_moe_gemm.py
+  tests/kernels/test_moe_reduce.py
+  tests/kernels/test_mxfp8_gemm_8wave.py
+  tests/kernels/test_preshuffle_gemm.py
+  tests/kernels/test_quant.py
+  tests/kernels/test_rdna_gemm.py
+  tests/kernels/test_rmsnorm.py
+  tests/kernels/test_softmax.py
+  tests/kernels/test_softmax_bwd.py
+  tests/kernels/test_topk_gating_softmax.py
+  tests/kernels/test_vec_add.py
+  tests/test_common.py
+  tests/unit/test_cluster_mcast_gemm_gfx1250.py
+  tests/unit/test_compile_hints.py
+  tests/unit/test_testing.py
+All done! ✨ 🍰 ✨
+23 files would be left unchanged.
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/kernels/test_flash_attn_fwd.py:33:1
+   |
+31 |       sys.exit(1)
+32 |
+33 | / import pytest  # noqa: E402
+34 | |
+35 | | from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+36 | | from kernels.attention import flash_attn_interface  # noqa: E402
+37 | | from kernels.attention.flash_attn_gfx950 import build_flash_attn_dualwave_swp_module  # noqa: E402
+38 | | from kernels.attention.flash_attn_interface import flydsl_flash_attn_func  # noqa: E402
+39 | | from kernels.attention.flash_attn_utils import (  # noqa: E402
+40 | |     BIAS_MAX_DESCRIPTOR_BYTES,
+41 | |     BIAS_MAX_OFFSET_ELEMS,
+42 | |     bias_addressing_error,
+43 | | )
+44 | | from flydsl.testing import run_perftest  # noqa: E402
+   | |_______________________________________^
+45 |
+46 |   UNIFORM_RANGE = (-1, 1)
+   |
+help: Organize imports
+   |
+35 | from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+36 + from flydsl.testing import run_perftest  # noqa: E402
+37 | from kernels.attention import flash_attn_interface  # noqa: E402
+--------------------------------------------------------------------------------
+44 | )
+   - from flydsl.testing import run_perftest  # noqa: E402
+45 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/kernels/test_fp4_gemm_4wave.py:29:1
+   |
+27 |       sys.path.insert(0, _REPO_ROOT)
+28 |
+29 | / from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+30 | | from kernels.gemm.fp4_gemm_4wave import compile_fp4_gemm_4w  # noqa: E402
+31 | | from tests.kernels.utils import gemm_common_utils  # noqa: E402
+32 | | from flydsl.testing import run_perftest, verify_output  # noqa: E402
+   | |______________________________________________________^
+33 |
+34 |   OUT_DTYPE = torch.bfloat16
+   |
+help: Organize imports
+   |
+29 | from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+30 + from flydsl.testing import run_perftest, verify_output  # noqa: E402
+31 | from kernels.gemm.fp4_gemm_4wave import compile_fp4_gemm_4w  # noqa: E402
+32 | from tests.kernels.utils import gemm_common_utils  # noqa: E402
+   - from flydsl.testing import run_perftest, verify_output  # noqa: E402
+33 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/kernels/test_fp8_gemm_rowscale.py:27:1
+   |
+25 |       sys.path.insert(0, _REPO_ROOT)
+26 |
+27 | / from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+28 | | from kernels.gemm.fp8_gemm_4wave import compile_fp8_gemm_4w  # noqa: E402
+29 | | from kernels.gemm.fp8_gemm_8wave import compile_fp8_gemm_8w  # noqa: E402
+30 | | from kernels.gemm.fp8_gemm_utils import preshuffle_b  # noqa: E402
+31 | | from flydsl.testing import run_perftest, verify_output  # noqa: E402
+32 | | from tests.utils import pertoken_quant  # noqa: E402
+   | |______________________________________^
+33 |
+34 |   FP8_DTYPE = torch.float8_e4m3fn
+   |
+help: Organize imports
+   |
+27 | from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+28 + from flydsl.testing import run_perftest, verify_output  # noqa: E402
+29 | from kernels.gemm.fp8_gemm_4wave import compile_fp8_gemm_4w  # noqa: E402
+30 | from kernels.gemm.fp8_gemm_8wave import compile_fp8_gemm_8w  # noqa: E402
+31 | from kernels.gemm.fp8_gemm_utils import preshuffle_b  # noqa: E402
+   - from flydsl.testing import run_perftest, verify_output  # noqa: E402
+32 | from tests.utils import pertoken_quant  # noqa: E402
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/kernels/test_layernorm.py:16:1
+   |
+14 |   """
+15 |
+16 | / import os
+17 | |
+18 | | import pytest
+19 | |
+20 | | import flydsl.compiler as flyc
+21 | | import flydsl.expr as fx
+22 | | from flydsl.runtime.device import get_rocm_arch
+23 | | from kernels.norm.layernorm_kernel import (
+24 | |     build_fused_add_layernorm_dynamicquant_module,
+25 | |     build_fused_add_layernorm_module,
+26 | |     build_fused_add_layernorm_smoothquant_module,
+27 | |     build_layernorm_bwd_module,
+28 | |     build_layernorm_dynamicquant_module,
+29 | |     build_layernorm_module,
+30 | |     build_layernorm_smoothquant_module,
+31 | |     layernorm,
+32 | | )
+33 | | from tests.kernels.benchmark_common import (
+34 | |     PerfRow,
+35 | |     bench_gpu_us_torch,
+36 | |     maybe_enable_aiter,
+37 | |     print_perf_table,
+38 | | )
+39 | | from flydsl.testing import run_perftest
+   | |_______________________________________^
+40 |
+41 |   pytestmark = [pytest.mark.l2_device, pytest.mark.rocm_lower]
+   |
+help: Organize imports
+   |
+22 | from flydsl.runtime.device import get_rocm_arch
+23 + from flydsl.testing import run_perftest
+24 | from kernels.norm.layernorm_kernel import (
+--------------------------------------------------------------------------------
+39 | )
+   - from flydsl.testing import run_perftest
+40 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/kernels/test_mla_decode.py:49:1
+   |
+47 |       pytest.skip(f"aiter.ops.attention API mismatch ({_e})", allow_module_level=True)
+48 |
+49 | / from kernels.attention.mla_fwd_decode import flydsl_mla_fwd_decode  # noqa: E402
+50 | | from flydsl.testing import checkAllclose, run_perftest  # noqa: E402
+   | |______________________________________________________^
+51 |
+52 |   torch.set_default_device("cuda")
+   |
+help: Organize imports
+   |
+48 |
+49 + from flydsl.testing import checkAllclose, run_perftest  # noqa: E402
+50 | from kernels.attention.mla_fwd_decode import flydsl_mla_fwd_decode  # noqa: E402
+   - from flydsl.testing import checkAllclose, run_perftest  # noqa: E402
+51 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/kernels/test_moe_gemm.py:33:1
+   |
+31 |           sys.path.insert(0, _p)
+32 |
+33 | / from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+34 | | from tests.kernels.test_ref import torch_moe_gemm1, torch_moe_gemm2  # noqa: E402
+35 | | from flydsl.testing import run_perftest, verify_output  # noqa: E402
+36 | | from tests.utils import shuffle_weight  # noqa: E402
+   | |______________________________________^
+37 |
+38 |   ARCH = get_rocm_arch()
+   |
+help: Organize imports
+   |
+33 | from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+34 + from flydsl.testing import run_perftest, verify_output  # noqa: E402
+35 | from tests.kernels.test_ref import torch_moe_gemm1, torch_moe_gemm2  # noqa: E402
+   - from flydsl.testing import run_perftest, verify_output  # noqa: E402
+36 | from tests.utils import shuffle_weight  # noqa: E402
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/kernels/test_moe_reduce.py:35:1
+   |
+33 |           sys.path.insert(0, _p)
+34 |
+35 | / import flydsl.compiler as flyc  # noqa: E402
+36 | | import flydsl.expr as fx  # noqa: E402
+37 | | from kernels.common.tensor_shim import _run_compiled  # noqa: E402
+38 | | from kernels.moe.moe_gemm_2stage import compile_moe_reduction  # noqa: E402
+39 | | from flydsl.testing import run_perftest, verify_output  # noqa: E402
+   | |______________________________________________________^
+40 |
+41 |   logging.basicConfig(level=logging.INFO)
+   |
+help: Organize imports
+   |
+36 | import flydsl.expr as fx  # noqa: E402
+37 + from flydsl.testing import run_perftest, verify_output  # noqa: E402
+38 | from kernels.common.tensor_shim import _run_compiled  # noqa: E402
+39 | from kernels.moe.moe_gemm_2stage import compile_moe_reduction  # noqa: E402
+   - from flydsl.testing import run_perftest, verify_output  # noqa: E402
+40 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/kernels/test_mxfp8_gemm_8wave.py:29:1
+   |
+27 |       sys.path.insert(0, _REPO_ROOT)
+28 |
+29 | / from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+30 | | from kernels.gemm.fp8_gemm_utils import preshuffle_b  # noqa: E402
+31 | | from kernels.gemm.mxfp8_gemm_8wave import compile_mxfp8_gemm_8w  # noqa: E402
+32 | | from tests.kernels.utils import gemm_common_utils  # noqa: E402
+33 | | from flydsl.testing import run_perftest, verify_output  # noqa: E402
+   | |______________________________________________________^
+34 |
+35 |   OUT_DTYPE = torch.bfloat16
+   |
+help: Organize imports
+   |
+29 | from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+30 + from flydsl.testing import run_perftest, verify_output  # noqa: E402
+31 | from kernels.gemm.fp8_gemm_utils import preshuffle_b  # noqa: E402
+32 | from kernels.gemm.mxfp8_gemm_8wave import compile_mxfp8_gemm_8w  # noqa: E402
+33 | from tests.kernels.utils import gemm_common_utils  # noqa: E402
+   - from flydsl.testing import run_perftest, verify_output  # noqa: E402
+34 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/kernels/test_preshuffle_gemm.py:33:1
+   |
+31 |       sys.path.insert(0, _PYFLYDSL_SRC)
+32 |
+33 | / from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+34 | | from kernels.gemm.mxfp4_preshuffle import launch_gemm  # noqa: E402
+35 | | from kernels.gemm.preshuffle_gemm import compile_preshuffle_gemm  # noqa: E402
+36 | | from tests.kernels.utils import gemm_common_utils  # noqa: E402
+37 | | from flydsl.testing import run_perftest, verify_output  # noqa: E402
+38 | | from tests.utils import pertoken_quant, shuffle_weight  # noqa: E402
+   | |______________________________________________________^
+39 |
+40 |   logging.basicConfig(level=logging.INFO)
+   |
+help: Organize imports
+   |
+33 | from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+34 + from flydsl.testing import run_perftest, verify_output  # noqa: E402
+35 | from kernels.gemm.mxfp4_preshuffle import launch_gemm  # noqa: E402
+36 | from kernels.gemm.preshuffle_gemm import compile_preshuffle_gemm  # noqa: E402
+37 | from tests.kernels.utils import gemm_common_utils  # noqa: E402
+   - from flydsl.testing import run_perftest, verify_output  # noqa: E402
+38 | from tests.utils import pertoken_quant, shuffle_weight  # noqa: E402
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/kernels/test_quant.py:18:1
+   |
+16 |   """
+17 |
+18 | / import argparse
+19 | | import os
+20 | | import sys
+21 | |
+22 | | import numpy as np
+23 | | import pytest
+24 | |
+25 | | import flydsl.compiler as flyc
+26 | | import flydsl.expr as fx
+27 | | from flydsl._mlir import ir
+28 | | from flydsl.compiler.kernel_function import CompilationContext
+29 | | from flydsl.expr import arith, gpu, range_constexpr
+30 | | from flydsl.expr.arith import ArithValue
+31 | | from flydsl.expr.numeric import Float16, Float32, Int8
+32 | | from flydsl.expr.typing import Int32, ReductionOp, T, Vector, full
+33 | | from flydsl.runtime.device import get_rocm_arch
+34 | | from flydsl.utils.smem_allocator import SmemAllocator, SmemPtr
+35 | | from flydsl.testing import run_perftest
+   | |_______________________________________^
+36 |
+37 |   try:
+   |
+help: Organize imports
+   |
+33 | from flydsl.runtime.device import get_rocm_arch
+34 + from flydsl.testing import run_perftest
+35 | from flydsl.utils.smem_allocator import SmemAllocator, SmemPtr
+   - from flydsl.testing import run_perftest
+36 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/kernels/test_rdna_gemm.py:22:1
+   |
+20 |       sys.path.insert(0, _REPO_ROOT)
+21 |
+22 | / from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+23 | | from kernels.gemm.rdna3_f16_gemm import create_wmma_gemm_module as _create_wmma_gemm_module_gfx11  # noqa: E402
+24 | | from kernels.gemm.rdna3_f16_gemm_autotune import (  # noqa: E402
+25 | |     _TILE_FIELDS,
+26 | |     NUM_CU,
+27 | |     TILE_32x32x64,
+28 | |     TILE_64x64x64,
+29 | |     TILE_128x64x32,
+30 | |     TILE_128x128x32,
+31 | |     _default_config,
+32 | |     _ladder_for,
+33 | |     _tile_workgroups,
+34 | |     pick_tile,
+35 | | )
+36 | | from kernels.gemm.rdna_f16_gemm import create_wmma_gemm_module as _create_wmma_gemm_module_gfx12  # noqa: E402
+37 | | from kernels.gemm.rdna_fp8_preshuffle_gemm import (  # noqa: E402
+38 | |     compile_fp8_gemm,
+39 | |     fp8_quantize_per_channel,
+40 | |     fp8_quantize_per_token,
+41 | |     preshuffle_b_fp8,
+42 | | )
+43 | | from flydsl.testing import run_perftest, verify_output  # noqa: E402
+   | |______________________________________________________^
+44 |
+45 |   logging.basicConfig(level=logging.INFO)
+   |
+help: Organize imports
+   |
+22 | from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+23 + from flydsl.testing import run_perftest, verify_output  # noqa: E402
+24 | from kernels.gemm.rdna3_f16_gemm import create_wmma_gemm_module as _create_wmma_gemm_module_gfx11  # noqa: E402
+--------------------------------------------------------------------------------
+43 | )
+   - from flydsl.testing import run_perftest, verify_output  # noqa: E402
+44 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/kernels/test_rmsnorm.py:31:1
+   |
+29 |   # Imported after the torch guard: rmsnorm() is only defined when torch is present,
+30 |   # so importing it earlier makes a torch-less collection fail (ImportError) instead of skip.
+31 | / import flydsl.compiler as flyc  # noqa: E402
+32 | | import kernels.norm.rmsnorm_kernel as rmsnorm_kernel_impl  # noqa: E402
+33 | | from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+34 | | from kernels.common.tensor_shim import _run_compiled  # noqa: E402
+35 | | from kernels.norm.rmsnorm_kernel import (  # noqa: E402
+36 | |     build_fused_add_rmsnorm_bwd_module,
+37 | |     build_fused_add_rmsnorm_bwd_two_stage_module,
+38 | |     build_fused_add_rmsnorm_dynamicquant_module,
+39 | |     build_fused_add_rmsnorm_module,
+40 | |     build_fused_add_rmsnorm_smoothquant_module,
+41 | |     build_rmsnorm_bwd_module,
+42 | |     build_rmsnorm_bwd_two_stage_module,
+43 | |     build_rmsnorm_dynamicquant_module,
+44 | |     build_rmsnorm_module,
+45 | |     build_rmsnorm_smoothquant_module,
+46 | |     fused_add_rmsnorm,
+47 | |     rmsnorm,
+48 | | )
+49 | | from tests.kernels.benchmark_common import (  # noqa: E402
+50 | |     PerfRow,
+51 | |     bench_gpu_us_torch,
+52 | |     maybe_enable_aiter,
+53 | |     print_perf_table,
+54 | | )
+55 | | from flydsl.testing import run_perftest  # noqa: E402
+   | |_______________________________________^
+56 |
+57 |   DTYPE_FP32 = torch.float32
+   |
+help: Organize imports
+   |
+33 | from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+34 + from flydsl.testing import run_perftest  # noqa: E402
+35 | from kernels.common.tensor_shim import _run_compiled  # noqa: E402
+--------------------------------------------------------------------------------
+55 | )
+   - from flydsl.testing import run_perftest  # noqa: E402
+56 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/kernels/test_softmax.py:15:1
+   |
+13 |   """
+14 |
+15 | / import os
+16 | |
+17 | | import pytest
+18 | |
+19 | | from kernels.norm.softmax_autotune import _RTOL
+20 | | from kernels.norm.softmax_kernel import build_softmax_module
+21 | | from tests.kernels.benchmark_common import (
+22 | |     PerfRow,
+23 | |     bench_gpu_us_torch,
+24 | |     maybe_enable_aiter,
+25 | |     print_perf_table,
+26 | | )
+27 | | from flydsl.testing import run_perftest
+   | |_______________________________________^
+28 |
+29 |   pytestmark = [pytest.mark.l2_device, pytest.mark.rocm_lower]
+   |
+help: Organize imports
+   |
+18 |
+19 + from flydsl.testing import run_perftest
+20 | from kernels.norm.softmax_autotune import _RTOL
+--------------------------------------------------------------------------------
+27 | )
+   - from flydsl.testing import run_perftest
+28 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/kernels/test_softmax_bwd.py:28:1
+   |
+26 |       pytest.skip("CUDA/ROCm not available. Skipping GPU tests.", allow_module_level=True)
+27 |
+28 | / from kernels.norm.softmax_bwd_kernel import (  # noqa: E402
+29 | |     build_softmax_bwd_module,
+30 | |     softmax_bwd_buffered_operands,
+31 | | )
+32 | | from flydsl.testing import run_perftest  # noqa: E402
+   | |_______________________________________^
+33 |
+34 |   DTYPE_FP32 = torch.float32
+   |
+help: Organize imports
+   |
+27 |
+28 + from flydsl.testing import run_perftest  # noqa: E402
+29 | from kernels.norm.softmax_bwd_kernel import (  # noqa: E402
+30 |     build_softmax_bwd_module,
+31 |     softmax_bwd_buffered_operands,
+32 | )
+   - from flydsl.testing import run_perftest  # noqa: E402
+33 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/kernels/test_topk_gating_softmax.py:17:1
+   |
+15 |   """
+16 |
+17 | / import os
+18 | |
+19 | | import pytest
+20 | |
+21 | | from kernels.moe.topk_gating_softmax_kernel import (
+22 | |     build_topk_gating_softmax_module,
+23 | | )
+24 | | from tests.kernels.benchmark_common import (
+25 | |     PerfRow,
+26 | |     bench_gpu_us_torch,
+27 | |     print_perf_table,
+28 | | )
+29 | | from flydsl.testing import run_perftest
+   | |_______________________________________^
+30 |
+31 |   pytestmark = [pytest.mark.l2_device, pytest.mark.rocm_lower]
+   |
+help: Organize imports
+   |
+20 |
+21 + from flydsl.testing import run_perftest
+22 | from kernels.moe.topk_gating_softmax_kernel import (
+--------------------------------------------------------------------------------
+29 | )
+   - from flydsl.testing import run_perftest
+30 |
+   |
+
+Found 15 errors.
+[*] 15 fixable with the `--fix` option.

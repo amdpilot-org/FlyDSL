@@ -34,9 +34,9 @@ for _p in reversed(_PYTHON_CANDIDATES):
 
 import flydsl.compiler as flyc  # noqa: E402
 import flydsl.expr as fx  # noqa: E402
+from flydsl.testing import run_perftest, verify_output  # noqa: E402
 from kernels.common.tensor_shim import _run_compiled  # noqa: E402
 from kernels.moe.moe_gemm_2stage import compile_moe_reduction  # noqa: E402
-from tests.test_common import run_perftest, verify_output  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 

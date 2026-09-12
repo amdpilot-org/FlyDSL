@@ -33,6 +33,7 @@ if not torch.cuda.is_available():
 import pytest  # noqa: E402
 
 from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+from flydsl.testing import run_perftest  # noqa: E402
 from kernels.attention import flash_attn_interface  # noqa: E402
 from kernels.attention.flash_attn_gfx950 import build_flash_attn_dualwave_swp_module  # noqa: E402
 from kernels.attention.flash_attn_interface import flydsl_flash_attn_func  # noqa: E402
@@ -41,7 +42,6 @@ from kernels.attention.flash_attn_utils import (  # noqa: E402
     BIAS_MAX_OFFSET_ELEMS,
     bias_addressing_error,
 )
-from tests.test_common import run_perftest  # noqa: E402
 
 UNIFORM_RANGE = (-1, 1)
 DEFAULT_SEED = 123

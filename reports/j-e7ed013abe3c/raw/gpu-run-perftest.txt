@@ -1,0 +1,4 @@
+reference=numpy-cpu
+elements= 4096
+latency_us= 7.255000062286854
+max_abs_error= 0.0

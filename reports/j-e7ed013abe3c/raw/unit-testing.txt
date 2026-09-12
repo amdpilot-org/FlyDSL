@@ -1,0 +1,20 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 6 items
+
+tests/unit/test_testing.py ....F.                                        [100%]
+
+=================================== FAILURES ===================================
+__________ test_tensor_dump_and_load_round_trip_noncontiguous_tensor ___________
+tests/unit/test_testing.py:61: in test_tensor_dump_and_load_round_trip_noncontiguous_tensor
+    testing.tensor_dump(value, "value", str(tmp_path))
+python/flydsl/testing.py:449: in tensor_dump
+    x_cpu = x.cpu().view(torch.uint8)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: self.stride(-1) must be 1 to view Float as Byte (different element sizes), but got 4
+=========================== short test summary info ============================
+FAILED tests/unit/test_testing.py::test_tensor_dump_and_load_round_trip_noncontiguous_tensor
+========================= 1 failed, 5 passed in 0.80s ==========================
