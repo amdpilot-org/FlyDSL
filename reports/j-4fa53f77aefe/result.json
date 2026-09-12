@@ -1,0 +1,44 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/688",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Audited dynamic branch merging and loop-carried state with independent scalar and Vector references. Existing if/else and nested if-in-for behavior was numerically correct, but dynamic for...else silently discarded the entire else suite. The rewriter now emits that suite after scf.for, where it observes final loop-carried values. GPU regressions cover taken/untaken branches, nested branches in a loop, and zero-trip/nonzero-trip for...else behavior while checking that independent references retain their original values.",
+  "tests": [
+    {
+      "command": "ROCR_VISIBLE_DEVICES=0 HIP_VISIBLE_DEVICES=0 CUDA_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-4fa53f77aefe/cache /tmp/amdpilot-repo-j-4fa53f77aefe/venv/bin/python -m pytest -q -s tests/system/test_control_flow_independent_refs_e2e.py",
+      "exit_code": 1,
+      "what_was_measured": "Failing-before GPU reproduction on the unmodified AST rewriter: 3 ordinary branch/loop reference cases passed, while both zero-trip and three-trip for...else cases failed because scalar and vector else-suite updates were omitted. Raw output: /job/evidence/before-for-else-failure.txt"
+    },
+    {
+      "command": "ROCR_VISIBLE_DEVICES=0 HIP_VISIBLE_DEVICES=0 CUDA_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-4fa53f77aefe/cache /tmp/amdpilot-repo-j-4fa53f77aefe/venv/bin/python -m pytest -q -s tests/system/test_control_flow_independent_refs_e2e.py",
+      "exit_code": 0,
+      "what_was_measured": "Passing-after GPU regression: all 5 scalar/vector branch, nested-loop, and for...else numerical cases passed against independent expected tensors. Raw output: /job/evidence/after-targeted-independent-refs.txt"
+    },
+    {
+      "command": "ROCR_VISIBLE_DEVICES=0 HIP_VISIBLE_DEVICES=0 CUDA_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-4fa53f77aefe/cache /tmp/amdpilot-repo-j-4fa53f77aefe/venv/bin/python -m pytest -q -s tests/system/test_control_flow_independent_refs_e2e.py tests/system/test_if_liveout_minimal.py tests/system/test_for_vector_carry_shape_e2e.py tests/system/test_control_flow_compile.py tests/system/test_for_auto_iter_args_e2e.py tests/unit/test_for_dispatch_paths.py tests/unit/test_for_auto_iter_args.py tests/unit/test_while_dispatch_paths.py",
+      "exit_code": 0,
+      "what_was_measured": "38 focused AST-rewriter/control-flow tests passed, including real GPU scalar/vector numerical execution. Raw output: /job/evidence/final-focused-suite.txt"
+    },
+    {
+      "command": "ROCR_VISIBLE_DEVICES=0 HIP_VISIBLE_DEVICES=0 CUDA_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-4fa53f77aefe/cache FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/evidence/ir /tmp/amdpilot-repo-j-4fa53f77aefe/venv/bin/python -m pytest -q -s 'tests/system/test_control_flow_independent_refs_e2e.py::test_for_else_updates_values_and_preserves_independent_refs[3-expected1]'",
+      "exit_code": 0,
+      "what_was_measured": "Real GPU execution plus compiler artifacts. Origin/lowered MLIR contains scf.for with i32 and vector<4xi32> iter_args and scf.yield; final gfx950 ISA contains scalar additions and global_store_dwordx4. Raw run: /job/evidence/after-for-else-ir-isa-run.txt; MLIR/LLVM/ISA: /job/evidence/ir/_for_else_refs_kernel_0/"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-4fa53f77aefe/venv/bin/python -m compileall -q python/flydsl/compiler/ast_rewriter.py tests/system/test_control_flow_independent_refs_e2e.py",
+      "exit_code": 0,
+      "what_was_measured": "Modified Python source and regression test compile successfully."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-4fa53f77aefe/venv/bin/python -m ruff check python/flydsl/compiler/ast_rewriter.py tests/system/test_control_flow_independent_refs_e2e.py",
+      "exit_code": 1,
+      "what_was_measured": "Formatting/lint tool availability only; the prepared interpreter does not contain the ruff module. Raw output: /job/evidence/ruff.txt"
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "Tests ran on the assigned gfx950 GPU (rocminfo Name: gfx950). Before the fix, both for...else numerical cases failed; after the fix, all 5 targeted cases and the 38-test focused suite passed. A compiled gfx950 ISA dump was retained at /job/evidence/ir/_for_else_refs_kernel_0/21_final_isa.s."
+  },
+  "native_rebuilt": false,
+  "remaining_limitations": "The source issue is intentionally broad. This audit covers dynamic if/else merging, nested if inside dynamic for, loop-carried scalar/vector state, independent pre-region references, and dynamic for...else with zero and nonzero trip counts. Dynamic loop break/continue semantics were not verified and are not implemented by this change. No native rebuild was needed because the defect and fix are entirely in python/flydsl/compiler/ast_rewriter.py; the prepared wheel's native compiler produced and executed the retained MLIR/LLVM/gfx950 ISA artifacts. Source paths: /job/repo/python/flydsl/compiler/ast_rewriter.py and /job/repo/tests/system/test_control_flow_independent_refs_e2e.py."
+}
