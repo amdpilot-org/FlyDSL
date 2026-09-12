@@ -1,0 +1,214 @@
+
+Symbol table '.dynsym' contains 3 entries:
+   Num:    Value          Size Type    Bind   Vis       Ndx Name
+     0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT   UND 
+     1: 0000000000001e00 27636 FUNC    GLOBAL PROTECTED   7 flyc_bwd_dkdv
+     2: 0000000000000dc0    64 OBJECT  GLOBAL DEFAULT     6 flyc_bwd_dkdv.kd
+
+Symbol table '.symtab' contains 8 entries:
+   Num:    Value          Size Type    Bind   Vis       Ndx Name
+     0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT   UND 
+     1: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT   ABS amdgpu.max_num_vgpr
+     2: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT   ABS amdgpu.max_num_agpr
+     3: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT   ABS amdgpu.max_num_sgpr
+     4: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT   ABS amdgpu.max_num_named_barrier
+     5: 0000000000009e00     0 NOTYPE  LOCAL  HIDDEN      8 _DYNAMIC
+     6: 0000000000001e00 27636 FUNC    GLOBAL PROTECTED   7 flyc_bwd_dkdv
+     7: 0000000000000dc0    64 OBJECT  GLOBAL DEFAULT     6 flyc_bwd_dkdv.kd
+Displaying notes found in: .note
+  Owner                Data size 	Description
+  AMDGPU               0x00000aec	NT_AMDGPU_METADATA (AMDGPU Metadata)
+    AMDGPU Metadata:
+        ---
+amdhsa.kernels:
+  - .agpr_count:     138
+    .args:
+      - .address_space:  global
+        .offset:         0
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         8
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         16
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         24
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         32
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         40
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         48
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         56
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         64
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         72
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         80
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         88
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         96
+        .size:           8
+        .value_kind:     global_buffer
+      - .offset:         104
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         108
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         112
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         116
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         120
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         124
+        .size:           4
+        .value_kind:     by_value
+      - .address_space:  global
+        .offset:         128
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         136
+        .size:           8
+        .value_kind:     global_buffer
+      - .offset:         144
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         152
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         156
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         160
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         164
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         168
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         172
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         176
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         184
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         192
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         200
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         208
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         216
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         224
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         232
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         240
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         248
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         256
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         264
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         272
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         280
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         288
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         296
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         304
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         312
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         320
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         328
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         336
+        .size:           8
+        .value_kind:     by_value
+      - .offset:         344
+        .size:           8
+        .value_kind:     by_value
+    .group_segment_fixed_size: 69632
+    .kernarg_segment_align: 8
+    .kernarg_segment_size: 352
+    .max_flat_workgroup_size: 256
+    .name:           flyc_bwd_dkdv
+    .private_segment_fixed_size: 0
+    .reqd_workgroup_size:
+      - 256
+      - 1
+      - 1
+    .sgpr_count:     106
+    .sgpr_spill_count: 105
+    .symbol:         flyc_bwd_dkdv.kd
+    .uniform_work_group_size: 1
+    .uses_dynamic_stack: false
+    .vgpr_count:     394
+    .vgpr_spill_count: 0
+    .wavefront_size: 64
+amdhsa.target:   amdgcn-amd-amdhsa-unknown-gfx950
+amdhsa.version:
+  - 1
+  - 2
+...
+

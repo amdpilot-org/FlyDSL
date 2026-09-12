@@ -1,0 +1,57 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/1087",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "reproduced",
+  "summary": "The exact issue MLIR reproduces byte-for-byte with embedded LLVM 24.0.0git e2a39f504fee836e4def9581bed817ecc327b9dc. Post-greedy MachineIR omits sub4_sub5 from an sgpr_512 copy-in, spills the full value, then restores and consumes those undefined lanes. Final ISA omits s_mov_b64 s[60:61], s[80:81]; a CFG analysis finds 16 buffer loads whose descriptor base derives from the lost definition. No FlyDSL-side mitigation was justified by the original reproducer and controls.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-e27d7a6783be/venv/bin/python repro.py 18_reconcile_unrealized_casts.mlir baseline-out.mlir",
+      "exit_code": 0,
+      "what_was_measured": "Exact source reproducer; generated ISA SHA-256 1452f52355effa38e7018af519828f1902d6960c82493a410fc75684a5684cef and missing s_mov_b64 s[60:61], s[80:81]."
+    },
+    {
+      "command": "ROCM_PATH=/opt/rocm /tmp/amdpilot-repo-j-e27d7a6783be/venv/bin/python <fatbin driver> && /opt/rocm/llvm/bin/llvm-objdump -d --mcpu=gfx950 baseline.hsaco",
+      "exit_code": 0,
+      "what_was_measured": "Actual ELF/HSACO and disassembly: undefined s60/s61 spill at 0x2510/0x2518, reload at 0x3f68/0x3f70, and descriptor dereference beginning at 0x41ec."
+    },
+    {
+      "command": "LLVM_BIN=/opt/rocm/llvm/bin python lostdef.py baseline.hsaco",
+      "exit_code": 0,
+      "what_was_measured": "Four writelane sources lack reaching definitions, including s60/s61 at the reported spill."
+    },
+    {
+      "command": "LLVM_BIN=/opt/rocm/llvm/bin python spillscan.py baseline.hsaco",
+      "exit_code": 0,
+      "what_was_measured": "Sixteen buffer accesses dereference a descriptor base tainted by the lost definition."
+    },
+    {
+      "command": "embedded codegen with print-after=greedy, verify-machineinstrs=true, verify-regalloc=true",
+      "exit_code": 0,
+      "what_was_measured": "Post-greedy MachineIR has copy-in lanes sub0-sub3 and sub6-sub7 but copy-out lanes sub4-sub5; both LLVM verifiers accept it."
+    },
+    {
+      "command": "embedded codegen controls: no waves-per-eu option and --amdgpu-waves-per-eu=2",
+      "exit_code": 0,
+      "what_was_measured": "Both controls produce the same failing ISA byte-for-byte."
+    },
+    {
+      "command": "embedded codegen with amdgpu-spill-sgpr-to-vgpr=false",
+      "exit_code": 0,
+      "what_was_measured": "Scratch spill lowering still omits s_mov_b64 s[60:61], s[80:81], excluding spill storage selection as a mitigation."
+    },
+    {
+      "command": "LLVM_BIN=/opt/rocm/llvm/bin python lostdef.py attached-affected.hsaco attached-clean-control.hsaco",
+      "exit_code": 0,
+      "what_was_measured": "The affected control has four undefined writelane sources; the clean sibling has zero."
+    }
+  ],
+  "gpu_execution": false,
+  "gpu_execution_evidence": "Compile-only reproduction and static MachineIR/ELF/ISA analysis. The generated kernel has a proven undefined buffer base and was intentionally not launched.",
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "No patched LLVM build was produced; the prepared native rebuild is pinned to the affected LLVM revision and rejects changed LLVM inputs.",
+    "LLVM commit 83dca924c250bc6bf2e1b1b930dcc0e2a2939009 is mechanistically implicated but not proven by a revert or corrected LLVM build.",
+    "No GPU numerical result exists for the unsafe kernel because executing an object with a proven undefined descriptor base would risk an illegal or stray memory access.",
+    "No FlyDSL-side mitigation was found that survives the exact reproducer and controls; resolving the miscompile requires an LLVM correction or a sound LLVM-level verifier/guard."
+  ]
+}

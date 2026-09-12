@@ -1,0 +1,5 @@
+baseline.hsaco: 4 writelane(s) with no reaching definition
+    0x00002510  v_writelane_b32 v254, s60, 4
+    0x00002518  v_writelane_b32 v254, s61, 5
+    0x00003C68  v_writelane_b32 v255, s72, 35
+    0x00003E4C  v_writelane_b32 v255, s73, 36
