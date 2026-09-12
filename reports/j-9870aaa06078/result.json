@@ -1,0 +1,35 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/726",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Added opt-in persistent grid-stride execution to the existing standard MoE GEMM1 path while preserving persistent=False as the default and retaining its API and mathematical behavior. Verified default and persistent modes against independent Torch references on gfx950 for all supported input dtypes and masked tails.",
+  "tests": [
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 PYTHONPATH=/job/repo FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-9870aaa06078/cache/runtime /tmp/amdpilot-repo-j-9870aaa06078/venv/bin/python -m pytest tests/kernels/test_moe_gemm_2stage.py -k 'test_moe_gemm1_numeric or test_moe_gemm1_sentinel_token0' -q -s",
+      "exit_code": 0,
+      "what_was_measured": "Failing-before baseline of the unchanged standard GEMM1 implementation: 20 existing numerical and masked-tail tests passed on gfx950. Persistent mode was not yet present."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 PYTHONPATH=/job/repo FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-9870aaa06078/cache/final-tests /tmp/amdpilot-repo-j-9870aaa06078/venv/bin/python -m pytest tests/kernels/test_moe_gemm_2stage.py -k 'test_moe_gemm1_numeric or test_moe_gemm1_persistent_numeric or test_moe_gemm1_sentinel_token0' -q -s",
+      "exit_code": 0,
+      "what_was_measured": "28 GPU tests: unchanged default behavior plus persistent fp8, int8, int8smooth, and int4 correctness for tile_m 16/64 and masked tails, against independent Torch references."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 PYTHONPATH=/job/repo FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-9870aaa06078/cache/validation /tmp/amdpilot-repo-j-9870aaa06078/venv/bin/python reports/j-9870aaa06078/validate_persistent_gemm1.py",
+      "exit_code": 0,
+      "what_was_measured": "On identical inputs, default and persistent correctness plus seven warmed timing batches of 100 launches for two masked-tail shapes and all four supported input dtypes; raw means, standard deviations, minima, maxima, and samples are in persistent-gemm1-validation.json."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-9870aaa06078/venv/bin/python -m py_compile kernels/moe/moe_gemm_2stage/gemm1.py tests/kernels/test_moe_gemm_2stage.py reports/j-9870aaa06078/validate_persistent_gemm1.py && git diff --check",
+      "exit_code": 0,
+      "what_was_measured": "Python syntax and patch whitespace validation. Ruff was unavailable in the prepared interpreter."
+    }
+  ],
+  "gpu_execution": true,
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "Only two synthetic shapes were timed; this is not a production-model performance qualification.",
+    "Persistent mode was neutral within variability once and slower in the other measured pairs, so it remains opt-in and no speedup is promised.",
+    "No C++ native compiler source changed, so the documented pinned native rebuild was not required."
+  ]
+}

@@ -1,0 +1,477 @@
+{
+  "source_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "python": "/tmp/amdpilot-repo-j-9870aaa06078/venv/bin/python",
+  "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+  "hip": "7.2.26015-fc0010cf6a",
+  "gpu": {
+    "name": "AMD Instinct MI350X",
+    "arch": "gfx950:sramecc+:xnack-",
+    "compute_units": 256
+  },
+  "results": [
+    {
+      "shape": {
+        "tokens": 2051,
+        "model_dim": 256,
+        "inter_dim": 128,
+        "experts": 4,
+        "topk": 2,
+        "tile_m": 16,
+        "tile_n": 64,
+        "tile_k": 128
+      },
+      "in_dtype": "fp8",
+      "sorted_m_blocks": 261,
+      "logical_tiles": 522,
+      "persistent_grid_ctas": 256,
+      "default_cosine_vs_torch": 0.9999985098838806,
+      "persistent_cosine_vs_torch": 0.9999985098838806,
+      "persistent_cosine_vs_default": 0.9999999403953552,
+      "default": {
+        "samples_us": [
+          8.326889872550964,
+          8.12129020690918,
+          8.495299816131592,
+          8.011299967765808,
+          8.484100103378296,
+          8.685700297355652,
+          8.201689720153809
+        ],
+        "mean_us": 8.332324283463615,
+        "median_us": 8.326889872550964,
+        "stdev_us": 0.2377528288100022,
+        "min_us": 8.011299967765808,
+        "max_us": 8.685700297355652,
+        "warmup": 20,
+        "batches": 7,
+        "iterations_per_batch": 100
+      },
+      "persistent": {
+        "samples_us": [
+          7.878479957580566,
+          8.344900012016296,
+          8.32610011100769,
+          8.306499719619751,
+          9.028509855270386,
+          8.116499781608582,
+          8.28849971294403
+        ],
+        "mean_us": 8.327069878578186,
+        "median_us": 8.306499719619751,
+        "stdev_us": 0.3511458308368419,
+        "min_us": 7.878479957580566,
+        "max_us": 9.028509855270386,
+        "warmup": 20,
+        "batches": 7,
+        "iterations_per_batch": 100
+      },
+      "persistent_over_default_mean": 0.9993693950563282
+    },
+    {
+      "shape": {
+        "tokens": 2051,
+        "model_dim": 256,
+        "inter_dim": 128,
+        "experts": 4,
+        "topk": 2,
+        "tile_m": 16,
+        "tile_n": 64,
+        "tile_k": 128
+      },
+      "in_dtype": "int8",
+      "sorted_m_blocks": 261,
+      "logical_tiles": 522,
+      "persistent_grid_ctas": 256,
+      "default_cosine_vs_torch": 0.9999985694885254,
+      "persistent_cosine_vs_torch": 0.9999985694885254,
+      "persistent_cosine_vs_default": 1.0,
+      "default": {
+        "samples_us": [
+          8.204489946365356,
+          8.552899956703186,
+          7.558889985084534,
+          7.812089920043945,
+          7.287290096282959,
+          7.547289729118347,
+          7.226889729499817
+        ],
+        "mean_us": 7.741405623299735,
+        "median_us": 7.558889985084534,
+        "stdev_us": 0.4864680305766376,
+        "min_us": 7.226889729499817,
+        "max_us": 8.552899956703186,
+        "warmup": 20,
+        "batches": 7,
+        "iterations_per_batch": 100
+      },
+      "persistent": {
+        "samples_us": [
+          8.074089884757996,
+          8.035690188407898,
+          7.99049973487854,
+          7.9256898164749146,
+          7.960489988327026,
+          7.898499965667725,
+          7.934489846229553
+        ],
+        "mean_us": 7.9742070606776645,
+        "median_us": 7.960489988327026,
+        "stdev_us": 0.06307839988410413,
+        "min_us": 7.898499965667725,
+        "max_us": 8.074089884757996,
+        "warmup": 20,
+        "batches": 7,
+        "iterations_per_batch": 100
+      },
+      "persistent_over_default_mean": 1.0300722438154195
+    },
+    {
+      "shape": {
+        "tokens": 2051,
+        "model_dim": 256,
+        "inter_dim": 128,
+        "experts": 4,
+        "topk": 2,
+        "tile_m": 16,
+        "tile_n": 64,
+        "tile_k": 128
+      },
+      "in_dtype": "int8smooth",
+      "sorted_m_blocks": 261,
+      "logical_tiles": 522,
+      "persistent_grid_ctas": 256,
+      "default_cosine_vs_torch": 0.9999985694885254,
+      "persistent_cosine_vs_torch": 0.9999985694885254,
+      "persistent_cosine_vs_default": 1.0,
+      "default": {
+        "samples_us": [
+          7.180489897727966,
+          7.2196900844573975,
+          7.132490277290344,
+          7.217280268669128,
+          7.261279821395874,
+          7.390090227127075,
+          7.119290232658386
+        ],
+        "mean_us": 7.217230115618024,
+        "median_us": 7.217280268669128,
+        "stdev_us": 0.09124139518936727,
+        "min_us": 7.119290232658386,
+        "max_us": 7.390090227127075,
+        "warmup": 20,
+        "batches": 7,
+        "iterations_per_batch": 100
+      },
+      "persistent": {
+        "samples_us": [
+          8.244889974594116,
+          8.182100057601929,
+          8.174489736557007,
+          8.19329023361206,
+          8.194090127944946,
+          8.10929000377655,
+          8.053699731826782
+        ],
+        "mean_us": 8.16454998084477,
+        "median_us": 8.182100057601929,
+        "stdev_us": 0.0631154810990721,
+        "min_us": 8.053699731826782,
+        "max_us": 8.244889974594116,
+        "warmup": 20,
+        "batches": 7,
+        "iterations_per_batch": 100
+      },
+      "persistent_over_default_mean": 1.1312580934861358
+    },
+    {
+      "shape": {
+        "tokens": 2051,
+        "model_dim": 256,
+        "inter_dim": 128,
+        "experts": 4,
+        "topk": 2,
+        "tile_m": 16,
+        "tile_n": 64,
+        "tile_k": 128
+      },
+      "in_dtype": "int4",
+      "sorted_m_blocks": 261,
+      "logical_tiles": 522,
+      "persistent_grid_ctas": 256,
+      "default_cosine_vs_torch": 0.9999986886978149,
+      "persistent_cosine_vs_torch": 0.9999986886978149,
+      "persistent_cosine_vs_default": 1.0000001192092896,
+      "default": {
+        "samples_us": [
+          8.067700266838074,
+          8.080899715423584,
+          7.920089960098267,
+          8.088889718055725,
+          8.000100255012512,
+          7.979300022125244,
+          7.956089973449707
+        ],
+        "mean_us": 8.013295701571874,
+        "median_us": 8.000100255012512,
+        "stdev_us": 0.06650093526083968,
+        "min_us": 7.920089960098267,
+        "max_us": 8.088889718055725,
+        "warmup": 20,
+        "batches": 7,
+        "iterations_per_batch": 100
+      },
+      "persistent": {
+        "samples_us": [
+          8.760089874267578,
+          20.632240772247314,
+          8.681700229644775,
+          8.777310252189636,
+          8.702099919319153,
+          8.558499813079834,
+          8.545299768447876
+        ],
+        "mean_us": 10.37960580417088,
+        "median_us": 8.702099919319153,
+        "stdev_us": 4.521886067946458,
+        "min_us": 8.545299768447876,
+        "max_us": 20.632240772247314,
+        "warmup": 20,
+        "batches": 7,
+        "iterations_per_batch": 100
+      },
+      "persistent_over_default_mean": 1.2952979885835032
+    },
+    {
+      "shape": {
+        "tokens": 8193,
+        "model_dim": 256,
+        "inter_dim": 128,
+        "experts": 4,
+        "topk": 2,
+        "tile_m": 64,
+        "tile_n": 64,
+        "tile_k": 128
+      },
+      "in_dtype": "fp8",
+      "sorted_m_blocks": 260,
+      "logical_tiles": 520,
+      "persistent_grid_ctas": 256,
+      "default_cosine_vs_torch": 0.9999985694885254,
+      "persistent_cosine_vs_torch": 0.9999985694885254,
+      "persistent_cosine_vs_default": 1.0,
+      "default": {
+        "samples_us": [
+          9.094510078430176,
+          9.363309741020203,
+          9.20490026473999,
+          9.310910105705261,
+          9.284110069274902,
+          9.229310154914856,
+          9.274510145187378
+        ],
+        "mean_us": 9.251651508467537,
+        "median_us": 9.274510145187378,
+        "stdev_us": 0.08653849007673631,
+        "min_us": 9.094510078430176,
+        "max_us": 9.363309741020203,
+        "warmup": 20,
+        "batches": 7,
+        "iterations_per_batch": 100
+      },
+      "persistent": {
+        "samples_us": [
+          11.68133020401001,
+          11.67654037475586,
+          11.664940118789673,
+          11.625339984893799,
+          11.541730165481567,
+          11.55493974685669,
+          11.47853970527649
+        ],
+        "mean_us": 11.603337185723442,
+        "median_us": 11.625339984893799,
+        "stdev_us": 0.07898608577624042,
+        "min_us": 11.47853970527649,
+        "max_us": 11.68133020401001,
+        "warmup": 20,
+        "batches": 7,
+        "iterations_per_batch": 100
+      },
+      "persistent_over_default_mean": 1.2541909058186567
+    },
+    {
+      "shape": {
+        "tokens": 8193,
+        "model_dim": 256,
+        "inter_dim": 128,
+        "experts": 4,
+        "topk": 2,
+        "tile_m": 64,
+        "tile_n": 64,
+        "tile_k": 128
+      },
+      "in_dtype": "int8",
+      "sorted_m_blocks": 260,
+      "logical_tiles": 520,
+      "persistent_grid_ctas": 256,
+      "default_cosine_vs_torch": 0.9999987483024597,
+      "persistent_cosine_vs_torch": 0.9999987483024597,
+      "persistent_cosine_vs_default": 1.0000001192092896,
+      "default": {
+        "samples_us": [
+          9.346110224723816,
+          9.573709964752197,
+          9.476919770240784,
+          9.542109966278076,
+          9.486110210418701,
+          9.453309774398804,
+          9.49330985546112
+        ],
+        "mean_us": 9.481654252324786,
+        "median_us": 9.486110210418701,
+        "stdev_us": 0.07243717318582533,
+        "min_us": 9.346110224723816,
+        "max_us": 9.573709964752197,
+        "warmup": 20,
+        "batches": 7,
+        "iterations_per_batch": 100
+      },
+      "persistent": {
+        "samples_us": [
+          12.860150337219238,
+          12.760549783706665,
+          12.558939456939697,
+          12.544549703598022,
+          12.595750093460083,
+          12.488149404525757,
+          12.528949975967407
+        ],
+        "mean_us": 12.619576965059553,
+        "median_us": 12.558939456939697,
+        "stdev_us": 0.13730079811189896,
+        "min_us": 12.488149404525757,
+        "max_us": 12.860150337219238,
+        "warmup": 20,
+        "batches": 7,
+        "iterations_per_batch": 100
+      },
+      "persistent_over_default_mean": 1.3309467556218249
+    },
+    {
+      "shape": {
+        "tokens": 8193,
+        "model_dim": 256,
+        "inter_dim": 128,
+        "experts": 4,
+        "topk": 2,
+        "tile_m": 64,
+        "tile_n": 64,
+        "tile_k": 128
+      },
+      "in_dtype": "int8smooth",
+      "sorted_m_blocks": 260,
+      "logical_tiles": 520,
+      "persistent_grid_ctas": 256,
+      "default_cosine_vs_torch": 0.9999986886978149,
+      "persistent_cosine_vs_torch": 0.9999986886978149,
+      "persistent_cosine_vs_default": 0.9999999403953552,
+      "default": {
+        "samples_us": [
+          9.37811017036438,
+          9.566919803619385,
+          9.499710202217102,
+          9.663310050964355,
+          9.655309915542603,
+          9.53212022781372,
+          9.528110027313232
+        ],
+        "mean_us": 9.546227199690682,
+        "median_us": 9.53212022781372,
+        "stdev_us": 0.09745941207438058,
+        "min_us": 9.37811017036438,
+        "max_us": 9.663310050964355,
+        "warmup": 20,
+        "batches": 7,
+        "iterations_per_batch": 100
+      },
+      "persistent": {
+        "samples_us": [
+          12.830549478530884,
+          12.739349603652954,
+          12.523349523544312,
+          12.529749870300293,
+          12.541749477386475,
+          12.535749673843384,
+          12.514950037002563
+        ],
+        "mean_us": 12.602206809180123,
+        "median_us": 12.535749673843384,
+        "stdev_us": 0.12786867241259092,
+        "min_us": 12.514950037002563,
+        "max_us": 12.830549478530884,
+        "warmup": 20,
+        "batches": 7,
+        "iterations_per_batch": 100
+      },
+      "persistent_over_default_mean": 1.3201243324261611
+    },
+    {
+      "shape": {
+        "tokens": 8193,
+        "model_dim": 256,
+        "inter_dim": 128,
+        "experts": 4,
+        "topk": 2,
+        "tile_m": 64,
+        "tile_n": 64,
+        "tile_k": 128
+      },
+      "in_dtype": "int4",
+      "sorted_m_blocks": 260,
+      "logical_tiles": 520,
+      "persistent_grid_ctas": 256,
+      "default_cosine_vs_torch": 0.9999986290931702,
+      "persistent_cosine_vs_torch": 0.9999986290931702,
+      "persistent_cosine_vs_default": 1.0,
+      "default": {
+        "samples_us": [
+          12.13014006614685,
+          9.183310270309448,
+          9.170910120010376,
+          9.11171019077301,
+          9.133710265159607,
+          9.171310067176819,
+          9.174110293388367
+        ],
+        "mean_us": 9.582171610423497,
+        "median_us": 9.171310067176819,
+        "stdev_us": 1.123843287210646,
+        "min_us": 9.11171019077301,
+        "max_us": 12.13014006614685,
+        "warmup": 20,
+        "batches": 7,
+        "iterations_per_batch": 100
+      },
+      "persistent": {
+        "samples_us": [
+          13.501759767532349,
+          13.510969877243042,
+          13.281359672546387,
+          13.230559825897217,
+          13.278559446334839,
+          13.228960037231445,
+          13.246560096740723
+        ],
+        "mean_us": 13.325532674789429,
+        "median_us": 13.278559446334839,
+        "stdev_us": 0.12528864475304113,
+        "min_us": 13.228960037231445,
+        "max_us": 13.510969877243042,
+        "warmup": 20,
+        "batches": 7,
+        "iterations_per_batch": 100
+      },
+      "persistent_over_default_mean": 1.3906589462762178
+    }
+  ]
+}
