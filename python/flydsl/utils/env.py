@@ -12,10 +12,16 @@ T = TypeVar("T")
 class EnvOption(Generic[T]):
     """Descriptor that reads a typed value from an environment variable.
 
-    Subclass and override ``parse_value`` for custom types.  When accessed
-    as an instance attribute of an ``EnvManager`` subclass, the descriptor
-    reads ``os.environ[env_var]``, parses it, and returns the result (or
-    the default if the variable is unset).
+    Args:
+        default: Value returned when the environment variable is unset.
+        env_var: Explicit variable name; managers generate one when omitted.
+        description: Human-readable text used by ``EnvManager.help``.
+        validator: Optional predicate applied to each parsed value.
+
+    Example:
+        from flydsl.utils.env import OptInt
+        option = OptInt(2, env_var="FLYDSL_EXAMPLE")
+        assert option.default == 2
     """
 
     def __init__(
@@ -189,9 +195,14 @@ class EnvManagerMeta(type):
 class EnvManager(metaclass=EnvManagerMeta):
     """Base class for environment-variable-driven configuration.
 
-    Subclasses declare ``EnvOption`` descriptors as class attributes.
-    The metaclass auto-generates ``env_var`` names from the prefix
-    and attribute name if not explicitly provided.
+    Subclasses declare ``EnvOption`` descriptors; accessing them returns a
+    parsed environment value or the option's default.
+
+    Example:
+        from flydsl.utils.env import EnvManager, OptInt
+        class Config(EnvManager):
+            workers = OptInt(4)
+        assert Config().workers == 4
     """
 
     env_prefix: str = "FLYDSL"
