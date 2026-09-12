@@ -1,0 +1,42 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/821",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "reproduced",
+  "summary": "The original issue reproduces on the prepared base, and candidate f57cca7f3edc7efc131c940777f02600e4717649 fixes only diagnostic behavior. The exact plain-global BufferCopy32/64/128 fx.gemm variants still fail, while the VGPR gap remains 24 raw versus 28 UniversalCopy fx.gemm. The candidate adds actionable descriptor/width diagnostics and changes the descriptor-backed BufferCopy128 mismatch from an LLVM abort to a clean compile error. Descriptor-backed BufferCopy32/64 already compile on the base and candidate and use 26 VGPR.",
+  "tests": [
+    {
+      "command": "ARCH=gfx942 FLYDSL_GPU_ARCH=gfx942 FLYDSL_DUMP_IR=1 FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-d95d9d896ee3/venv/bin/python /job/review-evidence/repro_821.py {raw universal|gemm universal|gemm 32|gemm 64|gemm 128|gemm 32 buffer|gemm 64 buffer|gemm 128 buffer}",
+      "exit_code": 134,
+      "what_was_measured": "Base matrix: raw and UniversalCopy compiled; exact plain-global BufferCopy32/64/128 failed with exit 1; descriptor-backed 32/64 compiled; descriptor-backed 128 aborted with exit 134. Final gfx942 ISA reported raw=24, UniversalCopy fx.gemm=28, descriptor-backed 32=26, and descriptor-backed 64=26 VGPR. Raw evidence: /job/review-evidence/base."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-d95d9d896ee3/venv/bin/python /opt/amdpilot/rebuild-native.py /job",
+      "exit_code": 0,
+      "what_was_measured": "Rebuilt candidate C++ against pinned LLVM e2a39f504fee836e4def9581bed817ecc327b9dc; repo native path was switched to /tmp/amdpilot-repo-j-d95d9d896ee3/native-build/python_packages/flydsl/_mlir. The included gfx950 vector-add GPU numerical smoke passed. Metadata: /job/review-evidence/candidate/native-build.json."
+    },
+    {
+      "command": "ARCH=gfx942 FLYDSL_GPU_ARCH=gfx942 FLYDSL_DUMP_IR=1 FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-d95d9d896ee3/venv/bin/python /job/review-evidence/repro_821.py {raw universal|gemm universal|gemm 32|gemm 64|gemm 128|gemm 32 buffer|gemm 64 buffer|gemm 128 buffer}",
+      "exit_code": 1,
+      "what_was_measured": "Candidate matrix: exact plain-global 32/64/128 still failed but gained actionable descriptor diagnostics; descriptor-backed 32/64 compiled; descriptor-backed 128 became a clean 128-bit-versus-vector<8xi8> error instead of aborting. VGPR counts were unchanged from base. Raw evidence: /job/review-evidence/candidate."
+    },
+    {
+      "command": "{ /tmp/amdpilot-repo-j-d95d9d896ee3/native-build/bin/fly-opt --split-input-file --convert-fly-to-rocdl tests/mlir/Conversion/buffer_copy_invalid.mlir 2>&1 || true; } | /opt/amdpilot/llvm-project/mlir_install/bin/FileCheck tests/mlir/Conversion/buffer_copy_invalid.mlir",
+      "exit_code": 0,
+      "what_was_measured": "Candidate regression verified load/store width mismatch diagnostics and plain-global source/destination diagnostics using the rebuilt fly-opt."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-d95d9d896ee3/native-build/bin/fly-opt --split-input-file --convert-fly-to-rocdl /job/review-evidence/buffer_copy_boundaries.mlir",
+      "exit_code": 1,
+      "what_was_measured": "Adversarial boundaries: exact vector<16xi8> BufferCopy128 load/store cases lowered to i128 buffer operations, while an oversized vector<8xi8> result for BufferCopy32 was rejected with the expected width diagnostic. Exact valid sections separately exited 0."
+    }
+  ],
+  "gpu_execution": true,
+  "native_rebuilt": true,
+  "remaining_limitations": [
+    "The available GPU was AMD Instinct MI350X gfx950, not the issue's gfx942. The original gfx942 kernels were compiled and their ISA inspected but were not numerically executed.",
+    "The successful GPU execution was the native rebuild's independent vector-add smoke; it validates the rebuilt library on gfx950 but is not evidence that the gfx942 fp8 GEMM issue is solved.",
+    "The exact original BufferCopy32/64/128 programs still fail because they pass plain global tensors to descriptor-only atoms.",
+    "The candidate does not address fx.gemm VGPR overhead: 28 VGPR versus 24 for raw MFMA with UniversalCopy32b on this prepared revision.",
+    "BufferCopy128b cannot match this tiled MMA's 64-bit per-lane fragment; the candidate diagnoses rather than changes that contract."
+  ]
+}
