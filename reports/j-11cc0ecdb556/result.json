@@ -1,0 +1,63 @@
+{
+  "job_id": "j-11cc0ecdb556",
+  "scope": "bounded AMDPilot PR-receipt recovery platform qualification using real FlyDSL GPU work",
+  "platform_context": "https://github.com/amdpilot-org/amdpilotv2/pull/438",
+  "repository": "https://github.com/amdpilot-org/FlyDSL.git",
+  "base_revision": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "branch": "amdpilot/j-11cc0ecdb556",
+  "prepared_python": "/tmp/amdpilot-repo-j-11cc0ecdb556/venv/bin/python",
+  "paths": {
+    "source_checkout": "/job/repo",
+    "flydsl_package": "/job/repo/python/flydsl/__init__.py",
+    "compiler_source": "/job/repo/python/flydsl/compiler/__init__.py",
+    "expr_source": "/job/repo/python/flydsl/expr/__init__.py",
+    "native_python_shim": "/job/repo/python/flydsl/_mlir/ir.py",
+    "native_wheel_directory": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir",
+    "native_extension": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so"
+  },
+  "software": {
+    "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+    "torch_hip": "7.2.26015-fc0010cf6a",
+    "rocm_smi_driver": "6.18.6"
+  },
+  "device": {
+    "visible_count": 1,
+    "index": 0,
+    "name": "AMD Instinct MI355X",
+    "gfx": "gfx950",
+    "unique_id": "0x89e8c5cd3767811a",
+    "serial": "692517002127"
+  },
+  "commands": [
+    {
+      "command": "/tmp/amdpilot-repo-j-11cc0ecdb556/venv/bin/python -m pytest -q tests/unit/test_pointer_argument_vec_add.py",
+      "exit_code": 0,
+      "result": "1 passed in 1.04s",
+      "raw_output": "raw/pytest-pointer-vec-add.log"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-11cc0ecdb556/venv/bin/python reports/j-11cc0ecdb556/numerical_control.py",
+      "exit_code": 0,
+      "result": {
+        "size": 4099,
+        "dtype": "torch.float32",
+        "finite": true,
+        "max_abs_error_vs_cpu_float64": 2.384185791015625e-07,
+        "checksum": 38.46857421845198
+      },
+      "raw_output": "raw/numerical-control.log"
+    },
+    {
+      "command": "rocm-smi --showproductname --showuniqueid --showserial --showdriverversion",
+      "exit_code": 0,
+      "raw_output": "raw/rocm-smi.log"
+    }
+  ],
+  "qualification": "The prepared FlyDSL raw-pointer vector-add test and an independent Torch GPU numerical control passed on the assigned GPU.",
+  "limitations": [
+    "This report does not change or fix FlyDSL.",
+    "The pytest assertion exposes only its threshold (<1e-5), not the test's exact maximum error; the exact reported error comes from the separate numerical control.",
+    "No native compiler rebuild was needed because no C++ or native source was changed.",
+    "The external receipt-loss fault occurs after this work; this report does not test, compensate for, or claim successful platform recovery."
+  ]
+}
