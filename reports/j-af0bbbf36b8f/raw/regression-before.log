@@ -1,0 +1,18 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 1 item
+
+tests/unit/test_mlir_compiler.py F                                       [100%]
+
+=================================== FAILURES ===================================
+_________________ test_mlir_compiler_reuses_retained_source_ir _________________
+tests/unit/test_mlir_compiler.py:58: in test_mlir_compiler_reuses_retained_source_ir
+    assert jit_function.MlirCompiler.compile(_MODULE, source_ir="retained source") is _PARSED_MODULE
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: MlirCompiler.compile() got an unexpected keyword argument 'source_ir'
+=========================== short test summary info ============================
+FAILED tests/unit/test_mlir_compiler.py::test_mlir_compiler_reuses_retained_source_ir
+============================== 1 failed in 0.46s ===============================

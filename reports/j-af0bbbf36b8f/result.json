@@ -1,0 +1,48 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/862",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_verified",
+  "summary": "Verified partial optimization: the JIT serialized freshly generated source IR twice, and MlirCompiler.compile now reuses the retained text for the required parse copy. Cold cache keys and source/compiled IR hashes were unchanged. The isolated cold observations are not evidence of an end-to-end speedup and this narrow reduction does not resolve the broad original compile-time request.",
+  "tests": [
+    {
+      "command": "PYTHONPATH=/job/repo FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-af0bbbf36b8f/cache/issue862-baseline-rms-v2 FLYDSL_RUNTIME_ENABLE_CACHE=1 /tmp/amdpilot-repo-j-af0bbbf36b8f/venv/bin/python -u reports/j-af0bbbf36b8f/measure_cold_jit.py rmsnorm",
+      "exit_code": 0,
+      "what_was_measured": "Baseline cold RMSNorm 16x4096 bf16 compile and GPU execution against a float32 Torch RMSNorm reference; retained raw stage timing, cache path, cache-key hash, IR hashes and maximum absolute error."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-af0bbbf36b8f/cache/issue862-after-rms-v2 FLYDSL_RUNTIME_ENABLE_CACHE=1 /tmp/amdpilot-repo-j-af0bbbf36b8f/venv/bin/python -u reports/j-af0bbbf36b8f/measure_cold_jit.py rmsnorm",
+      "exit_code": 0,
+      "what_was_measured": "Changed cold RMSNorm 16x4096 bf16 compile and the same independent GPU numerical reference, in a distinct empty cache."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-af0bbbf36b8f/cache/issue862-baseline-gemm-v3 FLYDSL_RUNTIME_ENABLE_CACHE=1 /tmp/amdpilot-repo-j-af0bbbf36b8f/venv/bin/python -u reports/j-af0bbbf36b8f/measure_cold_jit.py gemm",
+      "exit_code": 0,
+      "what_was_measured": "Baseline cold gfx950 GEMM 1024x1024x1024 bf16-to-fp32 compile and GPU execution against torch float32 matmul; retained raw stage timing, cache path, cache-key hash, IR hashes and maximum absolute error."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-af0bbbf36b8f/cache/issue862-after-gemm FLYDSL_RUNTIME_ENABLE_CACHE=1 /tmp/amdpilot-repo-j-af0bbbf36b8f/venv/bin/python -u reports/j-af0bbbf36b8f/measure_cold_jit.py gemm",
+      "exit_code": 0,
+      "what_was_measured": "Changed cold gfx950 GEMM in a distinct empty cache against the same independent Torch reference."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-af0bbbf36b8f/venv/bin/python -m pytest -q tests/unit/test_mlir_compiler.py",
+      "exit_code": 1,
+      "what_was_measured": "Failing-before regression on the recorded base: MlirCompiler.compile did not accept retained source IR and therefore could not avoid the second serialization."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-af0bbbf36b8f/venv/bin/python -m pytest -q tests/unit/test_mlir_compiler.py tests/unit/test_jit_cache_key.py tests/unit/test_jit_cache_key_completeness.py",
+      "exit_code": 0,
+      "what_was_measured": "Passing-after regression plus 19 cache identity/completeness tests."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "One AMD Instinct MI350X (gfx950:sramecc+:xnack-) executed both kernels. RMSNorm max_abs_error=0.0009765625; GEMM max_abs_error=0.4954681396484375 within the maintained test configuration tolerance.",
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "This is a Python JIT orchestration change, so no native C++ rebuild was required.",
+    "The exact external RMSNorm snapshot linked by the issue no longer imports against this checkout because it references removed flydsl.expr.vector APIs; measurements use the maintained in-tree RMSNorm and GEMM implementations instead.",
+    "The reported MI355 was unavailable; validation used the assigned MI350X with the same gfx950 target family.",
+    "Cold wall-clock timings are single isolated observations and include host/runtime noise. The correctness and identity hashes, rather than their small timing delta, establish unchanged output and compilation identity.",
+    "A direct attempt to remove the required parse copy caused an MLIR duplicate-attribute assertion; only the redundant second serialization was removed."
+  ]
+}
