@@ -1,0 +1,66 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/583",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/574",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/573",
+  "candidate_commit": "f3176f6a51dcc480298ee7d8779319d736db865f",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "recommendation": "request_changes",
+  "fully_resolves_original": false,
+  "summary": "The rebuilt candidate fixes the reproduced composition assertion and passes its regression plus the existing LayoutAlgebra suite, but it does not fully enforce the original layout-algebra contract. A static logical_divide using a TileType divisor of size 6 against a size-16 layout is accepted even though the equivalent LayoutType divisor is rejected. Complement still aborts on a non-congruent layout, and left_inverse accepts a statically non-invertible layout. This is a partial implementation, not a full original-issue fix.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-9a0da9922f39/venv/bin/python /opt/amdpilot/rebuild-native.py /job (base acf7e67b7d22847e345938ca54fcc137bd7b2a1f)",
+      "exit_code": 0,
+      "what_was_measured": "Pinned-LLVM native base build, source/native import switch, and one-device FlyDSL vector-add numerical smoke."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-9a0da9922f39/native-build/bin/fly-opt /job/evidence-j-9a0da9922f39/candidate-invalid-structural-inputs.mlir -verify-diagnostics (base build)",
+      "exit_code": 134,
+      "what_was_measured": "Failing-before reproduction: the base aborts in LayoutUtils.h compositionImpl on an inadmissible static composition instead of emitting an operation diagnostic."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-9a0da9922f39/venv/bin/python /opt/amdpilot/rebuild-native.py /job (candidate f3176f6a51dcc480298ee7d8779319d736db865f)",
+      "exit_code": 0,
+      "what_was_measured": "Pinned-LLVM native candidate build, rebuilt native import, and real GPU numerical vector-add smoke."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-9a0da9922f39/native-build/bin/fly-opt tests/mlir/LayoutAlgebra/invalid_structural_inputs.mlir -verify-diagnostics",
+      "exit_code": 0,
+      "what_was_measured": "Candidate regression emits all expected diagnostics and preserves its dynamic controls."
+    },
+    {
+      "command": "all RUN lines in tests/mlir/LayoutAlgebra/*.mlir with rebuilt fly-opt and /opt/amdpilot/llvm-project/mlir_install/bin/FileCheck",
+      "exit_code": 0,
+      "what_was_measured": "All 11 LayoutAlgebra files passed with the candidate native compiler."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-9a0da9922f39/native-build/bin/fly-opt /job/evidence-j-9a0da9922f39/adversarial-tile-divide.mlir",
+      "exit_code": 0,
+      "what_was_measured": "Counterexample: logical_divide accepts static !fly.tile<[6:1]> for !fly.layout<16:1>, producing !fly.layout<((6,3)):((1,6))> despite non-divisibility."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-9a0da9922f39/native-build/bin/fly-opt /job/evidence-j-9a0da9922f39/adversarial-complement.mlir",
+      "exit_code": 134,
+      "what_was_measured": "Counterexample: complement of a layout with non-congruent shape/stride tuple structure still aborts in intTupleFilterZero instead of diagnosing the operation."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-9a0da9922f39/native-build/bin/fly-opt /job/evidence-j-9a0da9922f39/adversarial-left-inverse.mlir",
+      "exit_code": 0,
+      "what_was_measured": "Counterexample: left_inverse accepts the statically non-invertible layout (4,8):(2,8) and infers (2,32):(0,1)."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_evidence": "The candidate rebuild smoke passed FlyDSL vector_add 100x1000 on exactly one AMD Instinct MI355X. rocminfo reports gfx950 and ISA amdgcn-amd-amdhsa--gfx950:sramecc+:xnack-. Torch was 2.9.1+rocm7.2.0.git7e1940d4 and HIP was 7.2.26015-fc0010cf6a.",
+  "native_rebuilt": true,
+  "source_path": "/job/repo/python/flydsl/__init__.py",
+  "native_path": "/tmp/amdpilot-repo-j-9a0da9922f39/native-build/python_packages/flydsl/_mlir",
+  "compiler_evidence": "The tested fly-opt was rebuilt from candidate commit f3176f6a51dcc480298ee7d8779319d736db865f with pinned LLVM e2a39f504fee836e4def9581bed817ecc327b9dc (LLVM 24.0.0git, assertions enabled); the candidate build contains the rebuilt FlyOps.cpp object and produced the measured verifier diagnostics.",
+  "remaining_counterexamples": [
+    "logical_divide validates divisibility only for LayoutType divisors; the static TileType divisor !fly.tile<[6:1]> is accepted for !fly.layout<16:1>.",
+    "complement has no verifier and aborts on !fly.layout<((4,8),2):(1,(4,32))> due to mismatched tuple ranks.",
+    "left_inverse has no verifier and accepts the statically non-invertible layout !fly.layout<(4,8):(2,8)>.",
+    "Dynamic values cannot be validated beyond their static profiles without runtime checks."
+  ],
+  "remaining_limitations": "This review ran on one gfx950 AMD Instinct MI355X only; no other GPU architecture was available. The verifier behavior is architecture-independent and was exercised directly with rebuilt fly-opt. GPU execution proves the rebuilt native package remained operational but is not used as proof of verifier completeness. No LLVM source change was required. Raw logs and adversarial inputs are retained in /job/evidence-j-9a0da9922f39 outside the checkout."
+}
