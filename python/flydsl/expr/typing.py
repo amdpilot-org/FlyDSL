@@ -768,6 +768,19 @@ class Tile(BuiltinDslType):
 
 @ir.register_value_caster(LayoutType.static_typeid, replace=True)
 class Layout(BuiltinDslType):
+    """Map logical coordinates to linear indices inside traced FlyDSL code.
+
+    ``Layout`` values are produced by layout constructors, not by calling this
+    class directly.  Their shape and stride may contain static or traced values.
+    Pass coordinates as separate arguments; one tuple denotes one nested mode.
+
+    Example:
+        @flyc.jit
+        def inspect():
+            layout = fx.make_layout((4, 8), (1, 4))
+            assert fx.get_scalar(layout(1, 2)) == 9
+        inspect()
+    """
     @property
     def rank(self) -> int:
         return self.type.rank
@@ -822,6 +835,15 @@ class Layout(BuiltinDslType):
 
     @dsl_loc_tracing
     def get_hier_coord(self, index):
+        """Return the shape-structured coordinate for ``index``.
+
+        Args:
+            index: Linear index to invert through this plain layout.
+        Returns:
+            An ``IntTuple`` matching the nesting of :attr:`shape`.
+        Example:
+            assert layout.get_hier_coord(9).to_py_value() == (1, 2)
+        """
         return idx2crd(index, self)
 
     @dsl_loc_tracing
@@ -945,6 +967,16 @@ class ComposedLayout(BuiltinDslType):
 
 @ir.register_value_caster(PointerType.static_typeid, replace=True)
 class Pointer(BuiltinDslType):
+    """Typed address used for scalar memory access in traced FlyDSL code.
+
+    Pointer values normally come from a JIT argument or an allocator.  Adding
+    an integer advances by that many elements, not bytes.
+
+    Example:
+        @flyc.kernel
+        def write(ptr: fx.Pointer):
+            ptr[2] = ptr[0]
+    """
     @property
     def element_type(self):
         return Numeric.from_ir_type(self.type.element_type)
@@ -975,10 +1007,28 @@ class Pointer(BuiltinDslType):
 
     @dsl_loc_tracing
     def load(self, dtype=None):
+        """Load one scalar from this address.
+
+        Args:
+            dtype: Optional result dtype; defaults to :attr:`element_type`.
+        Returns:
+            A scalar DSL value.
+        Example:
+            value = ptr.load()
+        """
         return ptr_load(self, result_type=dtype)
 
     @dsl_loc_tracing
     def store(self, value):
+        """Store one scalar at this address.
+
+        Args:
+            value: DSL scalar or Python scalar convertible to the element type.
+        Returns:
+            The generated store operation.
+        Example:
+            ptr.store(1.0)
+        """
         if isinstance(value, (bool, int, float)):
             value = self.element_type(value)
         return ptr_store(value, self)
@@ -1005,12 +1055,32 @@ class Pointer(BuiltinDslType):
 
     @dsl_loc_tracing
     def view(self, layout):
+        """Create a tensor view rooted at this pointer.
+
+        Args:
+            layout: Logical-to-linear mapping for the new tensor.
+        Returns:
+            A :class:`Tensor` sharing this pointer's storage.
+        Example:
+            tile = ptr.view(fx.make_layout((4, 8), (8, 1)))
+        """
         return make_view(self, layout)
 
 
 @ir.register_value_caster(MemRefType.static_typeid, replace=True)
 @ir.register_value_caster(CoordTensorType.static_typeid, replace=True)
 class Tensor(BuiltinDslType):
+    """Layout-aware memory or coordinate view used by traced FlyDSL code.
+
+    Tensor values normally come from annotated JIT arguments or
+    :func:`make_view`; calling ``Tensor`` directly is an internal IR cast.
+
+    Example:
+        @flyc.kernel
+        def inspect(tensor: fx.Tensor):
+            m, n = tensor.shape.unpack()
+            tensor[0, 0] = tensor[m - 1, n - 1]
+    """
     @property
     def element_type(self):
         if isinstance(self.type, CoordTensorType):
@@ -1043,6 +1113,11 @@ class Tensor(BuiltinDslType):
 
     @property
     def layout(self) -> Layout:
+        """Return the tensor's logical-to-linear layout.
+
+        Example:
+            assert tensor.layout.shape.to_py_value() == (4, 8)
+        """
         return get_layout(self)
 
     @property
@@ -1055,6 +1130,13 @@ class Tensor(BuiltinDslType):
 
     @property
     def iter(self):
+        """Return the tensor's underlying pointer or coordinate iterator.
+
+        Returns:
+            The iterator used as the base by :func:`make_view`.
+        Example:
+            reshaped = fx.make_view(tensor.iter, new_layout)
+        """
         return get_iter(self)
 
     @dsl_loc_tracing
@@ -1079,10 +1161,26 @@ class Tensor(BuiltinDslType):
 
     @dsl_loc_tracing
     def load(self):
+        """Load the complete register tensor as a vector.
+
+        Returns:
+            A vector containing every element of this register-backed tensor.
+        Example:
+            values = fragment.load()
+        """
         return memref_load_vec(self)
 
     @dsl_loc_tracing
     def store(self, vector):
+        """Store a vector into the complete register tensor.
+
+        Args:
+            vector: Vector with the tensor's element count and dtype.
+        Returns:
+            The generated vector-store operation.
+        Example:
+            fragment.store(values)
+        """
         return memref_store_vec(vector, self)
 
     @dsl_loc_tracing
