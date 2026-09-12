@@ -29,6 +29,17 @@ def test_rocm_runtime_is_only_added_for_rocdl_backend():
     assert "add_subdirectory(ROCm)" in text
 
 
+def test_rocm_jit_runtime_has_no_sdk_build_dependency():
+    cmake = (_REPO_ROOT / "lib" / "Runtime" / "ROCm" / "CMakeLists.txt").read_text()
+    source = (_REPO_ROOT / "lib" / "Runtime" / "ROCm" / "FlyRocmRuntimeWrappers.cpp").read_text()
+
+    assert "find_package(hip" not in cmake
+    assert "hip::host" not in cmake
+    assert "hip::amdhip64" not in cmake
+    assert '#include "hip/' not in source
+    assert 'dlopen(soname, RTLD_LAZY | RTLD_LOCAL)' in source
+
+
 def test_backend_descriptors_are_loaded_from_selected_backend_list():
     text = (_REPO_ROOT / "cmake" / "FlyDSLBackends.cmake").read_text()
 

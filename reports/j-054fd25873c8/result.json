@@ -1,0 +1,52 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/813",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Removed the FlyJitRuntime build-time HIP SDK dependency and its eager ELF dependency on libamdhip64. The runtime now uses a small, size-checked HIP ABI boundary and lazily opens/resolves the installed HIP runtime when a GPU wrapper is first invoked.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-054fd25873c8/venv/bin/python -m pytest -q tests/unit/test_backend_cmake_defaults.py",
+      "exit_code": 0,
+      "what_was_measured": "Five backend/CMake guardrails passed, including the regression that rejects HIP package discovery, HIP imported targets, and HIP header inclusion in FlyJitRuntime."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-054fd25873c8/venv/bin/python /opt/amdpilot/rebuild-native.py /job",
+      "exit_code": 0,
+      "what_was_measured": "Full prepared native rebuild with pinned LLVM e2a39f504fee836e4def9581bed817ecc327b9dc, import from the rebuilt native tree, and the image's MI350X vector-add GPU smoke. Receipt: /job/native-build.json; build log: /job/native-build.log."
+    },
+    {
+      "command": "cmake -S /job/repo -B /tmp/amdpilot-repo-j-054fd25873c8/sdkfree-config-3 -G Ninja -DMLIR_DIR=/opt/amdpilot/llvm-project/mlir_install/lib/cmake/mlir -DPython3_EXECUTABLE=/tmp/amdpilot-repo-j-054fd25873c8/venv/bin/python -Dnanobind_DIR=/opt/venv/lib/python3.12/site-packages/nanobind/cmake -DCMAKE_DISABLE_FIND_PACKAGE_hip=TRUE && cmake --build /tmp/amdpilot-repo-j-054fd25873c8/sdkfree-config-3 --target FlyJitRuntime -j2",
+      "exit_code": 0,
+      "what_was_measured": "A fresh configure and FlyJitRuntime build completed while CMake HIP package discovery was disabled. Raw logs: /job/artifacts/j-054fd25873c8/sdkfree-config.log and sdkfree-runtime-build.log."
+    },
+    {
+      "command": "readelf -d <rebuilt>/libfly_jit_runtime.so && nm -D --undefined-only <rebuilt>/libfly_jit_runtime.so",
+      "exit_code": 0,
+      "what_was_measured": "The rebuilt ELF has only standard C/C++ runtime DT_NEEDED entries and no undefined HIP symbols. The original prepared wheel had DT_NEEDED libamdhip64.so.7 and an /opt/rocm/lib RPATH. Raw logs are under /job/artifacts/j-054fd25873c8/."
+    },
+    {
+      "command": "FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/tmp/amdpilot-repo-j-054fd25873c8/isa-dump-2 FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-054fd25873c8/venv/bin/python -m pytest -q tests/unit/test_pointer_argument_vec_add.py -s",
+      "exit_code": 0,
+      "what_was_measured": "Fresh GPU compilation/execution passed against the independent PyTorch a+b reference (max error threshold 1e-5). Emitted ISA targets amdgcn-amd-amdhsa-unknown-gfx950 and contains two global_load_dword instructions, v_add_f32_e32, and global_store_dword."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-054fd25873c8/venv/bin/python -c '<ctypes-load rebuilt libfly_jit_runtime.so and inspect /proc/self/maps>'",
+      "exit_code": 0,
+      "what_was_measured": "No libamdhip64 mapping existed before or after loading the rebuilt JIT runtime, demonstrating that ordinary library startup is lazy. Raw log: /job/artifacts/j-054fd25873c8/lazy-load-maps.log."
+    }
+  ],
+  "gpu_execution": true,
+  "native_rebuilt": true,
+  "remaining_limitations": [
+    "ROCm 7.2 is physically installed in this image. The SDK-free build claim was validated by disabling CMake HIP discovery, inspecting the successful compiler/link inputs, and checking the resulting ELF; a physically SDK-absent host was not available.",
+    "This change removes the HIP SDK dependency only from FlyJitRuntime. It does not implement the RFC's future CUDA/NVVM backend or dual-backend wheel selection.",
+    "GPU execution still correctly requires a compatible user-machine HIP runtime/driver; only build-time and eager-load dependencies were removed."
+  ],
+  "paths": {
+    "source": "/job/repo",
+    "native": "/tmp/amdpilot-repo-j-054fd25873c8/native-build/python_packages/flydsl/_mlir",
+    "raw_output": "/job/artifacts/j-054fd25873c8",
+    "native_build_receipt": "/job/native-build.json",
+    "native_build_log": "/job/native-build.log"
+  }
+}
