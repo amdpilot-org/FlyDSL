@@ -1,0 +1,54 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/515",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "candidate_commit": "716219a9b7bd7b2b9632123f95433a0745e3045a",
+  "outcome": "candidate_rejected",
+  "recommendation": "request_changes",
+  "fully_resolves_original": false,
+  "summary": "The candidate is a useful but partial final-ISA analysis feature. Its advertised focused and gfx950 GPU tests pass, but independent valid-assembly cases show that the analyzer's claimed exact opcode counts can contain both false positives and false negatives. Five other major portions of the original six-part request remain unimplemented.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-8d21a3dd9942/venv/bin/python -c 'import flydsl,sys; print(flydsl.__file__); import flydsl.tools.isa_analyzer' (at base acf7e67b7d22847e345938ca54fcc137bd7b2a1f)",
+      "exit_code": 1,
+      "what_was_measured": "Confirmed the prepared source tree was imported and reproduced the base absence as ModuleNotFoundError: No module named flydsl.tools."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-8d21a3dd9942/venv/bin/python -m pytest -q tests/unit/test_isa_analyzer.py tests/unit/test_compile_hints.py tests/unit/test_external_llvm_codegen.py",
+      "exit_code": 0,
+      "what_was_measured": "At exact candidate commit: 29 passed and 2 skipped, covering the candidate regressions and compatibility tests."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-8d21a3dd9942/venv/bin/python -m pytest -q 'tests/extension/coop/test_warp_rocdl.py::test_every_form_agrees_with_the_portable_one[reduce-w16]' 'tests/extension/coop/test_warp_rocdl.py::test_a_full_wave_fold_rakes_and_lifts_the_total_into_an_sgpr' --basetemp=/tmp/amdpilot-repo-j-8d21a3dd9942/pytest-review",
+      "exit_code": 0,
+      "what_was_measured": "Two tests passed on one MI350X/gfx950, including numerical agreement with the portable GPU implementation and final-ISA shape assertions."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-8d21a3dd9942/venv/bin/python -m flydsl.tools.isa_analyzer --pretty reports/j-a68b43674cdb/raw/gfx950-final-isa.s",
+      "exit_code": 0,
+      "what_was_measured": "The exact candidate reproduced its checked-in retained-ISA JSON report."
+    },
+    {
+      "command": "Independent analyze_isa adversarial cases in reports/j-8d21a3dd9942/raw/adversarial.log",
+      "exit_code": 0,
+      "what_was_measured": "A multiline block comment containing instruction-like text was incorrectly reported as three instructions (including one MFMA and one VMEM store), while 'entry: s_nop 0' was incorrectly reported as zero instructions."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "reports/j-8d21a3dd9942/raw/candidate-gpu.log records two passing tests on the prepared AMD Instinct MI350X/gfx950 path.",
+  "native_rebuilt": false,
+  "remaining_counterexamples": [
+    "Valid multiline /* ... */ assembly comments cause instruction and family-count false positives.",
+    "A valid label and instruction on the same line, such as 'entry: s_nop 0', causes an instruction-count false negative.",
+    "Physical VGPR/SGPR pinning or named register-region reservation remains unimplemented.",
+    "Exact hand-scheduled region preservation and MFMA co-execute-window assertions remain unimplemented.",
+    "The requested first-class AMD instruction helpers remain unimplemented.",
+    "The requested exact low-level buffer load/store API remains unimplemented.",
+    "The requested compiler-option sweep example remains unimplemented."
+  ],
+  "remaining_limitations": [
+    "Only one MI350X/gfx950 GPU path was available; no other CDNA or RDNA architecture was tested.",
+    "No native rebuild was performed because the candidate changes no C++/MLIR native source.",
+    "Static parsing does not verify cycles, dependencies, occupancy, scheduling guarantees, register pinning, or performance parity with handwritten kernels.",
+    "The candidate's GPU tests exercise an existing reduction kernel, not a full attention kernel or the issue's native-ISA performance comparison."
+  ]
+}
