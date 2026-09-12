@@ -29,6 +29,8 @@ subtrees:
     entries:
       - file: extension/rand
         title: Random number generation
+      - file: extension/coop_scan
+        title: Cooperative scans
   - caption: Guides
     entries:
       - file: architecture_guide
