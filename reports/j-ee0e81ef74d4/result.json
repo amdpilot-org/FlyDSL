@@ -1,0 +1,38 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/770",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "reproduced",
+  "summary": "The base reproducibly skips autotuner config/global pre-hooks and the post-hook on selected and cached execution. Candidate 60273a666ee45369fd0b0548117c27afbb9daa9c fixes that semantic subset and passed independent boundary tests, but it does not by itself complete the remaining acceptance items of the open umbrella issue.",
+  "tests": [
+    {
+      "command": "PYTHONPATH=/job/repo/python FLYDSL_AUTOTUNE_CACHE_DIR=/job/review-evidence-j-ee0e81ef74d4/base-cache-corrected /tmp/amdpilot-repo-j-ee0e81ef74d4/venv/bin/python -m pytest -q /job/review-evidence-j-ee0e81ef74d4/test_candidate_hooks.py",
+      "exit_code": 1,
+      "what_was_measured": "Prepared-base reproduction of selected-call hooks, cache-hit hooks, reset/pre-hook ordering, return propagation, and launch-failure hook behavior; 3 failures reproduced skipped hooks."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python FLYDSL_AUTOTUNE_CACHE_DIR=/job/review-evidence-j-ee0e81ef74d4/candidate-cache /tmp/amdpilot-repo-j-ee0e81ef74d4/venv/bin/python -m pytest -q /job/review-evidence-j-ee0e81ef74d4/test_candidate_hooks.py",
+      "exit_code": 0,
+      "what_was_measured": "Exact-candidate regression and adversarial boundaries; 3 passed."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-ee0e81ef74d4/venv/bin/python -m pytest -q tests/unit/test_autotune.py",
+      "exit_code": 0,
+      "what_was_measured": "Exact-candidate full GPU-free autotune unit coverage; 56 passed."
+    },
+    {
+      "command": "FLYDSL_AUTOTUNE=0 /tmp/amdpilot-repo-j-ee0e81ef74d4/venv/bin/python -m pytest tests/unit/test_softmax_autotune.py tests/kernels/test_softmax_autotune.py::test_workgroup_size_tracks_block_threads tests/kernels/test_softmax_autotune.py::test_wrapper_matches_the_torch_reference tests/kernels/test_softmax_autotune.py::test_default_serves_without_searching_on_the_current_stream tests/kernels/test_softmax_autotune.py::test_compiled_cache_hit_bypasses_resolution_and_accepts_new_buffers_and_stream tests/kernels/test_rmsnorm_autotune.py::test_rmsnorm_autotuned_default_uses_current_stream_and_skips_search -v",
+      "exit_code": 0,
+      "what_was_measured": "52 tests passed, including real Softmax/RMSNorm GPU execution, Torch-reference numerics, workgroup configuration, current-stream behavior, and compiled cache hits on MI355X/gfx950."
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "AMD Instinct MI355X, gfx950:sramecc+:xnack-; focused candidate GPU suite exited 0 with 52 passed."
+  },
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "Candidate fixes only the selected/cache-hit hook-semantics subset; issue 770's remaining offline-artifact, CI policy, and documentation acceptance items are not completed by this patch alone.",
+    "Only the assigned gfx950 architecture was available for GPU execution.",
+    "No native rebuild was performed because the candidate contains no C++ or LLVM changes."
+  ]
+}
