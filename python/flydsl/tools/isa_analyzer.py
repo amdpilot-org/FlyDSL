@@ -25,11 +25,41 @@ _METADATA_FIELDS = {
 }
 
 
+def _strip_comments(line: str, in_block_comment: bool) -> tuple[str, bool]:
+    """Remove AMD assembly comments while retaining code around block comments."""
+
+    code: list[str] = []
+    position = 0
+    while position < len(line):
+        if in_block_comment:
+            end = line.find("*/", position)
+            if end == -1:
+                return "".join(code), True
+            position = end + 2
+            in_block_comment = False
+            continue
+
+        line_comment = line.find("//", position)
+        block_comment = line.find("/*", position)
+        if line_comment != -1 and (block_comment == -1 or line_comment < block_comment):
+            code.append(line[position:line_comment])
+            break
+        if block_comment == -1:
+            code.append(line[position:])
+            break
+        code.append(line[position:block_comment])
+        position = block_comment + 2
+        in_block_comment = True
+
+    return "".join(code), in_block_comment
+
+
 def _instruction(line: str) -> str | None:
-    # AMD assembly uses both // and /* ... */ comments.  Dumped instructions
-    # are one per line; discarding a trailing block comment is sufficient and
-    # avoids counting examples in comments or metadata strings.
-    line = line.split("//", 1)[0].split("/*", 1)[0].strip()
+    # Labels may share a line with an instruction. Strip each leading label,
+    # including numeric and assembler-local labels, before reading the opcode.
+    line = line.strip()
+    while match := re.match(r"(?:[A-Za-z_.$][A-Za-z0-9_.$]*|[0-9]+):\s*", line):
+        line = line[match.end() :]
     if not line or line.startswith((".", "#")) or line.endswith(":"):
         return None
     token = line.split(None, 1)[0]
@@ -64,9 +94,11 @@ def analyze_isa(assembly: str) -> dict:
     opcodes: Counter[str] = Counter()
     kernels: dict[str, dict[str, int]] = {}
     current_kernel: str | None = None
+    in_block_comment = False
 
     for raw_line in assembly.splitlines():
-        line = raw_line.strip()
+        uncommented_line, in_block_comment = _strip_comments(raw_line, in_block_comment)
+        line = uncommented_line.strip()
         match = re.match(r"\.amdhsa_kernel\s+([^\s]+)", line)
         if match:
             current_kernel = match.group(1)
@@ -85,7 +117,7 @@ def analyze_isa(assembly: str) -> dict:
                         pass
                     break
 
-        opcode = _instruction(raw_line)
+        opcode = _instruction(uncommented_line)
         if opcode is not None:
             opcodes[opcode] += 1
 
