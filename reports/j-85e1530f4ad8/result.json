@@ -1,0 +1,69 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/583",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/650",
+  "candidate_pr": "https://github.com/amdpilot-org/FlyDSL/pull/643",
+  "candidate_commit": "fe6918b4b8da90cf9e73640c8b827cce6a1f4877",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "recommendation": "request_changes",
+  "fully_resolves_original": false,
+  "summary": "The exact logical_divide counterexample is genuinely fixed by rebuilt native code: the prepared base aborts at intTupleFilterZero with exit 134, while candidate fe6918b diagnoses the incongruent LayoutAttr embedded in TileType with exit 1. The candidate regression and all 11 LayoutAlgebra test files pass. The correction is nevertheless partial against the original structural divide contract: zipped_divide, tiled_divide, and flat_divide still send the same malformed embedded layout into native tuple algebra and abort at the same assertion with exit 134.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-85e1530f4ad8/venv/bin/python /opt/amdpilot/rebuild-native.py /job (prepared base acf7e67b7d22847e345938ca54fcc137bd7b2a1f)",
+      "exit_code": 0,
+      "what_was_measured": "Rebuilt the recorded base with pinned LLVM and ran the prepared GPU numerical smoke before reproducing the issue."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-85e1530f4ad8/native-build/bin/fly-opt /job/review-evidence-j-85e1530f4ad8/original_counterexample.mlir (rebuilt base)",
+      "exit_code": 134,
+      "what_was_measured": "Failing-before reproduction of the exact reported logical_divide TileType counterexample; it aborted at IntTupleUtils.h:996 in intTupleFilterZero because guide.rank() != val.rank()."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-85e1530f4ad8/venv/bin/python /opt/amdpilot/rebuild-native.py /job (detached candidate fe6918b4b8da90cf9e73640c8b827cce6a1f4877)",
+      "exit_code": 0,
+      "what_was_measured": "Rebuilt the exact candidate C++ and generated op definitions with pinned LLVM; the rebuilt native library passed the prepared GPU numerical smoke."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-85e1530f4ad8/native-build/bin/fly-opt /job/review-evidence-j-85e1530f4ad8/original_counterexample.mlir (rebuilt candidate)",
+      "exit_code": 1,
+      "what_was_measured": "The exact logical_divide abort became a location-bearing diagnostic: tile divisor layout shape and stride must have congruent tuple structure."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-85e1530f4ad8/native-build/bin/fly-opt tests/mlir/LayoutAlgebra/invalid_structural_inputs.mlir -verify-diagnostics",
+      "exit_code": 0,
+      "what_was_measured": "The candidate's regression matched all expected diagnostics and accepted its legal dynamic-layout controls."
+    },
+    {
+      "command": "Run every RUN line in tests/mlir/LayoutAlgebra/*.mlir using rebuilt fly-opt and /opt/amdpilot/llvm-project/mlir_install/bin/FileCheck",
+      "exit_code": 0,
+      "what_was_measured": "All 11 LayoutAlgebra files passed, including ten FileCheck pipelines and the verify-diagnostics regression."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-85e1530f4ad8/native-build/bin/fly-opt /job/review-evidence-j-85e1530f4ad8/{zipped,tiled,flat}_divide_malformed_tile.mlir (three independent invocations)",
+      "exit_code": 134,
+      "what_was_measured": "Each sibling divide operation still aborts at IntTupleUtils.h:996 on the same incongruent LayoutAttr embedded in TileType."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_evidence": "Both native rebuild invocations passed FlyDSL vector_add 100x1000 (predicated border blocks) on one AMD Instinct MI350X, gfx950. This validates loading and executing the rebuilt native library, not verifier semantics on other architectures.",
+  "native_rebuilt": true,
+  "source_paths": {
+    "python": "/job/repo/python/flydsl",
+    "candidate_cpp": "/job/repo/lib/Dialect/Fly/IR/FlyOps.cpp at detached fe6918b4b8da90cf9e73640c8b827cce6a1f4877",
+    "candidate_tablegen": "/job/repo/include/flydsl/Dialect/Fly/IR/FlyOps.td at detached fe6918b4b8da90cf9e73640c8b827cce6a1f4877"
+  },
+  "native_paths": {
+    "fly_opt": "/tmp/amdpilot-repo-j-85e1530f4ad8/native-build/bin/fly-opt",
+    "python_extension": "/tmp/amdpilot-repo-j-85e1530f4ad8/native-build/python_packages/flydsl/_mlir",
+    "source_symlink": "/job/repo/python/flydsl/_mlir",
+    "candidate_build_record": "/job/review-evidence-j-85e1530f4ad8/candidate-native-build.json"
+  },
+  "raw_evidence": "/job/review-evidence-j-85e1530f4ad8",
+  "remaining_counterexamples": [
+    "fly.zipped_divide with layout !fly.layout<128:1> and divisor !fly.tile<[((4,8),2):(1,(4,32))]> aborts with exit 134 at IntTupleUtils.h intTupleFilterZero.",
+    "fly.tiled_divide with layout !fly.layout<128:1> and divisor !fly.tile<[((4,8),2):(1,(4,32))]> aborts with exit 134 at IntTupleUtils.h intTupleFilterZero.",
+    "fly.flat_divide with layout !fly.layout<128:1> and divisor !fly.tile<[((4,8),2):(1,(4,32))]> aborts with exit 134 at IntTupleUtils.h intTupleFilterZero."
+  ],
+  "remaining_limitations": "Dynamic SSA extents and dynamic BasisAttr leaves expose only static profiles, so value-dependent divisibility, bounds, and invertibility remain runtime concerns unless runtime checks are added. GPU execution was limited to one gfx950 AMD Instinct MI350X; no claim is made for other architectures. The verifier behavior itself was measured directly in rebuilt fly-opt and is architecture-independent. No LLVM change was required."
+}
