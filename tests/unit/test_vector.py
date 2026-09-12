@@ -516,7 +516,7 @@ class TestReduction:
             _ = ta.reduce(ReductionOp.MAX)
 
         ir_text = _build_module(build)
-        assert "vector.reduction <maxnumf>" in ir_text
+        assert "vector.reduction <maximumf>" in ir_text
 
     def test_reduce_min(self):
         def build(a):
@@ -629,7 +629,7 @@ class TestReduction:
             _ = ta.reduce("max")
 
         ir_text = _build_module(build)
-        assert "vector.reduction <maxnumf>" in ir_text
+        assert "vector.reduction <maximumf>" in ir_text
 
     def test_reduce_combining_kind_direct(self):
         """reduce() accepts raw CombiningKind."""

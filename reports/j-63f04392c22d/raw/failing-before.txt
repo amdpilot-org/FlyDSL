@@ -1,0 +1,35 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 4 items
+
+tests/unit/test_vector.py FF                                             [ 50%]
+tests/language/test_arithmetic_types.py FF                               [100%]
+
+=================================== FAILURES ===================================
+________________________ TestReduction.test_reduce_max _________________________
+tests/unit/test_vector.py:519: in test_reduce_max
+    assert "vector.reduction <maximumf>" in ir_text
+E   AssertionError: assert 'vector.reduction <maximumf>' in 'module {\n  func.func @test(%arg0: vector<8xf32>) {\n    %0 = vector.reduction <maxnumf>, %arg0 : vector<8xf32> into f32\n    return\n  }\n}\n'
+_____________________ TestReduction.test_reduce_string_max _____________________
+tests/unit/test_vector.py:632: in test_reduce_string_max
+    assert "vector.reduction <maximumf>" in ir_text
+E   AssertionError: assert 'vector.reduction <maximumf>' in 'module {\n  func.func @test(%arg0: vector<8xf32>) {\n    %0 = vector.reduction <maxnumf>, %arg0 : vector<8xf32> into f32\n    return\n  }\n}\n'
+________________________ TestReduction.test_reduce_max _________________________
+tests/language/test_arithmetic_types.py:1017: in test_reduce_max
+    assert "vector.reduction <maximumf>" in source_ir(body)
+E   assert 'vector.reduction <maximumf>' in '#loc = loc("/job/repo/tests/language/test_arithmetic_types.py":1014:0)\nmodule attributes {gpu.container_module} {\n ...:11)\n#loc2 = loc("/job/repo/tests/language/test_arithmetic_types.py":1015:8)\n#loc3 = loc(callsite(#loc1 at #loc2))\n'
+E    +  where '#loc = loc("/job/repo/tests/language/test_arithmetic_types.py":1014:0)\nmodule attributes {gpu.container_module} {\n ...:11)\n#loc2 = loc("/job/repo/tests/language/test_arithmetic_types.py":1015:8)\n#loc3 = loc(callsite(#loc1 at #loc2))\n' = source_ir(<function TestReduction.test_reduce_max.<locals>.body at 0x7663ee195800>)
+_____________________ TestReduction.test_reduce_string_max _____________________
+tests/language/test_arithmetic_types.py:1101: in test_reduce_string_max
+    assert "vector.reduction <maximumf>" in source_ir(body)
+E   assert 'vector.reduction <maximumf>' in '#loc = loc("/job/repo/tests/language/test_arithmetic_types.py":1098:0)\nmodule attributes {gpu.container_module} {\n ...:11)\n#loc2 = loc("/job/repo/tests/language/test_arithmetic_types.py":1099:8)\n#loc3 = loc(callsite(#loc1 at #loc2))\n'
+E    +  where '#loc = loc("/job/repo/tests/language/test_arithmetic_types.py":1098:0)\nmodule attributes {gpu.container_module} {\n ...:11)\n#loc2 = loc("/job/repo/tests/language/test_arithmetic_types.py":1099:8)\n#loc3 = loc(callsite(#loc1 at #loc2))\n' = source_ir(<function TestReduction.test_reduce_string_max.<locals>.body at 0x7663f3190360>)
+=========================== short test summary info ============================
+FAILED tests/unit/test_vector.py::TestReduction::test_reduce_max - AssertionE...
+FAILED tests/unit/test_vector.py::TestReduction::test_reduce_string_max - Ass...
+FAILED tests/language/test_arithmetic_types.py::TestReduction::test_reduce_max
+FAILED tests/language/test_arithmetic_types.py::TestReduction::test_reduce_string_max
+============================== 4 failed in 0.64s ===============================

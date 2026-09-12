@@ -1,0 +1,5 @@
+
+--- import paths ---
+flydsl: /job/repo/python/flydsl/__init__.py
+expr: /job/repo/python/flydsl/expr/__init__.py
+native: None

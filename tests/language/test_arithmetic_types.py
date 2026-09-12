@@ -1014,7 +1014,7 @@ class TestReduction:
         def body():
             _ = vec(Float32).reduce(ReductionOp.MAX)
 
-        assert "vector.reduction <maxnumf>" in source_ir(body)
+        assert "vector.reduction <maximumf>" in source_ir(body)
 
     def test_reduce_min(self):
         def body():
@@ -1098,7 +1098,7 @@ class TestReduction:
         def body():
             _ = vec(Float32).reduce("max")
 
-        assert "vector.reduction <maxnumf>" in source_ir(body)
+        assert "vector.reduction <maximumf>" in source_ir(body)
 
     def test_reduce_combining_kind_direct(self):
         """reduce() accepts raw CombiningKind."""

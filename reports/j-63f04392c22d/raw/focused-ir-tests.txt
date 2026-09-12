@@ -1,0 +1,12 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 7 items
+
+tests/unit/test_vector.py ...                                            [ 42%]
+tests/language/test_arithmetic_types.py ...                              [ 85%]
+tests/unit/test_typed_arith_ops.py .                                     [100%]
+
+============================== 7 passed in 0.48s ===============================

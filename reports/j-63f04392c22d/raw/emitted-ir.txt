@@ -1,0 +1,7 @@
+module {
+  func.func @test(%arg0: vector<8xf32>) {
+    %0 = vector.reduction <maximumf>, %arg0 : vector<8xf32> into f32
+    %1 = vector.reduction <minimumf>, %arg0 : vector<8xf32> into f32
+    return
+  }
+}
