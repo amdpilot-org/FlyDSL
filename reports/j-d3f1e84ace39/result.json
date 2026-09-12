@@ -1,0 +1,61 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/583",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/613",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/609",
+  "candidate_commit": "2e766716ad773b896c9ed63b89164b2f9eaa3a8a",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "recommendation": "request_changes",
+  "fully_resolves_original": false,
+  "summary": "The exact candidate is a substantive partial fix: after a pinned native rebuild it diagnoses the reported make_layout, composition, layout/tile divisibility, complement, and inverse regressions, preserves the legal dynamic-profile controls, and passes the existing LayoutAlgebra suite. It does not complete the approved structural validation contract. A logical_divide whose TileType contains a statically non-congruent LayoutAttr still reaches layout algebra internals and aborts in intTupleFilterZero instead of producing an operation diagnostic.",
+  "remaining_counterexamples": [
+    "fly.logical_divide with layout !fly.layout<128:1> and divisor !fly.tile<[((4,8),2):(1,(4,32))]> aborts with exit 134 at IntTupleUtils.h intTupleFilterZero because TileType divisor validation computes only its static product and does not validate the embedded LayoutAttr shape/stride structure."
+  ],
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-d3f1e84ace39/venv/bin/python /opt/amdpilot/rebuild-native.py /job (prepared base acf7e67b7d22847e345938ca54fcc137bd7b2a1f)",
+      "exit_code": 0,
+      "what_was_measured": "Pinned-LLVM native rebuild and prepared vector-add GPU numerical smoke before reproducing the issue; native-build record saved as /job/review-evidence/base-native-build.json."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-d3f1e84ace39/native-build/bin/fly-opt /job/review-evidence/invalid_structural_inputs.mlir -verify-diagnostics (prepared base)",
+      "exit_code": 134,
+      "what_was_measured": "Original structural-validation failure reproduced on the prepared base: invalid composition reaches a native assertion rather than a diagnostic. Raw stdout, stderr, and exit status are under /job/review-evidence/base-regression.*."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-d3f1e84ace39/venv/bin/python /opt/amdpilot/rebuild-native.py /job (detached exact candidate 2e766716ad773b896c9ed63b89164b2f9eaa3a8a)",
+      "exit_code": 0,
+      "what_was_measured": "Pinned-LLVM candidate native rebuild plus real FlyDSL vector_add 100x1000 numerical smoke on AMD Instinct MI355X gfx950; record saved as /job/review-evidence/candidate-native-build.json."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-d3f1e84ace39/native-build/bin/fly-opt tests/mlir/LayoutAlgebra/invalid_structural_inputs.mlir -verify-diagnostics",
+      "exit_code": 0,
+      "what_was_measured": "The candidate's regression checks the supplied static counterexamples and legal dynamic-profile controls with the rebuilt candidate compiler."
+    },
+    {
+      "command": "Execute every RUN line in tests/mlir/LayoutAlgebra/*.mlir with rebuilt fly-opt and pinned LLVM FileCheck",
+      "exit_code": 0,
+      "what_was_measured": "All RUN lines in all 11 layout-algebra test files passed; raw log is /job/review-evidence/layout-suite.log."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-d3f1e84ace39/native-build/bin/fly-opt /job/review-evidence/adversarial-malformed-tile.mlir",
+      "exit_code": 134,
+      "what_was_measured": "Independent structural adversarial case for logical_divide: a TileType containing a malformed LayoutAttr is accepted by the verifier and aborts in intTupleFilterZero. Raw stdout, stderr, input, and exit status are under /job/review-evidence/adversarial-malformed-tile.*."
+    },
+    {
+      "command": "PYTHONPATH=/tmp/amdpilot-repo-j-d3f1e84ace39/native-build/python_packages:/job/repo /tmp/amdpilot-repo-j-d3f1e84ace39/venv/bin/python (print flydsl source/native import paths)",
+      "exit_code": 0,
+      "what_was_measured": "Python source resolved to /job/repo/python/flydsl and native extension hashes were recorded from /tmp/amdpilot-repo-j-d3f1e84ace39/native-build/python_packages/flydsl/_mlir/_mlir_libs; evidence is /job/review-evidence/import-paths.txt and candidate-native-sha256.txt."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_evidence": "Both prepared rebuild invocations passed the supplied FlyDSL vector_add 100x1000 numerical smoke on one AMD Instinct MI355X, architecture gfx950. The verifier behavior itself is architecture-independent and was measured directly with rebuilt fly-opt.",
+  "native_rebuilt": true,
+  "remaining_limitations": [
+    "Dynamic SSA extents expose only static profiles to these verifiers. Value-dependent divisibility, bounds, and invertibility remain runtime concerns unless runtime checks are added.",
+    "The authenticated GitHub token could not query the public ROCm organization because that organization rejects tokens with this lifetime; review used the supplied upstream issue snapshot, the accessible mirror PR metadata, and the exact local commits.",
+    "The rebuild helper records source_revision as the prepared base even for a detached candidate rebuild; exact candidate identity was independently confirmed with git rev-parse, and the distinct rebuilt working-tree hash and native artifact hashes were retained.",
+    "No architecture limitation blocked this review. GPU smoke coverage was limited to the assigned gfx950 device and does not establish behavior on other GPU architectures."
+  ],
+  "evidence_directory": "/job/review-evidence"
+}
