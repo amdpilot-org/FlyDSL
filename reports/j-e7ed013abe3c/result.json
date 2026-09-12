@@ -1,0 +1,38 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/304",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Moved the complete shared correctness, benchmarking, profiling, and tensor I/O helper surface from tests/test_common.py into the installable flydsl.testing module; retained tests.test_common as an object-identical compatibility re-export; migrated repository callers and documentation; and hardened tensor serialization for non-contiguous/all-element-size tensors and untrusted metadata.",
+  "tests": [
+    {
+      "command": "PYTHONPATH=/job/repo/python /tmp/amdpilot-repo-j-e7ed013abe3c/venv/bin/python -c 'from flydsl.testing import checkAllclose, run_perftest' (before change)",
+      "exit_code": 1,
+      "what_was_measured": "Failing-before regression: the requested installed flydsl.testing import did not exist (ModuleNotFoundError). Raw output: reports/j-e7ed013abe3c/raw/before-import.txt"
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo /tmp/amdpilot-repo-j-e7ed013abe3c/venv/bin/python -m pytest tests/unit/test_testing.py tests/unit/test_compile_hints.py tests/kernels/test_vec_add.py -q",
+      "exit_code": 0,
+      "what_was_measured": "Final compatibility/regression coverage: public exports and signatures, legacy object-identical re-exports, iteration helpers, exact mismatch ratios, safe tensor metadata parsing, non-contiguous tensor round trips for uint8/fp16/bf16/fp32, compile-hint integration, and three compiled FlyDSL vector-add GPU numerical tests. Result: 28 passed, 2 skipped. Raw output: reports/j-e7ed013abe3c/raw/final-regression.txt"
+    },
+    {
+      "command": "FLYDSL_PERFTEST_USE_EVENTS=1 PYTHONPATH=/job/repo/python:/job/repo /tmp/amdpilot-repo-j-e7ed013abe3c/venv/bin/python < GPU run_perftest reference script",
+      "exit_code": 0,
+      "what_was_measured": "The newly public run_perftest executed eight HIP-event-timed torch.add iterations on one MI350X and matched an independently generated NumPy CPU float32 reference exactly for 4096 elements (max absolute error 0.0, measured latency 7.255 us). Raw script output: reports/j-e7ed013abe3c/raw/gpu-run-perftest.txt"
+    },
+    {
+      "command": "PATH=/tmp/amdpilot-style-j-e7ed013abe3c/bin:$PATH BASE_SHA=acf7e67b7d22847e345938ca54fcc137bd7b2a1f bash scripts/check_python_style.sh --include-local",
+      "exit_code": 0,
+      "what_was_measured": "Repository Black 26.5.1 and Ruff 0.16.6 style gate over all changed and new Python files. Raw output: reports/j-e7ed013abe3c/raw/style-gate-final.txt"
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "One AMD Instinct MI350X (gfx950 capability 9.5) executed three compiled FlyDSL vector-add numerical cases and the public HIP-event run_perftest path. Environment and raw outputs are retained under reports/j-e7ed013abe3c/raw/.",
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "No native C++ or LLVM source changed, so the prepared native rebuild command was not applicable; GPU kernel execution used the pinned native library at /opt/venv/lib/python3.12/site-packages/flydsl/_mlir with Python sources from /job/repo/python.",
+    "The CUDA/NVIDIA runtime path was unavailable and was not tested; GPU execution was ROCm/HIP on gfx950 only.",
+    "The moved HIP graph mode and torch.profiler timing mode were preserved without semantic changes but were not independently exercised in this run; the HIP-event timing path was exercised directly.",
+    "Two compile-hint tests were skipped by their existing architecture/feature conditions; their exact skip output is retained in reports/j-e7ed013abe3c/raw/final-regression.txt.",
+    "The closed, unmerged upstream PR https://github.com/ROCm/FlyDSL/pull/829 was inspected; it only proposed flydsl.profiling.do_bench and explicitly did not implement the broader tests/test_common.py API requested by issue 304. This contribution implements that broader API and does not incorporate the unmerged PR."
+  ]
+}

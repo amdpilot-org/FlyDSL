@@ -31,10 +31,10 @@ if _PYFLYDSL_SRC not in sys.path:
     sys.path.insert(0, _PYFLYDSL_SRC)
 
 from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+from flydsl.testing import run_perftest, verify_output  # noqa: E402
 from kernels.gemm.mxfp4_preshuffle import launch_gemm  # noqa: E402
 from kernels.gemm.preshuffle_gemm import compile_preshuffle_gemm  # noqa: E402
 from tests.kernels.utils import gemm_common_utils  # noqa: E402
-from tests.test_common import run_perftest, verify_output  # noqa: E402
 from tests.utils import pertoken_quant, shuffle_weight  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)

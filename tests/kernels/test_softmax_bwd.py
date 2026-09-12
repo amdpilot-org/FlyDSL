@@ -25,11 +25,11 @@ except ImportError:
 if torch is None or not torch.cuda.is_available():
     pytest.skip("CUDA/ROCm not available. Skipping GPU tests.", allow_module_level=True)
 
+from flydsl.testing import run_perftest  # noqa: E402
 from kernels.norm.softmax_bwd_kernel import (  # noqa: E402
     build_softmax_bwd_module,
     softmax_bwd_buffered_operands,
 )
-from tests.test_common import run_perftest  # noqa: E402
 
 DTYPE_FP32 = torch.float32
 DTYPE_FP16 = torch.float16

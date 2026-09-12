@@ -1,0 +1,7 @@
+prepared_base=acf7e67b7d22847e345938ca54fcc137bd7b2a1f
+reviewed_candidate=0ee04fd2a644b75ce07df281c8c37fba3e80680f
+python=/tmp/amdpilot-repo-j-7217e7d2c519/venv/bin/python
+python_source=/job/repo/python/flydsl/testing.py
+native_source=/opt/venv/lib/python3.12/site-packages/flydsl/_mlir
+torch=2.9.1+rocm7.2.0.git7e1940d4
+gpu=AMD Instinct MI355X

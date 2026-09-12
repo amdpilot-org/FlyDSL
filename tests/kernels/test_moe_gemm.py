@@ -31,8 +31,8 @@ for _p in reversed(_PYTHON_CANDIDATES):
         sys.path.insert(0, _p)
 
 from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+from flydsl.testing import run_perftest, verify_output  # noqa: E402
 from tests.kernels.test_ref import torch_moe_gemm1, torch_moe_gemm2  # noqa: E402
-from tests.test_common import run_perftest, verify_output  # noqa: E402
 from tests.utils import shuffle_weight  # noqa: E402
 
 ARCH = get_rocm_arch()

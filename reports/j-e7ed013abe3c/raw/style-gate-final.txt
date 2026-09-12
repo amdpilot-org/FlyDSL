@@ -1,0 +1,30 @@
+Checking committed Python changes between acf7e67b7d22847e345938ca54fcc137bd7b2a1f and HEAD.
+Checking Python style for changes between acf7e67b7d22847e345938ca54fcc137bd7b2a1f and HEAD.
+No changed Python files to check.
+Checking uncommitted Python files:
+  python/flydsl/testing.py
+  tests/kernels/test_flash_attn_fwd.py
+  tests/kernels/test_fp4_gemm_4wave.py
+  tests/kernels/test_fp8_gemm_rowscale.py
+  tests/kernels/test_gemm_a16w16_gfx950.py
+  tests/kernels/test_gemm_bf16_gfx1250.py
+  tests/kernels/test_layernorm.py
+  tests/kernels/test_mla_decode.py
+  tests/kernels/test_moe_gemm.py
+  tests/kernels/test_moe_reduce.py
+  tests/kernels/test_mxfp8_gemm_8wave.py
+  tests/kernels/test_preshuffle_gemm.py
+  tests/kernels/test_quant.py
+  tests/kernels/test_rdna_gemm.py
+  tests/kernels/test_rmsnorm.py
+  tests/kernels/test_softmax.py
+  tests/kernels/test_softmax_bwd.py
+  tests/kernels/test_topk_gating_softmax.py
+  tests/kernels/test_vec_add.py
+  tests/test_common.py
+  tests/unit/test_cluster_mcast_gemm_gfx1250.py
+  tests/unit/test_compile_hints.py
+  tests/unit/test_testing.py
+All done! ✨ 🍰 ✨
+23 files would be left unchanged.
+All checks passed!

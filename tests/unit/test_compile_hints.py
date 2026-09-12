@@ -311,7 +311,7 @@ class TestCacheDisabledRegression:
         assert len(_noop_launch._call_state_cache) == 1
 
     def test_cache_disabled_run_perftest_does_not_crash(self, monkeypatch):
-        from tests.test_common import run_perftest
+        from flydsl.testing import run_perftest
 
         monkeypatch.setenv("FLYDSL_RUNTIME_ENABLE_CACHE", "0")
         _reset_jit_caches(_noop_launch)

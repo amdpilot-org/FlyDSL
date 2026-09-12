@@ -202,7 +202,7 @@ def insert_point(ctx):
 
 ## 4. Performance measurement
 
-### 4.1 `tests/test_common.py`
+### 4.1 `flydsl.testing`
 
 Core performance testing utilities (adapted from AIter).
 
@@ -218,6 +218,8 @@ Features:
 - Device memory profiling to determine rotation count
 - Torch CUDA event timing
 - HIPGraph capture mode (`testGraph=True`)
+- The default `torch.profiler` result processing requires pandas; importing
+  `flydsl.testing` and using non-profiler helpers does not.
 - Cache-aware iteration calculation
 
 **`checkAllclose()` function:**
@@ -286,7 +288,7 @@ import torch
 import flydsl.compiler as flyc
 import flydsl.expr as fx
 from flydsl.expr import gpu
-from tests.test_common import checkAllclose
+from flydsl.testing import checkAllclose
 
 @flyc.kernel
 def my_kernel(A: fx.Tensor, B: fx.Tensor, N: fx.Constexpr[int]):
@@ -396,7 +398,7 @@ bash scripts/dumpir.sh
 | `scripts/run_benchmark.sh` | Benchmark harness with configurable shapes |
 | `scripts/dumpir.sh` | IR dump helper script |
 | `tests/conftest.py` | Pytest fixtures (MLIR context, module, insert point) |
-| `tests/test_common.py` | `perftest()`, `checkAllclose()`, `verify_output()` |
+| `python/flydsl/testing.py` | Public `perftest()`, `run_perftest()`, `checkAllclose()`, and `verify_output()` helpers |
 | `tests/utils.py` | `pertoken_quant()`, `shuffle_weight()` |
 | `tests/kernels/benchmark_common.py` | `bench_gpu_us_torch()`, benchmark harness |
 | `tests/mlir/{LayoutAlgebra,Conversion,Transforms}/` | MLIR lit tests (18 files) |
