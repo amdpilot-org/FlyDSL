@@ -4,6 +4,10 @@
 
 __version__ = "0.3.3"
 
+from .runtime.stdio import configure_device_printf_stdout as _configure_device_printf_stdout
+
+_configure_device_printf_stdout()
+
 from .autotune import Config as Config, autotune as autotune
 
 __all__ = [

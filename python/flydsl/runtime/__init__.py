@@ -13,6 +13,7 @@ from .device_runtime import (
     register_compile_runtime_mapping,
     register_device_runtime,
 )
+from .stdio import flush_device_printf
 
 __all__ = [
     "COMPILE_BACKEND_TO_RUNTIME_KIND",
@@ -20,6 +21,7 @@ __all__ = [
     "RocmDeviceRuntime",
     "ensure_compile_runtime_compatible",
     "ensure_compile_runtime_pairing_from_env",
+    "flush_device_printf",
     "get_device_runtime",
     "register_compile_runtime_mapping",
     "register_device_runtime",

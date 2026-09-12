@@ -1,0 +1,7 @@
+flydsl_source=/job/repo/python/flydsl/__init__.py
+native_paths=['/opt/venv/lib/python3.12/site-packages/flydsl/_mlir']
+torch=2.9.1+rocm7.2.0.git7e1940d4
+hip=7.2.26015-fc0010cf6a
+gpu_name=AMD Instinct MI350X
+gpu_capability=(9, 5)
+gpu_count=1

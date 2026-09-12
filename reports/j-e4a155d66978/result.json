@@ -1,0 +1,61 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/653",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Reproduced the unchanged hello(); torch.cuda.synchronize() pipe contract failure, then configured the process C stdout stream for line buffering at FlyDSL import. Newline-terminated device printf records are now visible while the synchronized child is still alive. The explicit flush helper from candidate PR 500 is retained for diagnostics without a trailing newline.",
+  "tests": [
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 /tmp/amdpilot-repo-j-e4a155d66978/venv/bin/python -m pytest -q tests/system/test_device_printf_pipe.py -s (base, before fix)",
+      "exit_code": 1,
+      "what_was_measured": "Failing-before regression: after the child reported READY following torch.cuda.synchronize(), zero of four expected lines were readable from piped stdout while the child remained alive."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 /tmp/amdpilot-repo-j-e4a155d66978/venv/bin/python -m pytest -q tests/system/test_device_printf_pipe.py -s",
+      "exit_code": 0,
+      "what_was_measured": "Four GPU cases passed: unchanged synchronize-only and explicit-helper paths, each with one and three launches (4 and 12 exact thread-ID lines), observed before process teardown."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-e4a155d66978/venv/bin/python -m pytest -q tests/unit/test_device_runtime.py",
+      "exit_code": 0,
+      "what_was_measured": "All 9 existing device-runtime unit tests passed."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-e4a155d66978/venv/bin/python -m pytest -q tests/unit/test_rocir_print.py",
+      "exit_code": 0,
+      "what_was_measured": "All 6 existing printf IR generation and lowering tests passed."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j-e4a155d66978-cache-final /tmp/amdpilot-repo-j-e4a155d66978/venv/bin/python -m pytest -q tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] -s",
+      "exit_code": 0,
+      "what_was_measured": "A real gfx950 FlyDSL vector-add kernel matched the independent PyTorch a+b reference with maximum error 0.00e+00 over 1,048,576 float32 elements."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/tmp/flydsl-j-e4a155d66978-dump-final /tmp/amdpilot-repo-j-e4a155d66978/venv/bin/python -m pytest -q tests/system/test_device_printf_pipe.py::test_device_printf_visible_in_pipe_after_synchronize[1-False] -s",
+      "exit_code": 0,
+      "what_was_measured": "A fresh compile and GPU execution passed; emitted LLVM IR calls __ockl_printf_begin, __ockl_printf_append_string_n, and __ockl_printf_append_args, and final ISA targets amdgcn-amd-amdhsa-unknown-gfx950."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-e4a155d66978/venv/bin/python -m compileall -q python/flydsl tests/system/test_device_printf_pipe.py && git diff --check",
+      "exit_code": 0,
+      "what_was_measured": "Changed Python compiled successfully and the patch had no whitespace errors."
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "One assigned AMD Instinct MI350X (gfx950, capability 9.5) executed the device-printf regressions and numerical vector-add validation. Raw output is retained under reports/j-e4a155d66978/raw/."
+  },
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "Only the prepared MI350X/gfx950 environment was tested.",
+    "The equivalent pipe behavior was tested directly; an actual Jupyter frontend was not available.",
+    "Line buffering is a process-wide libc stdout setting and therefore also changes buffering for other C/C++ stdout writers after FlyDSL is imported.",
+    "Line buffering flushes newline-terminated records. Callers emitting diagnostics without a trailing newline must synchronize and then use flydsl.runtime.flush_device_printf().",
+    "No C++ or LLVM source changed, so a native rebuild was not applicable. The loaded native package remained /opt/venv/lib/python3.12/site-packages/flydsl/_mlir."
+  ],
+  "evidence_paths": {
+    "source": "/job/repo/python/flydsl",
+    "native": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir",
+    "compiler_dump": "/tmp/flydsl-j-e4a155d66978-dump-final/hello_kernel_0",
+    "raw": "/job/repo/reports/j-e4a155d66978/raw"
+  }
+}
