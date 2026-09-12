@@ -1,0 +1,18 @@
+Prepared base: acf7e67b7d22847e345938ca54fcc137bd7b2a1f
+GPU: AMD Instinct MI355X (gfx950)
+
+Candidate regression run against the base exited 1.
+Observed rows:
+[[nan, nan, 1.0, 1.0, nan, inf],
+ [-0.0, 0.0, -0.0, 0.0, -0.0, 0.0],
+ [-inf, inf, -inf, inf, -inf, inf],
+ [-3.4028234663852886e+38, 3.4028234663852886e+38,
+  -3.4028234663852886e+38, 3.4028234663852886e+38,
+  -3.4028234663852886e+38, 3.4028234663852886e+38]]
+
+Columns are scalar minimumf, scalar maximumf, minnumf, maxnumf,
+Vector.reduce("min"), Vector.reduce("max"). The final value of the first row
+is the reproduced defect: +inf instead of NaN.
+
+The base compile-tier command for typed minimumf/maximumf selected 3 tests and
+passed all 3, confirming Numeric.minimumf is already fixed there.

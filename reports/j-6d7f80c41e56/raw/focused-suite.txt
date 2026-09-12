@@ -1,0 +1,7 @@
+Candidate: 697129d402848711037a0169f3bb09b0882257aa
+
+Command:
+/tmp/amdpilot-repo-j-6d7f80c41e56/venv/bin/python -m pytest -q tests/unit/test_vector.py tests/language/test_arithmetic_types.py tests/unit/test_typed_arith_ops.py tests/unit/test_arith_ops.py tests/unit/test_extrema_nan_semantics_gpu.py
+
+Result: 534 passed in 3.31s
+Exit code: 0
