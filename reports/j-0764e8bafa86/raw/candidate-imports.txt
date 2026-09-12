@@ -1,0 +1,6 @@
+flydsl /job/repo/python/flydsl/__init__.py
+expr /job/repo/python/flydsl/expr/__init__.py
+_mlir_namespace ['/job/repo/python/flydsl/_mlir']
+_mlir_ir /job/repo/python/flydsl/_mlir/ir.py
+device AMD Instinct MI355X
+arch gfx950:sramecc+:xnack-

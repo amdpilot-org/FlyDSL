@@ -1,0 +1,57 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/1016",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/583",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/558",
+  "candidate_commit": "d99a42f9f4a3fc755d9053ace0954f985f37e44b",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "recommendation": "request_changes",
+  "fully_resolves_original": false,
+  "summary": "The candidate is useful test-only and documentation hardening over a BlockScan implementation already present on the prepared base; it is not a failing-before/passing-after implementation fix. Its focused regression, full cooperative suite, and GPU example pass on gfx950. Changes are requested because the new documentation's primary snippet reuses shared scan storage for consecutive collectives without the barrier required by the implementation and by the document's own later contract. The broad original common-building-block proposal also remains intentionally incomplete.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-0764e8bafa86/venv/bin/python -m pytest -q tests/extension/coop/test_block_scan.py (prepared base)",
+      "exit_code": 0,
+      "what_was_measured": "All 62 pre-existing focused GPU tests passed before checking out the candidate, demonstrating that no original implementation failure was reproduced on the prepared base."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-0764e8bafa86/venv/bin/python examples/extension/coop/02-block_scan.py (prepared base)",
+      "exit_code": 0,
+      "what_was_measured": "The existing real GPU stream-compaction example matched its independent CPU reference before the candidate."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-0764e8bafa86/venv/bin/python -m pytest -q tests/extension/coop/test_block_scan.py (candidate d99a42f9)",
+      "exit_code": 0,
+      "what_was_measured": "All 64 focused GPU tests passed, including the candidate's inclusive/exclusive three-block regression with explicit wave64 boundary checks."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-0764e8bafa86/venv/bin/python -m pytest -q tests/extension/coop (candidate d99a42f9)",
+      "exit_code": 0,
+      "what_was_measured": "All 326 cooperative extension tests passed on the exact candidate."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-0764e8bafa86/venv/bin/python examples/extension/coop/02-block_scan.py (candidate d99a42f9)",
+      "exit_code": 0,
+      "what_was_measured": "The real GPU stream-compaction example passed on the exact candidate."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-0764e8bafa86/venv/bin/python reports/j-0764e8bafa86/raw/adversarial_reuse.py (candidate d99a42f9)",
+      "exit_code": 0,
+      "what_was_measured": "An independent 8-block, 256-thread kernel exercised the documentation's consecutive shared-storage reuse for 100 iterations and compared inclusive/exclusive outputs with host cumsum references. No mismatch manifested on gfx950 with or without a barrier; the no-barrier form nevertheless violates the documented collective-storage contract and remains unsupported."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "Numerical tests and examples ran on one assigned AMD Instinct MI355X, gfx950:sramecc+:xnack-, with torch 2.9.1+rocm7.2.0.git7e1940d4 and ROCm/HIP 7.2.",
+  "native_rebuilt": false,
+  "remaining_counterexamples": [
+    "docs/extension/coop_scan.md demonstrates two consecutive BlockScan calls reusing the same shared storage without the required intervening fx.barrier().",
+    "The candidate PR body references https://github.com/amdpilot-org/FlyDSL/issues/543 instead of the assigned mirror issue https://github.com/amdpilot-org/FlyDSL/issues/583.",
+    "The broad original proposal includes many common GPU building blocks beyond prefix scan and is not fully resolved by this explicitly scoped contribution."
+  ],
+  "remaining_limitations": [
+    "Only gfx950 was available; wave32 targets and other AMD architectures were not verified.",
+    "The prepared base already passed the scoped implementation tests and example, so there is no failing-before/passing-after implementation defect attributable to this candidate.",
+    "BlockScan remains limited to power-of-two block thread counts, the WARP_SCANS policy, and ReductionOp ADD/MUL/MIN/MAX.",
+    "No native C++ files changed, so native rebuilding was not applicable. The source import came from /job/repo/python/flydsl and prepared native MLIR libraries remained under /opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs."
+  ]
+}
