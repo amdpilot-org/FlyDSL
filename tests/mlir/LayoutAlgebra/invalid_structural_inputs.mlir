@@ -20,6 +20,22 @@ func.func @composition_rejects_inadmissible_static_stride(
   return
 }
 
+func.func @composition_rejects_combined_out_of_domain_coordinate(
+    %outer: !fly.layout<8:1>, %inner: !fly.layout<(2,2):(4,4)>) {
+  // Each inner mode reaches coordinate 4 independently, but their combined
+  // maximum coordinate is 8, outside the outer domain [0, 8).
+  // expected-error@+1 {{inner layout addresses coordinates outside the outer layout domain}}
+  %result = fly.composition(%outer, %inner) : (!fly.layout<8:1>, !fly.layout<(2,2):(4,4)>) -> !fly.layout<(2,2):(4,4)>
+  return
+}
+
+func.func @composition_validates_tile_inner_operand(
+    %outer: !fly.layout<8:1>, %inner: !fly.tile<[9:1]>) {
+  // expected-error@+1 {{inner layout addresses coordinates outside the outer layout domain}}
+  %result = fly.composition(%outer, %inner) : (!fly.layout<8:1>, !fly.tile<[9:1]>) -> !fly.layout<9:1>
+  return
+}
+
 func.func @logical_divide_requires_static_divisibility(
     %layout: !fly.layout<16:1>, %divisor: !fly.layout<6:1>) {
   // expected-error@+1 {{static divisor size must evenly divide layout size; got 6 and 16}}
