@@ -1,0 +1,64 @@
+{
+  "job_id": "j-53ad0a8ddc6e",
+  "qualification_scope": "AMDPilot artifact-delivery workflow qualification for FlyDSL only; not a claim about all repository behavior",
+  "source_revision": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "branch": "amdpilot/j-53ad0a8ddc6e",
+  "prepared_interpreter": "/tmp/amdpilot-repo-j-53ad0a8ddc6e/venv/bin/python",
+  "source_import_paths": {
+    "flydsl": "/job/repo/python/flydsl/__init__.py",
+    "flydsl.expr": "/job/repo/python/flydsl/expr/__init__.py"
+  },
+  "native_import": {
+    "root": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir",
+    "representative_extension": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so",
+    "note": "flydsl._mlir is a namespace package and therefore has no __file__; loaded wrapper modules and native shared objects are enumerated in environment_probe.raw.txt"
+  },
+  "gpu": {
+    "logical_device_count": 1,
+    "logical_device": 0,
+    "name": "AMD Instinct MI355X",
+    "total_memory_bytes": 309220868096
+  },
+  "software": {
+    "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+    "hip": "7.2.26015-fc0010cf6a"
+  },
+  "commands": [
+    {
+      "command": "/tmp/amdpilot-repo-j-53ad0a8ddc6e/venv/bin/python -m pytest -q -s tests/unit/test_pointer_argument_vec_add.py",
+      "exit_code": 0,
+      "raw_output": "pointer_argument_vec_add.raw.txt",
+      "result": "1 passed",
+      "numerical_measurement": "The repository test computes max(abs(GPU - Torch(a + b))) and asserts it is < 1e-5; it does not print the value."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-53ad0a8ddc6e/venv/bin/python reports/j-53ad0a8ddc6e/masked_tail_probe.py",
+      "exit_code": 0,
+      "raw_output": "masked_tail_probe.raw.txt",
+      "measurements": {
+        "length": 4103,
+        "power_of_two": false,
+        "block_dim": 256,
+        "tail_lanes": 7,
+        "guard_elements_each_side": 37,
+        "sentinel": -98765.5,
+        "max_abs_error_vs_torch_add": 0.0,
+        "mean_abs_error_vs_torch_add": 0.0,
+        "mismatch_count_at_1e-5": 0,
+        "prefix_sentinel_untouched": true,
+        "suffix_sentinel_untouched": true
+      }
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-53ad0a8ddc6e/venv/bin/python reports/j-53ad0a8ddc6e/environment_probe.py",
+      "exit_code": 0,
+      "raw_output": "environment_probe.raw.txt"
+    }
+  ],
+  "limitations": [
+    "Focused qualification only: one existing pointer-argument vector-add unit test and one independent masked-tail/sentinel probe were run.",
+    "The existing unit test exposes its 1e-5 assertion threshold but does not print its computed maximum error.",
+    "No native sources were changed, so the pinned native compiler was not rebuilt and the environment was not reinstalled.",
+    "GPU visibility variables were unset, but Torch reported exactly one visible logical GPU; only logical device 0 was used."
+  ]
+}
