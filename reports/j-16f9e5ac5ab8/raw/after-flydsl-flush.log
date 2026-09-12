@@ -1,0 +1,4 @@
+1.125410 stderr b'SYNCHRONIZED\nFLYDSL_FLUSHED\n'
+1.125482 stdout b'hello from thread 0\nhello from thread 1\nhello from thread 2\nhello from thread 3\n'
+4.125532 stderr b'EXITING\n'
+4.452334 exit 0

@@ -1,0 +1,50 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/653",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Reproduced the original four-thread gfx950 device printf delay through piped stdout. torch.cuda.synchronize() completed before any stdout bytes were visible; fflush(NULL) and stdbuf -oL each exposed all four lines before teardown. Added the explicit flydsl.runtime.flush_device_printf() contract for use after synchronization, documented that it flushes host C stdio but does not synchronize GPU work, and added a timing-independent pipe regression that keeps the child alive until the parent observes thread IDs 0, 1, 2, and 3.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-16f9e5ac5ab8/venv/bin/python /job/observe_pipe.py /tmp/amdpilot-repo-j-16f9e5ac5ab8/venv/bin/python /job/printf_repro.py --hold 3",
+      "exit_code": 0,
+      "what_was_measured": "Before the change, stderr reported SYNCHRONIZED at 1.328389 s and EXITING at 4.328514 s, while the four stdout lines first became pipe-visible at 4.558322 s during teardown."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-16f9e5ac5ab8/venv/bin/python /job/observe_pipe.py /tmp/amdpilot-repo-j-16f9e5ac5ab8/venv/bin/python /job/printf_repro.py --flush --hold 3",
+      "exit_code": 0,
+      "what_was_measured": "The explicit libc fflush control made all four lines visible at 1.025096 s, immediately after the synchronized/flush markers and about three seconds before EXITING."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-16f9e5ac5ab8/venv/bin/python /job/observe_pipe.py stdbuf -oL /tmp/amdpilot-repo-j-16f9e5ac5ab8/venv/bin/python /job/printf_repro.py --hold 3",
+      "exit_code": 0,
+      "what_was_measured": "The line-buffered control made all four lines visible at 1.022049 s, before SYNCHRONIZED was observed and about three seconds before EXITING."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-16f9e5ac5ab8/venv/bin/python /job/observe_pipe.py /tmp/amdpilot-repo-j-16f9e5ac5ab8/venv/bin/python /job/printf_repro.py --flydsl-flush --hold 3",
+      "exit_code": 0,
+      "what_was_measured": "The new FlyDSL helper made all four lines visible at 1.125482 s while the child remained alive until EXITING at 4.125532 s."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-16f9e5ac5ab8/venv/bin/python -m pytest -q tests/system/test_device_printf_pipe.py -s",
+      "exit_code": 0,
+      "what_was_measured": "Timing-independent GPU pipe regression passed. The child synchronizes and flushes, then blocks on a control pipe; the parent verifies the live child and exactly four device lines with the independent CPU reference set {0,1,2,3} before releasing it."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-16f9e5ac5ab8/venv/bin/python -m pytest -q tests/unit/test_device_runtime.py",
+      "exit_code": 0,
+      "what_was_measured": "Nine existing runtime unit tests passed."
+    },
+    {
+      "command": "FLYDSL_DUMP_IR=1 FLYDSL_DEBUG_DUMP_ASM=1 FLYDSL_DUMP_DIR=/tmp/flydsl-j-16f9e5ac5ab8-dump.75wWMA FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j-16f9e5ac5ab8-cache.TscGrO FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-16f9e5ac5ab8/venv/bin/python /job/printf_repro.py --flydsl-flush --hold 0",
+      "exit_code": 0,
+      "what_was_measured": "A fresh compile emitted gpu.printf, LLVM calls to __ockl_printf_begin/__ockl_printf_append_string_n/__ockl_printf_append_args, and final ISA declaring amdgcn-amd-amdhsa-unknown-gfx950 for hello_kernel_0."
+    }
+  ],
+  "gpu_execution": true,
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "The original hello(); torch.cuda.synchronize() sequence remains block-buffered when stdout is piped. The explicit API contract requires callers to invoke flydsl.runtime.flush_device_printf() after synchronizing the relevant stream or device.",
+    "flush_device_printf() calls fflush(NULL), so it flushes all host C stdio streams in the process, not only device printf output.",
+    "No C++ code changed, so the prepared native rebuild was not applicable; the loaded native extension remained /opt/venv/lib/python3.12/site-packages/flydsl/_mlir."
+  ]
+}
