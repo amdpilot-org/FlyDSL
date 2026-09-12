@@ -1,0 +1,60 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/946",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/653",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "candidate_commit": "9b06389868ff475b52fcec0521b5c63ac4d43585",
+  "outcome": "candidate_rejected",
+  "recommendation": "request_changes",
+  "fully_resolves_original": false,
+  "summary": "The exact candidate is a substantial partial fix: real gfx950 compilation and numerical execution pass for alternate roots containing spaces, double quotes, or backslashes and for an arbitrary private PATH symlink to a complete toolkit. A valid root containing both quote types is explicitly rejected before compilation, so arbitrary valid alternate ROCm locations are not fully supported.",
+  "tests": [
+    {
+      "command": "FLYDSL_ROCM_TOOLKIT_PATH=<valid-private-root> FLYDSL_DUMP_IR=1 python -m pytest 'tests/kernels/test_vec_add.py::test_benchmark_vector_add[4]' -q -s --tb=short (recorded base)",
+      "exit_code": 0,
+      "what_was_measured": "The base ran on gfx950 with max error 0.00e+00, but inspection shows it ignored the alternate-root variable and used the available /opt/rocm default; the image therefore cannot naturally reproduce the missing-default original failure."
+    },
+    {
+      "command": "python -m pytest tests/unit/test_rocm_toolkit_discovery.py -q (exact candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Candidate regression suite; 11 passed."
+    },
+    {
+      "command": "FLYDSL_ROCM_TOOLKIT_PATH=<private-root-containing-double-quote> FLYDSL_DUMP_IR=1 python -m pytest 'tests/kernels/test_vec_add.py::test_benchmark_vector_add[4]' -q -s --tb=short",
+      "exit_code": 0,
+      "what_was_measured": "Actual gpu-module-to-binary compilation, final ISA generation, and gfx950 vector addition; max error 0.00e+00 against Torch."
+    },
+    {
+      "command": "FLYDSL_ROCM_TOOLKIT_PATH=<private-root-containing-backslash> FLYDSL_DUMP_IR=1 python -m pytest 'tests/kernels/test_vec_add.py::test_benchmark_vector_add[4]' -q -s --tb=short",
+      "exit_code": 0,
+      "what_was_measured": "Actual gpu-module-to-binary compilation, final ISA generation, and gfx950 vector addition; max error 0.00e+00 against Torch."
+    },
+    {
+      "command": "PATH=<arbitrary-private-bin-with-ld.lld-symlink> FLYDSL_DUMP_IR=1 python -m pytest 'tests/kernels/test_vec_add.py::test_benchmark_vector_add[4]' -q -s --tb=short",
+      "exit_code": 0,
+      "what_was_measured": "PATH-only resolved-toolkit discovery followed by real compilation, final ISA generation, and gfx950 numerical execution; max error 0.00e+00."
+    },
+    {
+      "command": "FLYDSL_ROCM_TOOLKIT_PATH=<valid-private-root-containing-both-single-and-double-quotes> python -m pytest 'tests/kernels/test_vec_add.py::test_benchmark_vector_add[4]' -q -s --tb=short",
+      "exit_code": 1,
+      "what_was_measured": "Independent remaining counterexample: candidate rejects a valid toolkit root before gpu-module-to-binary with ValueError about both quote types."
+    },
+    {
+      "command": "python -m pytest tests/unit -q (exact candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Full unit suite; 1109 passed and 17 skipped."
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "Candidate runs for quote, backslash, space, and arbitrary-PATH layouts each executed vector addition on AMD Instinct MI355X gfx950 with maximum error 0.00e+00 against Torch a + b and emitted dumps through final ISA."
+  },
+  "native_rebuilt": false,
+  "remaining_counterexamples": [
+    "A valid alternate ROCm toolkit root whose pathname contains both a single quote and a double quote passes toolkit validation but is rejected before gpu-module-to-binary by quote_pass_option_value()."
+  ],
+  "remaining_limitations": [
+    "The reported gfx1250 GPU and ROCm 6 environment were unavailable; execution and compatibility there remain unverified.",
+    "The original missing-/opt/rocm failure could not be naturally reproduced because this image has a valid /opt/rocm-7.2.0 installation; the base comparison instead confirms that the alternate-root variable is ignored.",
+    "No native rebuild was performed because the candidate changes only Python; the prepared pinned native MLIR extension and LLVM were used."
+  ]
+}

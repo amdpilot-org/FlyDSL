@@ -1,0 +1,49 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 1 item
+
+tests/kernels/test_vec_add.py 
+================================================================================
+ROCm GPU Benchmark - Vector Addition with flydsl API
+GPU: gfx950
+================================================================================
+
+================================================================================
+Benchmark: Vector Addition (C = A + B) - flydsl API
+  - Threads per block: 256
+  - Vec width: 4 floats (128 bits)
+  - Tile elems: 1024
+Size: 1048576 elements (1.0M floats, ~0.00 GB)
+Memory Traffic: 3 x 1048576 x 4 bytes = 0.01 GB per kernel
+================================================================================
+F
+
+=================================== FAILURES ===================================
+_________________________ test_benchmark_vector_add[4] _________________________
+tests/kernels/test_vec_add.py:203: in test_benchmark_vector_add
+    assert benchmark_vector_add(
+tests/kernels/test_vec_add.py:159: in benchmark_vector_add
+    vecAdd(tA, b_dev, c_dev, SIZE, SIZE, THREADS_PER_BLOCK, VEC_WIDTH, stream=stream)
+python/flydsl/compiler/jit_function.py:1555: in __call__
+    compiled_module = MlirCompiler.compile(
+python/flydsl/compiler/jit_function.py:797: in compile
+    cfg = _pipeline_fragments_for_mode(backend, compile_hints=compile_hints)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+python/flydsl/compiler/jit_function.py:759: in _pipeline_fragments_for_mode
+    fragments = backend.pipeline_fragments(compile_hints=compile_hints)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+python/flydsl/compiler/backends/rocm.py:116: in pipeline_fragments
+    pre_binary_fragments, binary_fragment = self._pipeline_parts(compile_hints=compile_hints)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+python/flydsl/compiler/backends/rocm.py:109: in _pipeline_parts
+    toolkit_path = quote_pass_option_value(get_rocm_toolkit_path())
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+python/flydsl/compiler/mlir_utils.py:18: in quote_pass_option_value
+    raise ValueError("MLIR textual pass options cannot represent a value containing both quote types")
+E   ValueError: MLIR textual pass options cannot represent a value containing both quote types
+=========================== short test summary info ============================
+FAILED tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] - ValueErr...
+============================== 1 failed in 0.90s ===============================

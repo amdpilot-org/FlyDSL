@@ -1,0 +1,117 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 1123 items / 3 skipped
+
+tests/unit/test_arith_ops.py ..................                          [  1%]
+tests/unit/test_ast_wrap_locations.py ......                             [  2%]
+tests/unit/test_async_object_vs_deps.py ssss                             [  2%]
+tests/unit/test_atomic_write.py ...                                      [  2%]
+tests/unit/test_autotune.py ............................................ [  6%]
+...........                                                              [  7%]
+tests/unit/test_backend_cmake_defaults.py ....                           [  8%]
+tests/unit/test_callstate_dispatch.py ...........                        [  8%]
+tests/unit/test_class_bound_jit_kernel.py ...                            [  9%]
+tests/unit/test_compile_backends.py ..                                   [  9%]
+tests/unit/test_compile_hints.py .s...s...........                       [ 10%]
+tests/unit/test_constexpr.py ....                                        [ 11%]
+tests/unit/test_coord_tensor.py .                                        [ 11%]
+tests/unit/test_derived.py ..........                                    [ 12%]
+tests/unit/test_device_runtime.py .........                              [ 13%]
+tests/unit/test_diagnostics.py .......                                   [ 13%]
+tests/unit/test_docs_api_guard.py ..............                         [ 14%]
+tests/unit/test_dynamic_controlflow_list_carry.py ...................... [ 16%]
+......                                                                   [ 17%]
+tests/unit/test_expr_optional_rocdl.py ss                                [ 17%]
+tests/unit/test_extern_runtime_integration.py ....                       [ 17%]
+tests/unit/test_external_llvm_codegen.py ...........                     [ 18%]
+tests/unit/test_fastmath_context.py ..........................           [ 21%]
+tests/unit/test_fly_opt_tooling.py s                                     [ 21%]
+tests/unit/test_for_auto_iter_args.py ......                             [ 21%]
+tests/unit/test_for_dispatch_paths.py ........                           [ 22%]
+tests/unit/test_gfx1250_atoms.py ...                                     [ 22%]
+tests/unit/test_gfx1250_mma_atom_precision_check.py ssss                 [ 23%]
+tests/unit/test_hotspot_analyzer.py ......                               [ 23%]
+tests/unit/test_if_dispatch_paths.py .........                           [ 24%]
+tests/unit/test_ifexp_dispatch.py .......                                [ 25%]
+tests/unit/test_jit_cache_key.py ....                                    [ 25%]
+tests/unit/test_jit_cache_key_completeness.py ...............            [ 26%]
+tests/unit/test_jit_stream_param.py .........                            [ 27%]
+tests/unit/test_kernel_dynamic_smem_types.py .........                   [ 28%]
+tests/unit/test_kernel_known_block_size.py ........................      [ 30%]
+tests/unit/test_kernel_range_dynamic_upper_bound.py ...                  [ 30%]
+tests/unit/test_layout_algebra.py .............s..................       [ 33%]
+tests/unit/test_link_utils.py ...                                        [ 34%]
+tests/unit/test_llvm_wrapper.py ...........................              [ 36%]
+tests/unit/test_math_ops.py ............................................ [ 40%]
+..............................................................           [ 45%]
+tests/unit/test_multi_stream_launch.py .......                           [ 46%]
+tests/unit/test_pa_metadata_tuning.py ..                                 [ 46%]
+tests/unit/test_pointer_argument_vec_add.py .                            [ 46%]
+tests/unit/test_print_typst.py .....                                     [ 47%]
+tests/unit/test_rdna3_grid_swizzle.py .................................. [ 50%]
+........................................................................ [ 56%]
+........................................................................ [ 63%]
+........................................................................ [ 69%]
+........................................................................ [ 75%]
+....................                                                     [ 77%]
+tests/unit/test_rocir_print.py ......                                    [ 78%]
+tests/unit/test_rocm_toolkit_discovery.py ...........                    [ 79%]
+tests/unit/test_simple_namespace.py .                                    [ 79%]
+tests/unit/test_softmax_autotune.py .................................... [ 82%]
+........                                                                 [ 83%]
+tests/unit/test_static_vs_dynamic.py ....                                [ 83%]
+tests/unit/test_tensor_cache_signature.py .......................        [ 85%]
+tests/unit/test_tracing_context.py .....                                 [ 86%]
+tests/unit/test_typed_arith_ops.py ...................................   [ 89%]
+tests/unit/test_typed_arithmetic_guard.py ....................           [ 90%]
+tests/unit/test_universal_atomic.py ......                               [ 91%]
+tests/unit/test_vector.py .............................................. [ 95%]
+.......................................                                  [ 99%]
+tests/unit/test_vector_iteration.py ......                               [ 99%]
+tests/unit/test_while_dispatch_paths.py .....                            [100%]
+
+=============================== warnings summary ===============================
+unit/test_kernel_dynamic_smem_types.py::TestKernelDynamicSmemTypes::test_dynamic_smem_python_int[0]
+  /job/repo/python/flydsl/compiler/jit_function.py:1367: UserWarning: @jit parameter 'smem' is annotated as 'int', which is not a DSL value type.
+    self._ensure_sig()
+
+unit/test_kernel_dynamic_smem_types.py::TestKernelDynamicSmemTypes::test_dynamic_smem_python_int[0]
+  /job/repo/tests/unit/test_kernel_dynamic_smem_types.py:51: UserWarning: @jit parameter 'smem' is annotated as 'int', but the argument resolves to 'Int32'. The annotation is not enforced; the actual value type is used.
+    _run_with_python_int_smem(smem_size)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================= 1109 passed, 17 skipped, 2 warnings in 7.50s =================
+acc=4
+a=3 b=97
+i=0
+i=1
+i=2
+acc=4
+[smem_probe] tid=0
+[smem_probe] tid=0
+[smem_probe] tid=0
+[smem_probe] tid=0
+[smem_probe] tid=0
+[smem_probe] tid=0
+[smem_probe] tid=0
+[smem_probe] tid=0
+[smem_probe] tid=0
+kernel loop_count=1
+helper i=0
+kernel loop_count=4
+helper i=0
+helper i=1
+helper i=2
+helper i=3
+kernel loop_count=8
+helper i=0
+helper i=1
+helper i=2
+helper i=3
+helper i=4
+helper i=5
+helper i=6
+helper i=7
