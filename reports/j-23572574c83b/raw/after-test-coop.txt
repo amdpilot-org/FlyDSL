@@ -1,0 +1,19 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 326 items
+
+tests/extension/coop/test_block_reduce.py .............................. [  9%]
+.......................................................                  [ 26%]
+tests/extension/coop/test_block_scan.py ................................ [ 35%]
+................................                                         [ 45%]
+tests/extension/coop/test_block_spec.py ............                     [ 49%]
+tests/extension/coop/test_warp_rocdl.py ................................ [ 59%]
+................                                                         [ 64%]
+tests/extension/coop/test_warp_scan.py ................................. [ 74%]
+........................................................................ [ 96%]
+............                                                             [100%]
+
+============================= 326 passed in 24.93s =============================

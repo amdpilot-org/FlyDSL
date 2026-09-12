@@ -13,6 +13,7 @@ block_scan = fx.coop.BlockScan[fx.Int32, fx.known_block_size()]
 storage = fx.SharedAllocator().allocate(block_scan.SharedStorage).peek()
 
 inclusive = block_scan.inclusive(value, fx.ReductionOp.ADD, storage=storage)
+fx.barrier()
 exclusive = block_scan.exclusive(value, fx.ReductionOp.ADD, storage=storage)
 ```
 
