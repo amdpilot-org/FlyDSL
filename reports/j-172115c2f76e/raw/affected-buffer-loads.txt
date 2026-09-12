@@ -1,0 +1,16 @@
+	buffer_load_dwordx4 v13, s[48:51], 0 offen lds
+	buffer_load_dwordx4 v14, s[48:51], 0 offen lds
+	buffer_load_dwordx4 v10, s[48:51], 0 offen lds
+	buffer_load_dwordx4 v11, s[48:51], 0 offen lds
+	buffer_load_dwordx4 v13, s[48:51], s8 offen lds
+	buffer_load_dwordx4 v14, s[48:51], s8 offen lds
+	buffer_load_dwordx4 v10, s[48:51], s8 offen lds
+	buffer_load_dwordx4 v11, s[48:51], s8 offen lds
+	buffer_load_dwordx4 v93, s[76:79], s45 offen lds
+	buffer_load_dwordx4 v95, s[76:79], s45 offen lds
+	buffer_load_dwordx4 v43, s[76:79], s45 offen lds
+	buffer_load_dwordx4 v92, s[76:79], s45 offen lds
+	buffer_load_dwordx4 v93, s[76:79], s44 offen lds
+	buffer_load_dwordx4 v95, s[76:79], s44 offen lds
+	buffer_load_dwordx4 v43, s[76:79], s44 offen lds
+	buffer_load_dwordx4 v92, s[76:79], s44 offen lds

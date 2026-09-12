@@ -1,0 +1,3 @@
+required_copy_present=False
+affected_descriptor_loads=16
+missing required reaching definition: s_mov_b64 s[60:61], s[80:81]
