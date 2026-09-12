@@ -1,0 +1,29 @@
+{
+  "control": "deterministic FlyDSL raw-pointer vec_add compared with CPU reference",
+  "device_index": 0,
+  "device_name": "AMD Instinct MI355X",
+  "device_capability": [
+    9,
+    5
+  ],
+  "dtype": "torch.float32",
+  "elements": 1027,
+  "max_abs_error_vs_cpu": 0.0,
+  "allclose_rtol_1e-6_atol_1e-6": true,
+  "gpu_output_samples": [
+    -2.25,
+    -2.2417163848876953,
+    0.3018035888671875,
+    6.557815074920654,
+    6.548152923583984
+  ],
+  "cpu_reference_samples": [
+    -2.25,
+    -2.2417163848876953,
+    0.3018035888671875,
+    6.557815074920654,
+    6.548152923583984
+  ],
+  "gpu_output_sum": 1303.9260690659285,
+  "cpu_reference_sum": 1303.9260690659285
+}
