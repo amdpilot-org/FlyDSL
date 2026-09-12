@@ -1,0 +1,17 @@
+Command: /tmp/amdpilot-repo-j-aff9f621cb3e/venv/bin/python python/flydsl/tools/isa_analyzer.py --pretty reports/j-a68b43674cdb/raw/gfx950-final-isa.s
+Exit code: 0
+Observed instruction_count: 28
+False YAML opcodes: none
+Families: vmem_load=1, vmem_store=1, waitcnt=2; all other reported families=0
+
+Command: /tmp/amdpilot-repo-j-aff9f621cb3e/venv/bin/python -m pytest -q tests/unit/test_isa_analyzer.py tests/unit/test_compile_hints.py tests/unit/test_external_llvm_codegen.py
+Exit code: 0
+Result: 32 passed, 2 skipped in 2.23s
+
+Command: HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-aff9f621cb3e/venv/bin/python -m pytest -q tests/extension/coop/test_warp_rocdl.py::test_every_form_agrees_with_the_portable_one[reduce-w16] tests/extension/coop/test_warp_rocdl.py::test_a_full_wave_fold_rakes_and_lifts_the_total_into_an_sgpr --basetemp=/tmp/amdpilot-repo-j-aff9f621cb3e/pytest-correction
+Exit code: 0
+Result: 2 passed in 0.93s on AMD Instinct MI355X, gfx950.
+
+Command: git diff --check
+Exit code: 0
+Result: no whitespace errors.

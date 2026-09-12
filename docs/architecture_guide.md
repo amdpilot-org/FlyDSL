@@ -465,6 +465,10 @@ Analyze the final file with the built-in, machine-readable ISA analyzer:
 python -m flydsl.tools.isa_analyzer --pretty dumps/my_func_name/21_final_isa.s
 ```
 
+The analyzer excludes the YAML payload delimited by `.amdgpu_metadata` and
+`.end_amdgpu_metadata`; those scalar values are object metadata, not ISA
+instructions.
+
 The JSON report contains exact opcode counts, grouped MFMA/WMMA, VMEM,
 LDS, wait and barrier counts, plus each kernel's assembler-reported VGPR,
 SGPR, LDS and scratch high-water marks. Counts come from final assembly, not

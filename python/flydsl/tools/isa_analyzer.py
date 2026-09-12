@@ -95,10 +95,19 @@ def analyze_isa(assembly: str) -> dict:
     kernels: dict[str, dict[str, int]] = {}
     current_kernel: str | None = None
     in_block_comment = False
+    in_amdgpu_metadata = False
 
     for raw_line in assembly.splitlines():
         uncommented_line, in_block_comment = _strip_comments(raw_line, in_block_comment)
         line = uncommented_line.strip()
+        if line.startswith(".amdgpu_metadata"):
+            in_amdgpu_metadata = True
+            continue
+        if line.startswith(".end_amdgpu_metadata"):
+            in_amdgpu_metadata = False
+            continue
+        if in_amdgpu_metadata:
+            continue
         match = re.match(r"\.amdhsa_kernel\s+([^\s]+)", line)
         if match:
             current_kernel = match.group(1)

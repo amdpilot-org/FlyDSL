@@ -82,6 +82,30 @@ def test_label_and_instruction_may_share_a_line():
     assert report["opcodes"] == {"s_branch": 1, "s_endpgm": 1, "s_nop": 1}
 
 
+def test_amdgpu_yaml_metadata_is_not_parsed_as_instructions():
+    report = analyze_isa(
+        """
+s_nop 0
+.amdgpu_metadata
+---
+amdhsa.kernels:
+  - .name: kernel_0
+    .symbol: kernel_0.kd
+    .args:
+      - .value_kind: global_buffer
+      - .value_kind: by_value
+    .uses_dynamic_stack: false
+    .instruction_looking_value: v_mfma_f32_16x16x16_f16
+...
+.end_amdgpu_metadata
+s_endpgm
+"""
+    )
+    assert report["instruction_count"] == 2
+    assert report["opcodes"] == {"s_endpgm": 1, "s_nop": 1}
+    assert report["families"]["mfma_wmma"] == 0
+
+
 def test_cli_emits_machine_readable_json(tmp_path, capsys):
     isa = tmp_path / "kernel.s"
     isa.write_text(SAMPLE)
