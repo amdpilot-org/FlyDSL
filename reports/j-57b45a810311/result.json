@@ -1,0 +1,33 @@
+{
+  "job_id": "j-57b45a810311",
+  "outcome": "qualification",
+  "source_revision": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "gpu": {
+    "name": "AMD Instinct MI355X",
+    "arch": "gfx950",
+    "device_count": 1
+  },
+  "native_build": {
+    "exit_code": 0,
+    "passed": true,
+    "wall_seconds": 48.36537877796218,
+    "source_path": "/job/repo/python/flydsl",
+    "native_path": "/tmp/amdpilot-repo-j-57b45a810311/native-build/python_packages/flydsl/_mlir",
+    "gpu_smoke_passed": true,
+    "gpu_smoke_operation": "FlyDSL vector_add 100x1000 (predicated border blocks)"
+  },
+  "tests": {
+    "command": "/tmp/amdpilot-repo-j-57b45a810311/venv/bin/python -m pytest tests/unit",
+    "exit_code": 0,
+    "collected": 1112,
+    "collection_skips": 3,
+    "passed": 1098,
+    "skipped": 17,
+    "warnings": 2,
+    "duration_seconds": 7.23
+  },
+  "limitations": [
+    "Broader integration, performance, multi-GPU, and upstream CI qualification were not run.",
+    "This report does not infer success of the independently exercised platform receipt delivery."
+  ]
+}
