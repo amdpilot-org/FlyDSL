@@ -1,0 +1,52 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/946",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Reproduced the opaque lld failure in the real gpu-module-to-binary path, then added deterministic validated ROCm toolkit discovery for explicit roots, standard ROCm variables, process PATH, and /opt/rocm.",
+  "tests": [
+    {
+      "command": "ROCM_PATH=<private-missing-root> FLYDSL_RUNTIME_CACHE_DIR=<private-cache> python -m pytest tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] -q -s --tb=short (recorded base)",
+      "exit_code": 1,
+      "what_was_measured": "Failing-before regression in the actual gpu-module-to-binary path; diagnostic was the opaque 'lld invocation failed'."
+    },
+    {
+      "command": "FLYDSL_ROCM_TOOLKIT_PATH=<private-valid-root> ROCM_PATH=<private-invalid-root> python -m pytest tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] -q -s --tb=short",
+      "exit_code": 0,
+      "what_was_measured": "Explicit-root precedence, fatbin compilation, gfx950 execution, and numerical max error 0.00e+00 against Torch a+b."
+    },
+    {
+      "command": "env -u FLYDSL_ROCM_TOOLKIT_PATH -u ROCM_PATH -u ROCM_ROOT -u ROCM_HOME PATH=<private-toolkit-llvm-bin>:/usr/local/bin:/usr/bin:/bin python -m pytest tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] -q -s --tb=short",
+      "exit_code": 0,
+      "what_was_measured": "Process-local PATH discovery, fatbin compilation, gfx950 execution, and numerical max error 0.00e+00."
+    },
+    {
+      "command": "ROCM_PATH=<private-valid-root> python -m pytest tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] -q -s --tb=short",
+      "exit_code": 0,
+      "what_was_measured": "Alternate standard ROCm root compilation and numerical max error 0.00e+00."
+    },
+    {
+      "command": "FLYDSL_ROCM_TOOLKIT_PATH=<private-missing-root> python -m pytest tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] -q --tb=short",
+      "exit_code": 1,
+      "what_was_measured": "Clear missing-linker diagnostic naming the explicit variable and exact path."
+    },
+    {
+      "command": "FLYDSL_ROCM_TOOLKIT_PATH=<private-nonexec-root> python -m pytest tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] -q --tb=short",
+      "exit_code": 1,
+      "what_was_measured": "Clear non-executable-linker diagnostic naming the explicit variable and exact path."
+    },
+    {
+      "command": "FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=<private-dump-dir> FLYDSL_ROCM_TOOLKIT_PATH=<private-valid-root> python -m pytest tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] -q -s --tb=short",
+      "exit_code": 0,
+      "what_was_measured": "Real compiler evidence: fatbin MLIR, LLVM IR, and gfx950 ISA containing the kernel, target directive, s_endpgm, and AMDHSA metadata; GPU max error 0.00e+00."
+    },
+    {
+      "command": "python -m pytest tests/unit -q",
+      "exit_code": 0,
+      "what_was_measured": "Full unit regression suite: 1102 passed, 17 skipped."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "The FlyDSL vector-add kernel compiled through gpu-module-to-binary and executed on one AMD Instinct MI350X gfx950 for explicit-root, ROCM_PATH, PATH-discovered, and ISA-dump runs; each reported max error 0.00e+00 against Torch a+b.",
+  "native_rebuilt": false,
+  "remaining_limitations": "gfx1250 and ROCm 6 were unavailable and remain unverified. Hardware execution and ISA evidence are for gfx950 on ROCm 7.2. No C++ code changed, so the prepared pinned native library was used without rebuilding."
+}

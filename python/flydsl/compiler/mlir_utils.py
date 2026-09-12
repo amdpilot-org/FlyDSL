@@ -6,6 +6,12 @@ from typing import Any
 from .._mlir import ir
 
 
+def quote_pass_option_value(value: str) -> str:
+    """Quote a string for use as a value in a textual MLIR pass pipeline."""
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'
+
+
 def convert_to_mlir_attr(value: Any) -> ir.Attribute:
     if isinstance(value, ir.Attribute):
         return value
