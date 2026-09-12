@@ -50,6 +50,14 @@ func.func @logical_divide_tile_requires_static_divisibility(
   return
 }
 
+func.func @logical_divide_tile_requires_congruent_embedded_layout(
+    %layout: !fly.layout<128:1>,
+    %divisor: !fly.tile<[((4,8),2):(1,(4,32))]>) {
+  // expected-error@+1 {{LogicalDivideOp tile divisor layout: shape and stride must have congruent tuple structure}}
+  %result = fly.logical_divide(%layout, %divisor) : (!fly.layout<128:1>, !fly.tile<[((4,8),2):(1,(4,32))]>) -> !fly.layout<1:0>
+  return
+}
+
 func.func @complement_requires_congruent_shape_and_stride(
     %layout: !fly.layout<((4,8),2):(1,(4,32))>) {
   // expected-error@+1 {{shape and stride must have congruent tuple structure}}

@@ -1,0 +1,52 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/583",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/636",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "candidate_pr": "https://github.com/amdpilot-org/FlyDSL/pull/609",
+  "candidate_commit": "2e766716ad773b896c9ed63b89164b2f9eaa3a8a",
+  "review_pr": "https://github.com/amdpilot-org/FlyDSL/pull/628",
+  "outcome": "fixed",
+  "summary": "Preserved PR 609's structural layout-algebra validation and closed PR 628's reproduced TileType gap by recursively validating every LayoutAttr embedded in a logical_divide tile before static-size calculation or layout algebra. The exact malformed tile changed from an assertion abort (134) to a location-bearing diagnostic (1).",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-a8e93c1cc02a/venv/bin/python /opt/amdpilot/rebuild-native.py /job (detached candidate 2e766716ad773b896c9ed63b89164b2f9eaa3a8a)",
+      "exit_code": 0,
+      "what_was_measured": "The exact candidate C++/TableGen sources rebuilt with pinned LLVM and the prepared GPU numerical smoke passed before reproduction."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-a8e93c1cc02a/native-build/bin/fly-opt /job/reports/j-a8e93c1cc02a/raw/adversarial-malformed-tile.mlir (detached candidate 2e766716ad773b896c9ed63b89164b2f9eaa3a8a)",
+      "exit_code": 134,
+      "what_was_measured": "Failing-before evidence: the review's exact malformed embedded layout aborted at IntTupleUtils.h:996 in intTupleFilterZero because guide.rank() did not equal val.rank()."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-a8e93c1cc02a/venv/bin/python /opt/amdpilot/rebuild-native.py /job (corrected working tree)",
+      "exit_code": 0,
+      "what_was_measured": "The corrected C++/TableGen sources rebuilt with pinned LLVM; the rebuilt native library passed the prepared FlyDSL vector_add numerical smoke."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-a8e93c1cc02a/native-build/bin/fly-opt /job/reports/j-a8e93c1cc02a/raw/adversarial-malformed-tile.mlir",
+      "exit_code": 1,
+      "what_was_measured": "Passing-after regression: the former abort became a targeted diagnostic that the tile divisor layout shape and stride must have congruent tuple structure."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-a8e93c1cc02a/native-build/bin/fly-opt tests/mlir/LayoutAlgebra/invalid_structural_inputs.mlir -verify-diagnostics",
+      "exit_code": 0,
+      "what_was_measured": "All structural-validation diagnostics, including the malformed LayoutAttr embedded in TileType and legal dynamic controls, matched expectations."
+    },
+    {
+      "command": "Run every RUN line in tests/mlir/LayoutAlgebra/*.mlir with rebuilt fly-opt and /opt/amdpilot/llvm-project/mlir_install/bin/FileCheck",
+      "exit_code": 0,
+      "what_was_measured": "All 11 LayoutAlgebra test files passed; the ten FileCheck pipelines and the verify-diagnostics regression all exited zero."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_evidence": "Both native rebuilds passed FlyDSL vector_add 100x1000 (predicated border blocks) on one AMD Instinct MI355X, gfx950. Corrected-build details are in /job/native-build.json.",
+  "native_rebuilt": true,
+  "native_paths": {
+    "fly_opt": "/tmp/amdpilot-repo-j-a8e93c1cc02a/native-build/bin/fly-opt",
+    "python_extension": "/tmp/amdpilot-repo-j-a8e93c1cc02a/native-build/python_packages/flydsl/_mlir",
+    "corrected_build_record": "/job/native-build.json"
+  },
+  "raw_evidence": "/job/reports/j-a8e93c1cc02a/raw",
+  "remaining_limitations": "Static validation can check tuple congruence and other type-profile properties, including layouts nested in tiles. Dynamic SSA extents and dynamic BasisAttr leaves do not expose their runtime values here, so value-dependent divisibility, bounds, and invertibility remain runtime concerns unless runtime checks are introduced. The GPU smoke validates operation of the rebuilt native library on gfx950; the verifier correction itself is architecture-independent. No LLVM change was required."
+}

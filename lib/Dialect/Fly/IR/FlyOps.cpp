@@ -49,6 +49,26 @@ LogicalResult validateLayoutStructure(std::optional<Location> location, StringRe
   return success();
 }
 
+LogicalResult validateTileStructure(std::optional<Location> location, StringRef opName,
+                                    TileAttr tile) {
+  if (tile.isLeaf()) {
+    if (auto layout = dyn_cast<LayoutAttr>(tile.getValue()))
+      return validateLayoutStructure(location, opName, layout);
+    return success();
+  }
+  for (int32_t i = 0; i < tile.rank(); ++i) {
+    Attribute mode = tile.at(i);
+    if (auto nested = dyn_cast<TileAttr>(mode)) {
+      if (failed(validateTileStructure(location, opName, nested)))
+        return failure();
+    } else if (auto layout = dyn_cast<LayoutAttr>(mode)) {
+      if (failed(validateLayoutStructure(location, opName, layout)))
+        return failure();
+    }
+  }
+  return success();
+}
+
 std::optional<int64_t> staticProduct(IntTupleAttr value) {
   if (value.isLeaf()) {
     auto leaf = value.extractIntFromLeaf();
@@ -276,7 +296,8 @@ LogicalResult validateLogicalDivide(std::optional<Location> location, LayoutAttr
 
 LogicalResult validateLogicalDivide(std::optional<Location> location, LayoutAttr layout,
                                     TileAttr divisor) {
-  if (failed(validateLayoutStructure(location, "LogicalDivideOp layout", layout)))
+  if (failed(validateLayoutStructure(location, "LogicalDivideOp layout", layout)) ||
+      failed(validateTileStructure(location, "LogicalDivideOp tile divisor layout", divisor)))
     return failure();
   auto layoutSize = staticProduct(layout.getShape());
   auto divisorSize = staticProduct(divisor);
