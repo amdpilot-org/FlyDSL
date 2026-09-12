@@ -1,0 +1,41 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/583",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Added shared structural validation used by inference and operation verification for make_layout congruence, statically inadmissible composition, non-dividing static logical_divide inputs, and non-invertible static right_inverse domains. The original composition pattern changed from an assertion abort to a located diagnostic; the other invalid patterns changed from successful acceptance to located diagnostics. Legal dynamic-layout controls remain accepted.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-4776ec6c5f96/native-build/bin/fly-opt /job/evidence/before/composition-invalid.mlir (recorded base)",
+      "exit_code": 134,
+      "what_was_measured": "The invalid composition aborted at LayoutUtils.h:762. Raw stderr: /job/evidence/before/composition-invalid.mlir.stderr."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-4776ec6c5f96/native-build/bin/fly-opt /job/evidence/before/make-layout-invalid.mlir, divide-invalid.mlir, and inverse-invalid.mlir (recorded individually at base)",
+      "exit_code": 0,
+      "what_was_measured": "Each invalid input was silently accepted by the recorded base. Raw stdout/stderr is retained under /job/evidence/before."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-4776ec6c5f96/native-build/bin/fly-opt tests/mlir/LayoutAlgebra/invalid_structural_inputs.mlir -verify-diagnostics",
+      "exit_code": 0,
+      "what_was_measured": "Located diagnostics for all four invalid structural patterns and successful parsing/verification of legal dynamic make_layout, composition, logical_divide, and right_inverse controls."
+    },
+    {
+      "command": "Run every RUN line under tests/mlir/LayoutAlgebra with rebuilt fly-opt and pinned FileCheck",
+      "exit_code": 0,
+      "what_was_measured": "All 11 LayoutAlgebra MLIR test files passed, including the new diagnostic regression. Raw summary: /job/evidence/after/layout-algebra-suite.log."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-4776ec6c5f96/native-build/bin/fly-opt tests/mlir/Transforms/layout_lowering.mlir --fly-layout-lowering | /opt/amdpilot/llvm-project/mlir_install/bin/FileCheck tests/mlir/Transforms/layout_lowering.mlir",
+      "exit_code": 0,
+      "what_was_measured": "The affected lowering path still matches its compiler regression checks. Raw summary: /job/evidence/after/layout-lowering.log."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-4776ec6c5f96/venv/bin/python /opt/amdpilot/rebuild-native.py /job",
+      "exit_code": 0,
+      "what_was_measured": "Rebuilt the native compiler with pinned LLVM e2a39f504fee836e4def9581bed817ecc327b9dc and ran the rebuild harness's real GPU vector_add numerical smoke. Evidence: /job/native-build.json and /job/evidence/after/native-rebuild-delivery.log."
+    }
+  ],
+  "gpu_execution": true,
+  "native_rebuilt": true,
+  "remaining_limitations": "Checks that depend on runtime SSA values remain runtime concerns: dynamic extent divisibility for logical_divide, dynamic inner-coordinate reachability/admissibility for composition, and dynamic-domain invertibility for right_inverse are not rejected statically. This slice validates LayoutType operands; TileType-specific algebra is unchanged. No LLVM change was required."
+}
