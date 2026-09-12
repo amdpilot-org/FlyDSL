@@ -778,7 +778,13 @@ def _run_pipeline(module: ir.Module, fragments: list, *, verifier: bool, print_a
 class MlirCompiler:
     @classmethod
     def compile(
-        cls, module: ir.Module, *, arch: str = "", func_name: str = "", link_libs: Optional[list] = None
+        cls,
+        module: ir.Module,
+        *,
+        arch: str = "",
+        func_name: str = "",
+        link_libs: Optional[list] = None,
+        source_ir: Optional[str] = None,
     ) -> ir.Module:
         try:
             module.operation.verify()
@@ -788,7 +794,9 @@ class MlirCompiler:
         backend = get_backend(arch=arch)
 
         compile_hints = CompilationContext.get_compile_hints()
-        module = ir.Module.parse(module.operation.get_asm(enable_debug_info=env.debug.enable_debug_info))
+        if source_ir is None:
+            source_ir = module.operation.get_asm(enable_debug_info=env.debug.enable_debug_info)
+        module = ir.Module.parse(source_ir)
         backend.lower_compile_hints(module, compile_hints=compile_hints)
         cfg = _pipeline_fragments_for_mode(backend, compile_hints=compile_hints)
         fragments = cfg.fragments
@@ -1553,6 +1561,7 @@ class JitFunction:
                         arch=backend.target.arch,
                         func_name=self.func.__name__,
                         link_libs=link_libs,
+                        source_ir=original_ir,
                     )
 
                     compiled_func = CompiledArtifact(
