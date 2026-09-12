@@ -1,0 +1,44 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/453",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Imported the relevant dependency-aware compile-factory cache from candidate PR 496, reproduced the review PR 540 gaps for helpers rebound through object/module attributes and closure cells, and extended dependency discovery and snapshots so those rebinding forms invalidate stale wrappers. Current paged-attention factories use the dependency-aware cache.",
+  "tests": [
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/job/private-cache-j-1997b34fb096 /tmp/amdpilot-repo-j-1997b34fb096/venv/bin/python -m pytest tests/unit/test_dependency_cache.py -q",
+      "exit_code": 1,
+      "what_was_measured": "Pre-fix regression: direct-global rebinding passed, while object-attribute and closure-cell helper rebinding both reused the identical cached wrapper (2 failed, 1 passed). Raw output: /job/evidence-j-1997b34fb096/regression-before.log"
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/job/private-cache-j-1997b34fb096 /tmp/amdpilot-repo-j-1997b34fb096/venv/bin/python -m pytest tests/unit/test_dependency_cache.py tests/unit/test_jit_cache_key_completeness.py -q",
+      "exit_code": 0,
+      "what_was_measured": "Candidate direct-global case plus object attribute, module attribute, closure-cell, and existing JIT cache-key regressions: 19 passed. Raw output: /job/evidence-j-1997b34fb096/focused-after.log"
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/job/private-cache-j-1997b34fb096 /tmp/amdpilot-repo-j-1997b34fb096/venv/bin/python /job/evidence-j-1997b34fb096/repro_pa_factory.py",
+      "exit_code": 0,
+      "what_was_measured": "Actual compile_pa_decode_tile returned the same wrapper while unchanged, then observed the cdiv sentinel on the first same-signature call after helper rebinding. Raw output and repro source: /job/evidence-j-1997b34fb096/pa-factory-after.log and /job/evidence-j-1997b34fb096/repro_pa_factory.py"
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/job/private-cache-j-1997b34fb096 /tmp/amdpilot-repo-j-1997b34fb096/venv/bin/python /job/evidence-j-1997b34fb096/gpu_pa_reference.py",
+      "exit_code": 0,
+      "what_was_measured": "Compiled and executed BF16 paged attention on one AMD Instinct MI350X (gfx950:sramecc+:xnack-); finite output matched an independent float32 PyTorch softmax/attention reference with max_abs_diff=0.000244140625 at rtol=0.005, atol=0.005. Raw output and source: /job/evidence-j-1997b34fb096/gpu-pa-reference.log and /job/evidence-j-1997b34fb096/gpu_pa_reference.py"
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/job/private-cache-j-1997b34fb096 /tmp/amdpilot-repo-j-1997b34fb096/venv/bin/python -m pytest tests/unit -q",
+      "exit_code": 0,
+      "what_was_measured": "Full unit suite: 1102 passed, 17 skipped. Raw output: /job/evidence-j-1997b34fb096/unit-after.log"
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo /tmp/amdpilot-repo-j-1997b34fb096/venv/bin/python -m pytest tests/kernels/test_pa.py --collect-only -q -rs",
+      "exit_code": 0,
+      "what_was_measured": "Repository PA module remained skipped because aiter requires Triton >=3.6.0 but the prepared interpreter has 3.5.1+rocm7.2.0.gita272dfa8. Raw output: /job/evidence-j-1997b34fb096/pa-collection.log"
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "One assigned AMD Instinct MI350X ran the current BF16 pa_decode_tile implementation; independent-reference max_abs_diff=0.000244140625."
+  },
+  "native_rebuilt": false,
+  "remaining_limitations": "No C++/LLVM sources changed, so the prepared native rebuild was not applicable and no LLVM/ISA behavior is claimed. Dependency discovery follows statically visible Python bytecode reads; dynamic getattr names and state changes hidden behind descriptors are not discoverable. The aiter-dependent repository PA module could not collect with the pinned Triton, but the current direct tile implementation was compiled and executed independently. Direct upstream issue inspection was blocked by the ROCm organization token-lifetime policy; credentials and host configuration were not changed."
+}
