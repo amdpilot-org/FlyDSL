@@ -1,0 +1,15 @@
+{
+  "job_id": "j-e27d7a6783be",
+  "recipe": "flydsl",
+  "origin": "https://github.com/amdpilot-org/FlyDSL.git",
+  "source_revision": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "checkout": "/job/repo",
+  "python": "/tmp/amdpilot-repo-j-e27d7a6783be/venv/bin/python",
+  "native": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir",
+  "wheel": "https://files.pythonhosted.org/packages/e0/4a/3a06f9c6489fafda3c72aec628dadf03555d4969f4f90f9dc27b9a0f14c3/flydsl-0.3.3.dev889-cp312-cp312-manylinux_2_27_x86_64.whl#sha256=3ded0eb88b0431a6c79c34b0820c775102b4ebdfad6ee53dc8d003b3cb18d37e",
+  "runtime": "/tmp/amdpilot-repo-j-e27d7a6783be",
+  "prepared_at": 1789182644.5025833,
+  "module": "/job/repo/python/flydsl/expr/__init__.py",
+  "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+  "hip": "7.2.26015-fc0010cf6a"
+}
