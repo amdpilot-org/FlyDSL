@@ -1,0 +1,53 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/831",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/580",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/560",
+  "candidate_commit": "4f72a59a0306801071fee7ef2850c110d893ff33",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_verified",
+  "recommendation": "accept",
+  "fully_resolves_original": true,
+  "summary": "The exact candidate adds a coherent opt-in global timer read and caller-owned timestamp store. The missing API was reproduced on the prepared base, then passed on the candidate on a real gfx950 GPU. Candidate regressions, separate ISA inspection, exact numerical checks, overhead measurement, and an independent uneven-work adversarial kernel all passed. No candidate source was modified.",
+  "tests": [
+    {
+      "command": "FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-0610ec3abe6e/venv/bin/python /job/review-evidence/j-0610ec3abe6e/base/base_timer_probe.py",
+      "exit_code": 1,
+      "what_was_measured": "On base acf7e67b7d22847e345938ca54fcc137bd7b2a1f, real kernel lowering failed with AttributeError because flydsl.expr.rocdl.global_timer did not exist, reproducing the missing original capability."
+    },
+    {
+      "command": "FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-0610ec3abe6e/venv/bin/python /job/review-evidence/j-0610ec3abe6e/base/base_timer_probe.py",
+      "exit_code": 0,
+      "what_was_measured": "At candidate 4f72a59a0306801071fee7ef2850c110d893ff33, the identical probe compiled, executed on GPU, and returned a nonzero uint64 timestamp."
+    },
+    {
+      "command": "FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/review-evidence/j-0610ec3abe6e/candidate/ir /tmp/amdpilot-repo-j-0610ec3abe6e/venv/bin/python -m pytest -q tests/unit/test_intra_kernel_profiling.py tests/unit/test_expr_optional_rocdl.py tests/unit/test_pointer_argument_vec_add.py -s",
+      "exit_code": 0,
+      "what_was_measured": "Candidate-focused suite: 4 passed, 2 optional-backend tests skipped. The profiled vector add exactly matched the independent Torch a+b reference; stage intervals were positive (104/128/140 ticks min/median/max). Median HIP-event launch time was 37.640 us plain and 37.716 us profiled, delta 0.076 us and ratio 1.002x."
+    },
+    {
+      "command": "Separate profiled/plain pytest invocations with FLYDSL_RUNTIME_ENABLE_CACHE=0, FLYDSL_DUMP_IR=1, and distinct dump directories, followed by rg -n 's_memrealtime|global_store_dwordx2|s_barrier' over each final ISA",
+      "exit_code": 0,
+      "what_was_measured": "The instrumented gfx950 ISA contains exactly two s_memrealtime reads, two global_store_dwordx2 timestamp stores, and one s_barrier. The uninstrumented specialization contains none of those instructions. Both numerical tests passed."
+    },
+    {
+      "command": "FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/review-evidence/j-0610ec3abe6e/candidate/adversarial-ir-2 /tmp/amdpilot-repo-j-0610ec3abe6e/venv/bin/python /job/review-evidence/j-0610ec3abe6e/candidate/adversarial_profile.py",
+      "exit_code": 0,
+      "what_was_measured": "Independent uneven-work GPU kernel: exact integer results [4096, 8192, 12288, 16384], caller-layout guard sentinels preserved, and increasing measured intervals [7172, 13224, 20752, 27104] raw ticks for 1x through 4x global-load work."
+    },
+    {
+      "command": "git diff --check acf7e67b7d22847e345938ca54fcc137bd7b2a1f..4f72a59a0306801071fee7ef2850c110d893ff33",
+      "exit_code": 0,
+      "what_was_measured": "Candidate patch whitespace validation."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_evidence": "One assigned AMD Instinct MI350X, gfx950:sramecc+:xnack-, executed the candidate regressions and independent adversarial kernel under Torch 2.9.1+rocm7.2.0.git7e1940d4 and HIP 7.2.26015-fc0010cf6a.",
+  "native_rebuilt": false,
+  "remaining_counterexamples": [],
+  "remaining_limitations": [
+    "The candidate changes no C++ or LLVM source, so the prepared native rebuild command was not applicable. Checkout Python sources were confirmed active, and the native MLIR extension continued to resolve through /job/repo/python/flydsl/_mlir/_mlir_libs to the prepared pinned wheel build.",
+    "Only gfx950 was available. Other supported AMDGPU architectures were not executed in this review.",
+    "The s_memrealtime primitive supplies a same-device global time domain suitable for comparing workgroups across XCDs, but this environment provided no supported mechanism to identify or pin tested workgroups to distinct XCDs; actual cross-XCD placement was therefore not independently demonstrated.",
+    "Different GPUs do not have a guaranteed synchronized epoch. Timer reads do not establish stream ordering or memory/execution completion; callers must add the synchronization or waits appropriate to the stage. Raw ticks should not be converted to time without an independently established timer frequency."
+  ]
+}
