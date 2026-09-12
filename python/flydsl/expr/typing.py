@@ -1382,7 +1382,7 @@ class ReductionOp(enum.Enum):
 _REDUCE_KINDS = {
     "add": (vector.CombiningKind.ADD, vector.CombiningKind.ADD, vector.CombiningKind.ADD),
     "mul": (vector.CombiningKind.MUL, vector.CombiningKind.MUL, vector.CombiningKind.MUL),
-    "max": (vector.CombiningKind.MAXNUMF, vector.CombiningKind.MAXSI, vector.CombiningKind.MAXUI),
+    "max": (vector.CombiningKind.MAXIMUMF, vector.CombiningKind.MAXSI, vector.CombiningKind.MAXUI),
     "min": (vector.CombiningKind.MINIMUMF, vector.CombiningKind.MINSI, vector.CombiningKind.MINUI),
 }
 

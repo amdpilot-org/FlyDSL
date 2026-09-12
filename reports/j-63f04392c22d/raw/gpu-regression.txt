@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 1 item
+
+tests/unit/test_extrema_nan_semantics_gpu.py extrema GPU output: [[nan, nan, 1.0, 1.0, nan, nan], [-0.0, 0.0, -0.0, 0.0, -0.0, 0.0], [-inf, inf, -inf, inf, -inf, inf], [-3.4028234663852886e+38, 3.4028234663852886e+38, -3.4028234663852886e+38, 3.4028234663852886e+38, -3.4028234663852886e+38, 3.4028234663852886e+38]]
+.
+
+============================== 1 passed in 0.76s ===============================
