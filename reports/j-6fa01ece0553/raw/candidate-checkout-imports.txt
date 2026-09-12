@@ -1,0 +1,13 @@
+9bf7434049ef10ebc0329f1f3567b961aee73f0b
+## HEAD (no branch)
+reports/j-971b1e7c1b24/raw/a6w4-before.txt
+reports/j-971b1e7c1b24/raw/a6w4-collect.txt
+reports/j-971b1e7c1b24/raw/a6w4-isa-run.txt
+reports/j-971b1e7c1b24/raw/focused-after.txt
+reports/j-971b1e7c1b24/raw/isa-evidence.txt
+reports/j-971b1e7c1b24/raw/isa-files.txt
+reports/j-971b1e7c1b24/result.json
+tests/kernels/test_preshuffle_gemm.py
+flydsl /job/repo/python/flydsl/__init__.py
+kernel /job/repo/kernels/gemm/mxfp4_preshuffle.py
+native None

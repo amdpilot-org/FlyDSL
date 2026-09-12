@@ -1,0 +1,9 @@
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-6fa01ece0553/cache/aiter/module_aiter_core.so
+[W912 03:46:44.703428207 collection.cpp:1133] Warning: ROCTracer produced duplicate flow start: 1 (function operator())
+================================================================================
+MFMA W4A6 (MXFP6 A × MXFP4 B) GEMM Test (Tile: 64x128x256)
+================================================================================
+✓ Compiled (waves_per_eu=None)
+NUMERIC max_abs 0.125 max_rel 0.0038910505827516317 mean_abs 0.01731918938457966 rtol 0.1 atol 0.1
+[flyc] W4A6 Throughput: 2.7 us, 0.81 TFLOPS, BW: 0.013 TB/s
