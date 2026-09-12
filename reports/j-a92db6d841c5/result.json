@@ -1,0 +1,55 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/583",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "candidate_commit": "c2a301580864ac6235af57156f4b22d61ed29edb",
+  "outcome": "reproduced",
+  "summary": "The base reproduced the deep composition assertion. The rebuilt candidate fixes its selected regression cases but only a subset of the original problem: it accepts a statically out-of-domain multi-mode composition because it checks modes independently, and it skips composition validation for TileType inner operands. Recommendation: do not accept as a complete fix until those static composition paths are covered.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-a92db6d841c5/venv/bin/python /opt/amdpilot/rebuild-native.py /job (base acf7e67b7d22847e345938ca54fcc137bd7b2a1f)",
+      "exit_code": 0,
+      "what_was_measured": "Pinned-LLVM native build from the prepared base plus the harness GPU numerical vector-add smoke."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-a92db6d841c5/native-build/bin/fly-opt /job/review-evidence-j-a92db6d841c5/invalid_structural_inputs.mlir -verify-diagnostics (rebuilt base)",
+      "exit_code": 134,
+      "what_was_measured": "Failing-before reproduction: base aborts in LayoutUtils.h:762 compositionImpl instead of diagnosing the invalid composition."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-a92db6d841c5/venv/bin/python /opt/amdpilot/rebuild-native.py /job (detached candidate c2a301580864ac6235af57156f4b22d61ed29edb)",
+      "exit_code": 0,
+      "what_was_measured": "Pinned-LLVM native candidate build, distinct working-tree digest, native path switch, and harness GPU numerical smoke."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-a92db6d841c5/native-build/bin/fly-opt tests/mlir/LayoutAlgebra/invalid_structural_inputs.mlir -verify-diagnostics (rebuilt candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Passing-after candidate regression for its selected make_layout, composition, logical_divide, and right_inverse cases."
+    },
+    {
+      "command": "Run every RUN line in tests/mlir/LayoutAlgebra/*.mlir with rebuilt candidate fly-opt and pinned Triton FileCheck",
+      "exit_code": 0,
+      "what_was_measured": "All 11 LayoutAlgebra test files passed."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-a92db6d841c5/native-build/bin/fly-opt /job/review-evidence-j-a92db6d841c5/adversarial.mlir (rebuilt candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Adversarial failure: compiler retained an out-of-domain multi-mode composition and an oversized TileType composition without diagnostics."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_evidence": "Both native rebuild manifests report a passing FlyDSL vector_add 100x1000 numerical smoke on one AMD Instinct MI355X, gfx950, with Torch 2.9.1+rocm7.2.0.git7e1940d4 and HIP 7.2.26015-fc0010cf6a.",
+  "native_rebuilt": true,
+  "remaining_limitations": [
+    "The installed GitHub token could not fetch the ROCm upstream issue because of the organization's token-lifetime policy; the supplied snapshot and accessible mirror were used.",
+    "The focused verification defect is compiler-side; GPU execution validates the rebuilt library but is not evidence that the rejected/accepted MLIR boundaries are correct.",
+    "Dynamic SSA-value admissibility remains runtime-dependent.",
+    "Untouched layout operations named by the original issue remain unverified and are not claimed fixed."
+  ],
+  "evidence_directory": "/job/review-evidence-j-a92db6d841c5",
+  "native_paths": {
+    "python_package": "/job/repo/python/flydsl",
+    "rebuilt_native": "/tmp/amdpilot-repo-j-a92db6d841c5/native-build/python_packages/flydsl/_mlir",
+    "fly_opt": "/tmp/amdpilot-repo-j-a92db6d841c5/native-build/bin/fly-opt",
+    "llvm_revision": "e2a39f504fee836e4def9581bed817ecc327b9dc"
+  }
+}
