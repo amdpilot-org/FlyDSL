@@ -30,6 +30,7 @@ to GPU/ROCDL.
    .. grid-item-card:: Extension
 
       * :doc:`Random number generation <extension/rand>`
+      * :doc:`Cooperative scans <extension/coop_scan>`
 
    .. grid-item-card:: Guides
 

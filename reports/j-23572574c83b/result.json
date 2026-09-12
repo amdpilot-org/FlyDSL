@@ -1,0 +1,48 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/1016",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Reproduced the independent review against candidate commit d99a42f9f4a3fc755d9053ace0954f985f37e44b. Its primary BlockScan documentation example made consecutive inclusive and exclusive calls using the same shared storage without the required intervening fx.barrier(), despite the contract later requiring that barrier. Added the barrier while preserving the candidate's documentation and independent GPU boundary tests. The delivery PR references the assigned mirror issue rather than the candidate PR's incorrect issue 543, and explicitly treats block-wide prefix scan as one scoped contribution rather than completion of the broad building-block proposal.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-23572574c83b/venv/bin/python -m pytest -q tests/extension/coop/test_block_scan.py (exact candidate content before correction)",
+      "exit_code": 0,
+      "what_was_measured": "All 64 focused BlockScan GPU tests passed, preserving the candidate's independent inclusive/exclusive multi-block and wave-boundary validation. Raw output: reports/j-23572574c83b/raw/candidate-test-block-scan.txt"
+    },
+    {
+      "command": "Python assertion requiring fx.barrier() between the documented consecutive inclusive/exclusive calls that reuse storage (exact candidate content before correction)",
+      "exit_code": 1,
+      "what_was_measured": "Reproduced the review counterexample: the candidate documentation snippet omitted the synchronization required by its own storage-reuse contract. Raw output: reports/j-23572574c83b/raw/failing-before-doc-storage-reuse.txt"
+    },
+    {
+      "command": "Python assertion requiring fx.barrier() between the documented consecutive inclusive/exclusive calls that reuse storage (after correction)",
+      "exit_code": 0,
+      "what_was_measured": "Verified that the corrected public snippet places fx.barrier() before the second collective reuses shared storage. Raw output: reports/j-23572574c83b/raw/passing-after-doc-storage-reuse.txt"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-23572574c83b/venv/bin/python -m pytest -q tests/extension/coop",
+      "exit_code": 0,
+      "what_was_measured": "All 326 cooperative extension tests passed on the assigned GPU after correction, including 64 BlockScan tests. Raw output: reports/j-23572574c83b/raw/after-test-coop.txt"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-23572574c83b/venv/bin/python examples/extension/coop/02-block_scan.py",
+      "exit_code": 0,
+      "what_was_measured": "The real GPU stream-compaction example passed against its independent host reference after correction. Raw output: reports/j-23572574c83b/raw/after-example.txt"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "what_was_measured": "The consolidated candidate-plus-correction diff contains no whitespace errors."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "One assigned AMD Instinct MI350X reporting gfx950:sramecc+:xnack- ran the focused tests, full cooperative suite, and numerical example through the prepared interpreter. Import, Torch, and device evidence: reports/j-23572574c83b/raw/environment.txt",
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "This explicitly scoped contribution provides and validates block-wide prefix scan only; it does not resolve the original proposal's broader set of common GPU building blocks.",
+    "Only gfx950 was available and validated; other architectures, including wave32 targets, remain unverified.",
+    "BlockScan remains limited to power-of-two thread counts, full-block participation, the WARP_SCANS policy, and ReductionOp ADD/MUL/MIN/MAX.",
+    "No native C++ source changed, so the prepared native rebuild was not applicable and was not run.",
+    "The candidate PR's incorrect mirror issue URL is immutable historical PR text; this correction's PR body uses the assigned mirror issue https://github.com/amdpilot-org/FlyDSL/issues/604."
+  ]
+}
