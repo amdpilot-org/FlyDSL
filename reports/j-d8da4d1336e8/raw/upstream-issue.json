@@ -1,0 +1,82 @@
+{
+  "url": "https://api.github.com/repos/ROCm/FlyDSL/issues/993",
+  "repository_url": "https://api.github.com/repos/ROCm/FlyDSL",
+  "labels_url": "https://api.github.com/repos/ROCm/FlyDSL/issues/993/labels{/name}",
+  "comments_url": "https://api.github.com/repos/ROCm/FlyDSL/issues/993/comments",
+  "events_url": "https://api.github.com/repos/ROCm/FlyDSL/issues/993/events",
+  "html_url": "https://github.com/ROCm/FlyDSL/issues/993",
+  "id": 5107302040,
+  "node_id": "I_kwDOQbZkB88AAAABMGs-mA",
+  "number": 993,
+  "title": "[Feature]:  conv3d_implicit — accept and emit NDHWC so chained convs skip the layout round-trip",
+  "user": {
+    "login": "ZJLi2013",
+    "id": 3397714,
+    "node_id": "MDQ6VXNlcjMzOTc3MTQ=",
+    "avatar_url": "https://avatars.githubusercontent.com/u/3397714?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/ZJLi2013",
+    "html_url": "https://github.com/ZJLi2013",
+    "followers_url": "https://api.github.com/users/ZJLi2013/followers",
+    "following_url": "https://api.github.com/users/ZJLi2013/following{/other_user}",
+    "gists_url": "https://api.github.com/users/ZJLi2013/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/ZJLi2013/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/ZJLi2013/subscriptions",
+    "organizations_url": "https://api.github.com/users/ZJLi2013/orgs",
+    "repos_url": "https://api.github.com/users/ZJLi2013/repos",
+    "events_url": "https://api.github.com/users/ZJLi2013/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/ZJLi2013/received_events",
+    "type": "User",
+    "user_view_type": "public",
+    "site_admin": false
+  },
+  "labels": [
+
+  ],
+  "state": "open",
+  "locked": false,
+  "assignees": [
+
+  ],
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2026-08-10T06:28:08Z",
+  "updated_at": "2026-09-10T09:51:39Z",
+  "closed_at": null,
+  "assignee": null,
+  "author_association": "NONE",
+  "issue_field_values": [
+
+  ],
+  "type": null,
+  "active_lock_reason": null,
+  "sub_issues_summary": {
+    "total": 0,
+    "completed": 0,
+    "percent_completed": 0
+  },
+  "issue_dependencies_summary": {
+    "blocked_by": 0,
+    "total_blocked_by": 0,
+    "blocking": 0,
+    "total_blocking": 0
+  },
+  "body": "### Suggestion Description\n\n## Ask\n\n`conv3d_implicit` takes NCDHW and calls `_ncdhw_to_ndhwc` on every invocation (L705). In a network that is a *chain* of 3D convolutions, every intermediate could have stayed in NDHWC. Please add a layout parameter so a caller can convert twice per network instead of twice per layer:\n\n```python\nconv3d_implicit(\n    x, weight, bias=None, stride=1, padding=0,\n    layout=\"NCDHW\",        # \"NCDHW\" (default, unchanged) | \"NDHWC\"\n    out_layout=None,       # None -> same as `layout`\n    **kwargs,\n)\n```\n\n`layout=\"NDHWC\"` skips the input transpose; `out_layout=\"NDHWC\"` lets the non-split-K epilogue write `(n, do, ho, wo, k)`, which is a change of output view rather than new kernel work.\n\n## Why\n\nOn a Wan 3D causal VAE encoder (bf16, input `(1, 3, 33, 352, 640)`, 278 conv calls, MI350X / gfx950 / ROCm 7.1.1), layout movement is **17.4% of the 193 ms encoder** — 992 `batched_transpose` kernels, 33.6 ms. Swapping MIOpen for `conv3d_implicit` already removes the weight and output round-trips (`_prep_weight` caches, the `splitk==1` epilogue writes NCDHW), and is **1.20x faster overall** on these shapes: 108.2 → 89.9 ms measured per-shape. What remains is the per-call input transpose, roughly 20 ms that nothing in the network needs.\n\nThe dominant shapes are rank-5 `in=[1,96,6,354,642] w=[96,96,3,3,3]`, `in=[1,384,3,46,82] w=[384,384,3,3,3]` and rank-4 `in=[4,96,353,641] w=[96,96,3,3]`, all bf16. Happy to test a branch on them.\n\n## Related\n\n- #861 `[Issue]: Tune conv perf` — tuning the conv itself; this request is about the data movement around it.\n\n### Operating System\n\n_No response_\n\n### GPU\n\n_No response_\n\n### ROCm Component\n\n_No response_",
+  "closed_by": null,
+  "reactions": {
+    "url": "https://api.github.com/repos/ROCm/FlyDSL/issues/993/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/ROCm/FlyDSL/issues/993/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null,
+  "pinned_comment": null
+}

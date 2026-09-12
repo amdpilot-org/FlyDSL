@@ -1,0 +1,1 @@
+/tmp/amdpilot-repo-j-d8da4d1336e8/venv/bin/python: No module named ruff

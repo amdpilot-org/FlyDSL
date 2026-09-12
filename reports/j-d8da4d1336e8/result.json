@@ -1,0 +1,56 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/993",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "The checked-out implementation already contained internal input_layout/output_layout support, but the requested layout/out_layout API failed with TypeError and output did not inherit the input layout by default. Added the public layout='NCDHW', out_layout=None contract, retained the pre-public API spellings with conflict checks, and added GPU regressions for all relevant 3D layout directions, an NDHWC convolution chain, and split-K NDHWC output. On gfx950, five two-layer chains launched 10 transpose kernels with default NCDHW and zero with NDHWC while launching 10 convolution kernels in both cases.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-d8da4d1336e8/venv/bin/python < inline exact-API reproducer",
+      "exit_code": 1,
+      "what_was_measured": "Failing-before regression on MI355X/gfx950: layout='NDHWC', out_layout='NDHWC' raised TypeError. Raw output: reports/j-d8da4d1336e8/raw/reproduce-before.txt"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-d8da4d1336e8/venv/bin/python -m pytest -q tests/kernels/test_conv3d_implicit.py -k 'layout_contract or ndhwc_chain or ndhwc_splitk'",
+      "exit_code": 0,
+      "what_was_measured": "Five focused GPU cases: independent PyTorch references for layout combinations, chained NDHWC numerical output with zero calls to _ncdhw_to_ndhwc, and forced split-K NDHWC output. 5 passed."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-d8da4d1336e8/venv/bin/python < inline torch.profiler two-convolution comparison",
+      "exit_code": 0,
+      "what_was_measured": "Actual ROCTracer device kernels over five bounded two-layer chains: NCDHW had transpose_kernel_0 count=10 and conv3d_implicit_kernel_0 count=10; NDHWC had transpose count=0 and convolution count=10. Chrome traces: reports/j-d8da4d1336e8/raw/ncdhw-trace.json and reports/j-d8da4d1336e8/raw/ndhwc-trace.json. The same raw run intentionally remains recorded even though its unscaled two-layer reference exceeded the selected allclose tolerance; correctness was rerun with bounded weights."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-d8da4d1336e8/venv/bin/python < inline bounded chained-convolution PyTorch reference",
+      "exit_code": 0,
+      "what_was_measured": "Bounded (1,32,6,24,40) two-layer bf16 chain against torch.nn.functional.conv3d: default and NDHWC paths both allclose at rtol=atol=0.03, max abs error 0.125, mean abs error 5.68159e-05; the two FlyDSL layout paths were bit-identical. Raw output: reports/j-d8da4d1336e8/raw/bounded-chain-reference.txt"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-d8da4d1336e8/venv/bin/python -m pytest -q tests/kernels/test_conv3d_implicit.py",
+      "exit_code": 0,
+      "what_was_measured": "Complete conv3d implicit GPU test file after the fix: 62 passed, covering 3D, rank-dispatched 2D/1D, layouts, chained output, split-K, tails, padding, and autotuning. Raw output: reports/j-d8da4d1336e8/raw/full-conv3d-tests-final.txt"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-d8da4d1336e8/venv/bin/python -m py_compile kernels/conv/conv3d_implicit.py tests/kernels/test_conv3d_implicit.py && git diff --check",
+      "exit_code": 0,
+      "what_was_measured": "Python syntax and patch whitespace checks."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-d8da4d1336e8/venv/bin/python -m ruff format --check ...; /tmp/amdpilot-repo-j-d8da4d1336e8/venv/bin/python -m ruff check ...",
+      "exit_code": 1,
+      "what_was_measured": "Formatting/lint tool availability only: the prepared interpreter reported 'No module named ruff', and no ruff executable was present on PATH. Raw outputs: reports/j-d8da4d1336e8/raw/ruff-format.txt and reports/j-d8da4d1336e8/raw/ruff-check.txt"
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "PyTorch 2.9.1+rocm7.2.0 ran on AMD Instinct MI355X, gfx950:sramecc+:xnack-. Focused and full GPU suites passed, PyTorch reference comparisons passed, and ROCTracer captured the actual device kernels."
+  },
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "The kernel remains bf16-only and requires CDNA4/gfx95x for its mfma_f32_16x16x32_bf16 instruction path.",
+    "NDHWC input avoids the NCDHW-to-NDHWC transpose only when supplied in the promised contiguous channels-last logical layout; non-contiguous NDHWC inputs are materialized with contiguous().",
+    "Forced or selected split-K still accumulates into an fp32 (npq, K) staging buffer. NDHWC returns a view/conversion of that staging result without a spatial/channel transpose; NCDHW still performs the final layout copy.",
+    "Non-zero reflect/replicate/circular padding and asymmetric same-padding can materialize padding and may change layout internally; the no-transpose claim is for the ordinary zero-padding chained-convolution path.",
+    "The requested dominant production shapes were not run at full size; bounded representative shapes were used to stay within the assigned validation budget. Full 62-case kernel coverage ran on the assigned gfx950 GPU.",
+    "No native C++ files changed, so the prepared native rebuild command was not applicable. The imported native library remained /opt/venv/lib/python3.12/site-packages/flydsl/_mlir; Python sources came from /job/repo."
+  ]
+}

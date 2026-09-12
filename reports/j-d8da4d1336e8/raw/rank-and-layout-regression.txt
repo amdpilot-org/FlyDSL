@@ -1,0 +1,10 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 62 items / 43 deselected / 19 selected
+
+tests/kernels/test_conv3d_implicit.py ...................                [100%]
+
+====================== 19 passed, 43 deselected in 13.16s ======================
