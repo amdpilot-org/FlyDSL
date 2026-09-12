@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "<stdin>", line 9, in <module>
+  File "/job/repo/python/flydsl/testing.py", line 17, in <module>
+    import pandas as pd
+  File "<stdin>", line 6, in find_spec
+ModuleNotFoundError: No module named 'pandas' (simulated clean FlyDSL runtime)

@@ -1,0 +1,15 @@
+flydsl= /job/repo/python/flydsl/__init__.py
+native= None
+benchmark ()
+checkAllclose (a, b, rtol=0.01, atol=0.01, tol_err_ratio=0.05, msg='', printNum=8, printLog=True)
+device_memory_profiling (func, *args, **kwargs)
+get_trace_perf (prof, num_iters)
+log_args (func, *args, **kwargs)
+perftest (num_iters=20, num_warmup=3, testGraph=False, num_rotate_args=0, needTrace=False)
+post_process_data (df, num_iters, warm_iter=1)
+run_iters (num_iters, func, *args, **kwargs)
+run_iters_rotate (num_iters, func, rotate_args)
+run_perftest (func, *args, num_iters=20, num_warmup=3, testGraph=False, num_rotate_args=0, needTrace=False, **kwargs)
+tensor_dump (x: <built-in method tensor of type object at 0x7c0a13459be0>, name: str, dir='./')
+tensor_load (filename: str)
+verify_output (c_out, c_ref, atol=0.01, rtol=0.01, msg='', logits_diff_threshold=0.002)
