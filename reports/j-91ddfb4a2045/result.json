@@ -1,0 +1,58 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/515",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "candidate_commit": "576bdb4f4ecf6ca0bcd2c966d8f4615e6cba7f51",
+  "outcome": "candidate_verified",
+  "recommendation": "accept",
+  "fully_resolves_original": false,
+  "summary": "PR 686 correctly fixes the concrete YAML-metadata false-positive regression in the final-ISA analyzer and preserves the prior parser fixes. It is a valid partial implementation of issue 515's ISA-analysis workflow, not a complete implementation of the original six-part low-level-control request.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-91ddfb4a2045/venv/bin/python import flydsl.tools.isa_analyzer on base acf7e67b",
+      "exit_code": 1,
+      "what_was_measured": "Original-base failing-before: the analyzer feature is absent and importing it raises ModuleNotFoundError."
+    },
+    {
+      "command": "analyze retained gfx950-final-isa.s on parent candidate b0d6d33d6256a013e0a5ba4a4f0a5308998ee954",
+      "exit_code": 0,
+      "what_was_measured": "Reproduced the review counterexample: 35 instructions, including seven YAML scalar values misclassified as opcodes."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-91ddfb4a2045/venv/bin/python -m pytest -q tests/unit/test_isa_analyzer.py",
+      "exit_code": 0,
+      "what_was_measured": "Candidate regression suite: 6 passed."
+    },
+    {
+      "command": "independent analyze_isa adversarial script plus retained compiler-emitted gfx950 assembly",
+      "exit_code": 0,
+      "what_was_measured": "The real assembly reports exactly 28 instructions with no YAML scalar opcodes; multiple blocks, delimiter variants, commented delimiters, and instruction-looking metadata were handled correctly."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-91ddfb4a2045/venv/bin/python -m pytest -q tests/unit/test_isa_analyzer.py tests/unit/test_compile_hints.py tests/unit/test_external_llvm_codegen.py",
+      "exit_code": 0,
+      "what_was_measured": "Focused compatibility suite: 32 passed, 2 skipped."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-91ddfb4a2045/venv/bin/python -m pytest -q tests/extension/coop/test_warp_rocdl.py::test_every_form_agrees_with_the_portable_one[reduce-w16] tests/extension/coop/test_warp_rocdl.py::test_a_full_wave_fold_rakes_and_lifts_the_total_into_an_sgpr --basetemp=/tmp/amdpilot-repo-j-91ddfb4a2045/pytest-review",
+      "exit_code": 0,
+      "what_was_measured": "Two tests passed on MI350X/gfx950, including optimized GPU numerical agreement with a portable GPU reference and final-ISA generation assertions."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "reports/j-91ddfb4a2045/raw/gpu-tests.log records two passing tests; architecture.log identifies AMD Instinct MI350X/gfx950.",
+  "native_rebuilt": false,
+  "remaining_counterexamples": [
+    "Physical VGPR/SGPR pinning or named register-region reservation remains unimplemented.",
+    "Exact hand-scheduled region preservation and MFMA co-execute-window assertions remain unimplemented.",
+    "The requested first-class AMD instruction helpers remain unimplemented.",
+    "The requested exact low-level buffer load/store API remains unimplemented.",
+    "The requested compiler-option sweep example remains unimplemented."
+  ],
+  "remaining_limitations": [
+    "The candidate implements only the final-ISA analysis portion of the original feature request.",
+    "Static ISA analysis does not prove scheduling guarantees, physical register placement, cycle timing, dependency correctness, occupancy, or handwritten-kernel performance parity.",
+    "Only AMD Instinct MI350X/gfx950 hardware was available; other CDNA and RDNA architectures were not tested.",
+    "No native rebuild was applicable because the candidate changes only Python, tests, documentation, and reports.",
+    "Direct upstream issue API access was blocked by the ROCm organization's fine-grained-token lifetime policy."
+  ]
+}

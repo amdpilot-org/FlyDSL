@@ -1,0 +1,8 @@
+PARENT_CANDIDATE: b0d6d33d6256a013e0a5ba4a4f0a5308998ee954
+instruction_count 35
+global_buffer 2
+by_value 2
+kernel_0 1
+kernel_0.kd 1
+false 1
+mfma_wmma 0

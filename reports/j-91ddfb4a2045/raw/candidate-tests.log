@@ -1,0 +1,15 @@
+CANDIDATE=576bdb4f4ecf6ca0bcd2c966d8f4615e6cba7f51
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 6 items
+
+tests/unit/test_isa_analyzer.py ......                                   [100%]
+
+============================== 6 passed in 0.49s ===============================
+real_llvm_instruction_count 28
+multiple_blocks_and_indented_markers 3 {'s_branch': 1, 's_endpgm': 1, 's_nop': 1} {'mfma_wmma': 0, 'vmem_load': 0, 'vmem_store': 0, 'lds_read': 0, 'lds_write': 0, 'waitcnt': 0, 'barrier': 0}
+commented_markers_do_not_toggle 2 {'s_endpgm': 1, 's_nop': 1} {'mfma_wmma': 0, 'vmem_load': 0, 'vmem_store': 0, 'lds_read': 0, 'lds_write': 0, 'waitcnt': 0, 'barrier': 0}
+metadata_instruction_families 1 {'s_endpgm': 1} {'mfma_wmma': 0, 'vmem_load': 0, 'vmem_store': 0, 'lds_read': 0, 'lds_write': 0, 'waitcnt': 0, 'barrier': 0}

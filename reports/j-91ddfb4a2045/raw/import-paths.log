@@ -1,0 +1,4 @@
+flydsl /job/repo/python/flydsl/__init__.py
+expr /job/repo/python/flydsl/expr/__init__.py
+flydsl._mlir._mlir_libs._flydsl None
+flydsl._mlir.ir /job/repo/python/flydsl/_mlir/ir.py
