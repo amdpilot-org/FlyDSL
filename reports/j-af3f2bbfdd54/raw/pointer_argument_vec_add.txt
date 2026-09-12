@@ -1,0 +1,23 @@
+COMMAND
+/tmp/amdpilot-repo-j-af3f2bbfdd54/venv/bin/python -m pytest -q -s tests/unit/test_pointer_argument_vec_add.py
+
+WORKING DIRECTORY
+/job/repo
+
+EXIT CODE
+0
+
+MEASURED PROCESS WALL TIME
+2.833539934 seconds
+
+OUTPUT
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 1 item
+
+tests/unit/test_pointer_argument_vec_add.py .
+
+============================== 1 passed in 0.90s ===============================
