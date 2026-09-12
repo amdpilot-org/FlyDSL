@@ -1,0 +1,13 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 22 items
+
+tests/unit/test_mlir_compiler.py .                                       [  4%]
+tests/unit/test_jit_cache_key.py ....                                    [ 22%]
+tests/unit/test_jit_cache_key_completeness.py ...............            [ 90%]
+tests ..                                                                 [100%]
+
+============================== 22 passed in 1.07s ==============================
