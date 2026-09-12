@@ -1,0 +1,37 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/767",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "not_reproduced",
+  "summary": "The prepared base already supports MXFP6 E2M3 as the A operand and passes its GPU regressions. Candidate 9bf7434049ef10ebc0329f1f3567b961aee73f0b changes only the test oracle; its independent bit-level decoders are correct and all candidate and adversarial GPU checks pass. It is useful test hardening, but it is not the production fix for the original missing-support report.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-6fa01ece0553/venv/bin/python -m pytest tests/kernels/test_preshuffle_gemm.py -k 'a6w4' -vv -s (base)",
+      "exit_code": 0,
+      "what_was_measured": "All 10 existing MXFP6-A/MXFP4-B GPU cases passed on the prepared base with unchanged rtol=0.1 and atol=0.1."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-6fa01ece0553/venv/bin/python -m pytest tests/kernels/test_preshuffle_gemm.py -k 'a6w4' -vv -s (candidate 9bf7434)",
+      "exit_code": 0,
+      "what_was_measured": "All 10 cases passed against the candidate's independent packed-value decoder for bf16 and fp16 output."
+    },
+    {
+      "command": "standalone exhaustive E2M3 pack/decode and padding-independence check",
+      "exit_code": 0,
+      "what_was_measured": "All 64 FP6 codes matched a direct mathematical reference exactly (max absolute error 0.0), and changing padding bytes did not change decoded values."
+    },
+    {
+      "command": "direct candidate test calls for M={1,31,32,33}, N=128, K=256, output={bf16,fp16}",
+      "exit_code": 0,
+      "what_was_measured": "Eight GPU row/tile-boundary cases passed. Seeded M=33 bf16: max_abs=0.125, max_rel=0.0038910506, mean_abs=0.0173192 with unchanged rtol=0.1 and atol=0.1."
+    },
+    {
+      "command": "FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/review-evidence/candidate/isa FLYDSL_RUNTIME_ENABLE_CACHE=0 <focused A6W4 GPU runner>",
+      "exit_code": 0,
+      "what_was_measured": "Fresh gfx950 compilation and execution passed; final ISA targets gfx950 and contains v_mfma_scale_f32_16x16x128_f8f6f4."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "One assigned AMD Instinct MI355X (gfx950) executed the base, exact candidate, boundary, numeric, and ISA-dump regressions successfully.",
+  "native_rebuilt": false,
+  "remaining_limitations": "Only gfx950 was verified. The historical post-f5c50f4 failure was not reconstructed because the prepared base already has MXFP6-A support. Native libraries remained the pinned wheel at /opt/venv/lib/python3.12/site-packages/flydsl/_mlir because the candidate has no native C++ changes. Raw evidence is retained at /job/review-evidence."
+}

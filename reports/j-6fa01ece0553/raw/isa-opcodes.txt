@@ -1,0 +1,9 @@
+/job/review-evidence/candidate/isa/kernel_gemm_0/21_final_isa.s:1:	.amdgcn_target "amdgcn-amd-amdhsa-unknown-gfx950"
+/job/review-evidence/candidate/isa/kernel_gemm_0/21_final_isa.s:104:	v_mfma_scale_f32_16x16x128_f8f6f4 v[0:3], v[8:13], v[4:7], 0, v18, v19 op_sel_hi:[0,0,0] cbsz:2 blgp:4
+/job/review-evidence/candidate/isa/kernel_gemm_0/21_final_isa.s:105:	v_mfma_scale_f32_16x16x128_f8f6f4 v[4:7], v[26:31], v[4:7], 0, v18, v19 op_sel:[1,0,0] op_sel_hi:[0,0,0] cbsz:2 blgp:4
+/job/review-evidence/candidate/isa/kernel_gemm_0/21_final_isa.s:106:	v_mfma_scale_f32_16x16x128_f8f6f4 v[8:11], v[8:13], v[42:45], 0, v18, v19 op_sel:[0,1,0] op_sel_hi:[0,0,0] cbsz:2 blgp:4
+/job/review-evidence/candidate/isa/kernel_gemm_0/21_final_isa.s:107:	v_mfma_scale_f32_16x16x128_f8f6f4 v[12:15], v[26:31], v[42:45], 0, v18, v19 op_sel:[1,1,0] op_sel_hi:[0,0,0] cbsz:2 blgp:4
+/job/review-evidence/candidate/isa/kernel_gemm_0/21_final_isa.s:108:	v_mfma_scale_f32_16x16x128_f8f6f4 v[0:3], v[20:25], v[38:41], v[0:3], v18, v19 op_sel_hi:[1,1,0] cbsz:2 blgp:4
+/job/review-evidence/candidate/isa/kernel_gemm_0/21_final_isa.s:109:	v_mfma_scale_f32_16x16x128_f8f6f4 v[4:7], v[32:37], v[38:41], v[4:7], v18, v19 op_sel:[1,0,0] op_sel_hi:[1,1,0] cbsz:2 blgp:4
+/job/review-evidence/candidate/isa/kernel_gemm_0/21_final_isa.s:110:	v_mfma_scale_f32_16x16x128_f8f6f4 v[8:11], v[20:25], v[46:49], v[8:11], v18, v19 op_sel:[0,1,0] op_sel_hi:[1,1,0] cbsz:2 blgp:4
+/job/review-evidence/candidate/isa/kernel_gemm_0/21_final_isa.s:111:	v_mfma_scale_f32_16x16x128_f8f6f4 v[12:15], v[32:37], v[46:49], v[12:15], v18, v19 op_sel:[1,1,0] op_sel_hi:[1,1,0] cbsz:2 blgp:4

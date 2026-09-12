@@ -1,0 +1,59 @@
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-6fa01ece0553/cache/aiter/module_aiter_core.so
+CASE 1 bf16
+[W912 03:46:32.126062033 collection.cpp:1133] Warning: ROCTracer produced duplicate flow start: 1 (function operator())
+================================================================================
+MFMA W4A6 (MXFP6 A × MXFP4 B) GEMM Test (Tile: 32x128x256)
+================================================================================
+✓ Compiled (waves_per_eu=None)
+[flyc] W4A6 Throughput: 2.0 us, 0.03 TFLOPS, BW: 0.009 TB/s
+PASS 1 bf16
+CASE 1 fp16
+================================================================================
+MFMA W4A6 (MXFP6 A × MXFP4 B) GEMM Test (Tile: 32x128x256)
+================================================================================
+✓ Compiled (waves_per_eu=None)
+[flyc] W4A6 Throughput: 2.0 us, 0.03 TFLOPS, BW: 0.009 TB/s
+PASS 1 fp16
+CASE 31 bf16
+================================================================================
+MFMA W4A6 (MXFP6 A × MXFP4 B) GEMM Test (Tile: 32x128x256)
+================================================================================
+✓ Compiled (waves_per_eu=None)
+[flyc] W4A6 Throughput: 2.1 us, 0.98 TFLOPS, BW: 0.016 TB/s
+PASS 31 bf16
+CASE 31 fp16
+================================================================================
+MFMA W4A6 (MXFP6 A × MXFP4 B) GEMM Test (Tile: 32x128x256)
+================================================================================
+✓ Compiled (waves_per_eu=None)
+[flyc] W4A6 Throughput: 2.0 us, 1.00 TFLOPS, BW: 0.016 TB/s
+PASS 31 fp16
+CASE 32 bf16
+================================================================================
+MFMA W4A6 (MXFP6 A × MXFP4 B) GEMM Test (Tile: 32x128x256)
+================================================================================
+✓ Compiled (waves_per_eu=None)
+[flyc] W4A6 Throughput: 2.1 us, 1.01 TFLOPS, BW: 0.016 TB/s
+PASS 32 bf16
+CASE 32 fp16
+================================================================================
+MFMA W4A6 (MXFP6 A × MXFP4 B) GEMM Test (Tile: 32x128x256)
+================================================================================
+✓ Compiled (waves_per_eu=None)
+[flyc] W4A6 Throughput: 2.0 us, 1.03 TFLOPS, BW: 0.017 TB/s
+PASS 32 fp16
+CASE 33 bf16
+================================================================================
+MFMA W4A6 (MXFP6 A × MXFP4 B) GEMM Test (Tile: 64x128x256)
+================================================================================
+✓ Compiled (waves_per_eu=None)
+[flyc] W4A6 Throughput: 2.5 us, 0.86 TFLOPS, BW: 0.014 TB/s
+PASS 33 bf16
+CASE 33 fp16
+================================================================================
+MFMA W4A6 (MXFP6 A × MXFP4 B) GEMM Test (Tile: 64x128x256)
+================================================================================
+✓ Compiled (waves_per_eu=None)
+[flyc] W4A6 Throughput: 2.5 us, 0.86 TFLOPS, BW: 0.014 TB/s
+PASS 33 fp16
