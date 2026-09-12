@@ -441,14 +441,18 @@ def make_coord(*coord):
 
 @dsl_loc_tracing
 def make_layout(shape, stride):
-    """Pair a *shape* with a *stride* to describe how logical coords map to memory.
+    """Create a layout mapping logical coordinates to linear element indices.
 
-    Accepts Python tuples directly (auto-converted). The mapping is:
-    `index = sum(coord_i * stride_i)`.
+    Args:
+        shape: Mode extents as an int, tuple, or ``IntTuple``.
+        stride: Per-mode element strides with a profile congruent to ``shape``.
+    Returns:
+        A ``Layout`` usable only while tracing FlyDSL code.
 
-    Examples:
-        make_layout((4, 8), (1, 4))      -> ((4, 8), (1, 4))
-        make_layout((4, 8), (8, 1))      -> ((4, 8), (8, 1))
+    Example:
+        layout = fx.make_layout((4, 8), (1, 4))
+        assert layout.shape.to_py_value() == (4, 8)
+        assert fx.get_scalar(layout(1, 2)) == 9
     """
     if not _is_int_tuple_value(shape):
         shape = make_int_tuple(shape)
@@ -526,6 +530,16 @@ def make_identity_layout(shape):
 @dsl_loc_tracing
 @coerce_int_tuple_args("iter", permissive=True)
 def make_view(iter, layout):
+    """Combine a base iterator and layout into a tensor view.
+
+    Args:
+        iter: Pointer, coordinate, or existing tensor iterator.
+        layout: Mapping from logical coordinates to iterator offsets.
+    Returns:
+        A ``Tensor`` that does not allocate or copy storage.
+    Example:
+        matrix = fx.make_view(ptr, fx.make_layout((4, 8), (8, 1)))
+    """
     return fly.make_view(iter, layout)
 
 
@@ -604,16 +618,35 @@ def get_leaves(input, dynamic_only=False):
 
 @dsl_loc_tracing
 def get_shape(layout):
+    """Return a layout's possibly nested shape as an ``IntTuple``.
+
+    Example:
+        assert fx.get_shape(layout).to_py_value() == (4, 8)
+    """
     return fly.get_shape(layout)
 
 
 @dsl_loc_tracing
 def get_stride(layout):
+    """Return a plain layout's possibly nested element strides.
+
+    Example:
+        assert fx.get_stride(layout).to_py_value() == (1, 4)
+    """
     return fly.get_stride(layout)
 
 
 @dsl_loc_tracing
 def get_layout(memref):
+    """Return the layout carried by a tensor or memref value.
+
+    Args:
+        memref: Tensor-like FlyDSL value.
+    Returns:
+        Its ``Layout``.
+    Example:
+        layout = fx.get_layout(tensor)
+    """
     return fly.get_layout(memref)
 
 
@@ -838,8 +871,8 @@ def crd2idx(crd, layout):
     apply swizzles, so the general case is richer than a single multiply-add.
 
     Examples:
-        crd2idx((1, 2), make_layout((4, 8), (1, 4)))   -> 9
-        crd2idx(7, make_layout((4, 8), (1, 4)))        -> 7
+        index = fx.crd2idx((1, 2), fx.make_layout((4, 8), (1, 4)))
+        assert fx.get_scalar(index) == 9
     """
     if not _is_int_tuple_value(crd):
         crd = make_int_tuple(crd)
