@@ -1,0 +1,7 @@
+commit=ca9a2e4368b537e69ab8dd7e0b15b7f2383e381f
+flydsl_source= /job/repo/python/flydsl/__init__.py
+native_paths= ['/job/repo/python/flydsl/_mlir']
+libc= libc.so.6 ('glibc', '2.39')
+torch= 2.9.1+rocm7.2.0.git7e1940d4 hip= 7.2.26015-fc0010cf6a
+gpu_count= 1
+gpu= AMD Instinct MI355X capability= (9, 5)

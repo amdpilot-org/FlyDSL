@@ -1,0 +1,56 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/653",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/691",
+  "candidate_mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/689",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/690",
+  "candidate_commit": "ca9a2e4368b537e69ab8dd7e0b15b7f2383e381f",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_verified",
+  "recommendation": "accept",
+  "fully_resolves_original": true,
+  "summary": "The recorded base independently reproduced delayed device printf output through a pipe: READY arrived after torch.cuda.synchronize() while the child remained alive, but none of the four device lines were readable until release and teardown. The exact candidate made all four lines readable before teardown in clean-import, prior-newline-libc-write, and prior-partial-libc-write probes, and passed its own five-case timing regression. This is a full fix for the original Linux/glibc pipe contract in the prepared gfx950 environment, not merely test hardening.",
+  "tests": [
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j-5bbdde242061-base-$mode PYTHONPATH=/job/repo/python /tmp/amdpilot-repo-j-5bbdde242061/venv/bin/python /job/review-evidence-j-5bbdde242061/scripts/live_pipe_probe.py $mode (base acf7e67; modes clean, preimport-newline, preimport-partial)",
+      "exit_code": 0,
+      "what_was_measured": "Failing-before evidence: for every mode, READY_ALIVE=True and ALL_DEVICE_LINES_LIVE=False; all four synchronized device lines appeared only after child release/teardown."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j-5bbdde242061-candidate-regression PYTHONPATH=/job/repo/python /tmp/amdpilot-repo-j-5bbdde242061/venv/bin/python -m pytest -q tests/system/test_device_printf_pipe.py -s (candidate ca9a2e4)",
+      "exit_code": 0,
+      "what_was_measured": "Candidate regression passed 5/5 cases, including the exact prior-libc-write counterexample, one and three launches, and explicit-flush compatibility; the test requires output while the child remains alive."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j-5bbdde242061-candidate-$mode PYTHONPATH=/job/repo/python /tmp/amdpilot-repo-j-5bbdde242061/venv/bin/python /job/review-evidence-j-5bbdde242061/scripts/live_pipe_probe.py $mode (candidate ca9a2e4; modes clean, preimport-newline, preimport-partial)",
+      "exit_code": 0,
+      "what_was_measured": "Independent passing-after evidence: every mode reported READY_ALIVE=True and ALL_DEVICE_LINES_LIVE=True, with exactly the four thread lines already readable before release and no additional stdout after teardown."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j-5bbdde242061-focused PYTHONPATH=/job/repo/python /tmp/amdpilot-repo-j-5bbdde242061/venv/bin/python -m pytest -q tests/unit/test_device_runtime.py tests/unit/test_rocir_print.py -s",
+      "exit_code": 0,
+      "what_was_measured": "All 15 focused runtime and printf-lowering unit tests passed at the exact candidate."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j-5bbdde242061-vector PYTHONPATH=/job/repo/python /tmp/amdpilot-repo-j-5bbdde242061/venv/bin/python -m pytest -q tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] -s",
+      "exit_code": 0,
+      "what_was_measured": "A real gfx950 FlyDSL vector-add kernel matched the independent PyTorch a+b reference with maximum error 0.00e+00 over 1,048,576 float32 elements."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-5bbdde242061/venv/bin/python -m compileall -q python/flydsl tests/system/test_device_printf_pipe.py; git diff --check acf7e67..ca9a2e4",
+      "exit_code": 2,
+      "what_was_measured": "Changed Python compiled successfully. diff --check found only pre-existing trailing spaces inside two candidate-retained raw pytest logs, not source or test code."
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "One assigned AMD Instinct MI355X (gfx950, capability 9.5) ran the base failure probes, exact-candidate live pipe probes, candidate regression, and independent numerical vector-add check under ROCm 7.2."
+  },
+  "native_rebuilt": false,
+  "remaining_counterexamples": [],
+  "remaining_limitations": [
+    "Validation covered Linux with glibc 2.39, ROCm 7.2, and one MI355X/gfx950. Other libc implementations, operating systems, and GPU architectures were not available.",
+    "The equivalent pipe behavior was exercised directly; an actual Jupyter frontend was not available.",
+    "The candidate intentionally changes C stdout buffering process-wide, affecting other C/C++ stdout writers after FlyDSL import.",
+    "No C++ or LLVM source changed, so the prescribed native rebuild was not applicable. Python loaded from /job/repo/python/flydsl and /job/repo/python/flydsl/_mlir resolved to /opt/venv/lib/python3.12/site-packages/flydsl/_mlir through the prepared symlink."
+  ]
+}
