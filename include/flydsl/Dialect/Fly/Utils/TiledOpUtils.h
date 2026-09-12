@@ -215,6 +215,21 @@ Layout layoutTiledCopyRetile(LayoutBuilder<Layout> &builder, CopyAtomType copyAt
   LayoutAttr vLayout =
       LayoutAttr::get(IntTupleAttr::get(vVal), IntTupleAttr::getLeafStatic(ctx, 1));
 
+  // A fragment containing exactly one tile's values for one thread has no
+  // residual tile-coordinate modes to preserve.  Retile its linear register
+  // storage directly into the copy atom's value groups.  The general path
+  // below expects those residual modes and otherwise attempts to zip the
+  // rank-2 fragment against a rank-3 divisor profile.
+  auto inputNumVal = intTupleProduct(attrBuilder, builder.getAttr(inputShape)).getLeafAsInt();
+  auto tileNumVal = intTupleProduct(attrBuilder, tilerShape).getLeafAsInt();
+  if (inputNumVal.getValue() * tiledNumThr.getValue() == tileNumVal.getValue()) {
+    Layout coalescedInput = layoutCoalesce(builder, inputLayout);
+    LayoutAttr atomNumValLayout =
+        LayoutAttr::get(IntTupleAttr::get(atomNumVal), IntTupleAttr::getLeafStatic(ctx, 1));
+    return layoutZippedDivide(builder, coalescedInput,
+                              builder.materializeConstantLayout(atomNumValLayout));
+  }
+
   LayoutAttr frgLayoutMNInv = layoutRightInverse(attrBuilder, frgLayoutMN);
   LayoutAttr vProduct = layoutLogicalProduct(attrBuilder, vLayout, frgLayoutMNInv);
 
