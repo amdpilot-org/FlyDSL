@@ -1,0 +1,61 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/652",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "candidate_url": "https://github.com/amdpilot-org/FlyDSL/pull/620",
+  "candidate_commit": "aa3c22c8110937562cf3690f8e380da32e5012dd",
+  "outcome": "candidate_rejected",
+  "recommendation": "request_changes",
+  "fully_resolves_original": false,
+  "summary": "The candidate is a verified partial correction for the Pointer/Tensor/layout subset, not a full fix for the original package-wide documentation contract. All 21 named review omissions are documented and the candidate's 38 extracted examples execute, but an independent AST inventory at the exact candidate still finds 510 public classes/functions/methods without docstrings and 263 documented public symbols without an Example section. The candidate changes no flydsl/compiler or flydsl/utils source files.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-0a0b2a6482fd/venv/bin/python /job/review-evidence/check_named_contract.py (prepared base)",
+      "exit_code": 1,
+      "what_was_measured": "Reproduced the original focused failure: all 21 named Pointer/Tensor/layout members lacked docstrings and examples. Raw output: /job/review-evidence/base/named-contract.json"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-0a0b2a6482fd/venv/bin/python /job/review-evidence/audit_public_docstrings.py /job/repo (base and exact candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Independent package-wide AST inventory. Base: 546 missing docstrings; candidate: 510 missing. Candidate area counts are expr 374, compiler 127, utils 9; 263 additional documented symbols have no Example section. Raw JSON: /job/review-evidence/{base,candidate}/package-audit.json"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-0a0b2a6482fd/venv/bin/python /job/review-evidence/check_named_contract.py (aa3c22c8110937562cf3690f8e380da32e5012dd)",
+      "exit_code": 0,
+      "what_was_measured": "All 21 specifically named Pointer/Tensor/layout counterexamples have docstrings and Example sections. Raw output: /job/review-evidence/candidate/named-contract.json"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-0a0b2a6482fd/venv/bin/python -m pytest tests/unit/test_layout_algebra.py -q",
+      "exit_code": 0,
+      "what_was_measured": "32 passed, 1 skipped at the exact candidate. The candidate regression extracts and executes all 38 changed examples in fresh modules and enforces the five-line limit. Raw output: /job/review-evidence/candidate/test-layout-algebra.log"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-0a0b2a6482fd/venv/bin/python -m pytest tests/unit/test_pointer_argument_vec_add.py -q",
+      "exit_code": 0,
+      "what_was_measured": "One real AMD GPU Pointer vector-add regression passed. Raw output: /job/review-evidence/candidate/test-pointer-gpu.log"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-0a0b2a6482fd/venv/bin/python examples/01-vectorAdd.py",
+      "exit_code": 0,
+      "what_was_measured": "Real AMD GPU Tensor/layout vector addition printed PASS against its PyTorch numerical reference. Raw output: /job/review-evidence/candidate/vector-add.log"
+    },
+    {
+      "command": "git diff --check acf7e67b7d22847e345938ca54fcc137bd7b2a1f aa3c22c8110937562cf3690f8e380da32e5012dd",
+      "exit_code": 0,
+      "what_was_measured": "No whitespace errors in the candidate diff."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_evidence": "The assigned gfx950 AMD Instinct MI350X executed the Pointer regression and Tensor/layout vector-add example successfully with torch 2.9.1+rocm7.2.0.git7e1940d4 and HIP 7.2.",
+  "native_rebuilt": false,
+  "remaining_counterexamples": [
+    "The exact candidate leaves 510 AST-enumerated public classes/functions/methods without docstrings: 374 in flydsl/expr, 127 in flydsl/compiler, and 9 in flydsl/utils.",
+    "The exact candidate leaves 263 documented public symbols without an Example section: 177 in flydsl/expr, 63 in flydsl/compiler, and 23 in flydsl/utils.",
+    "Concrete untouched missing-docstring examples include compiler.backends.base.GPUTarget, compiler.backends.base.BaseBackend, utils.env.EnvOption, and utils.env.EnvManager.",
+    "The candidate changes no source file under python/flydsl/compiler or python/flydsl/utils, despite the original issue explicitly covering both directories."
+  ],
+  "remaining_limitations": [
+    "The AST inventory intentionally uses an objective syntactic definition: public module-level classes/functions and public class methods. It may include implementation-visible symbols not re-exported at package top level, but the concrete untouched counterexamples are sufficient to disprove full package-wide completion.",
+    "No native C++ source changed, so the prepared native rebuild was not applicable. Python imported from /job/repo/python/flydsl; native extension libraries remained the pinned wheel under /opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs.",
+    "Only the available gfx950 AMD Instinct MI350X architecture was exercised; other GPU architectures remain unverified. GPU execution does not establish package-wide documentation completeness."
+  ]
+}
