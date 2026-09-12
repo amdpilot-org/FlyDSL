@@ -1,0 +1,41 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/770",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Fixed a shared-autotuner semantic gap where config/global pre-hooks and the post-hook ran for benchmark repetitions but were skipped by the selected user-visible execution, including searched-winner cache hits. The selected call now applies the same reset, hook ordering, compile hints, and kernel execution semantics as the measured calls. A failing-before/passing-after regression covers the initial selected call and a normal cache hit. The existing accepted-artifact failure and invalid-artifact fallback contracts remain covered.",
+  "tests": [
+    {
+      "command": "python -m pytest tests/unit/test_autotune.py::test_execution_hooks_apply_to_final_and_cache_hit_calls -q (before fix)",
+      "exit_code": 1,
+      "what_was_measured": "Reproduced the defect: the selected final call skipped setup hooks and produced 1.0 instead of the benchmarked program's expected 13.0. Raw output: /job/evidence/failing-before-hooks.txt"
+    },
+    {
+      "command": "python -m pytest tests/unit/test_autotune.py::test_execution_hooks_apply_to_final_and_cache_hit_calls -q (after fix)",
+      "exit_code": 0,
+      "what_was_measured": "Verified config pre-hook, global pre-hook, kernel, and post-hook ordering on the post-search execution and a non-searching winner-cache hit. Raw output: /job/evidence/passing-after-hooks.txt"
+    },
+    {
+      "command": "python -m pytest tests/unit/test_autotune.py -q",
+      "exit_code": 0,
+      "what_was_measured": "56 shared-autotuner unit tests passed, covering explicit opt-in ordering, cache identity, state restoration/reset, declared keys, artifact validation/fallback, and loud accepted-artifact runtime failure. Raw output: /job/evidence/unit-autotune-after.txt"
+    },
+    {
+      "command": "python -m pytest tests/unit/test_autotune.py::test_artifact_runtime_failure_is_not_masked_by_default tests/unit/test_autotune.py::test_invalid_artifact_falls_back -q",
+      "exit_code": 0,
+      "what_was_measured": "Seven artifact-policy cases passed: accepted runtime failure propagated without default retry, while corrupt/version/identity/config/override/type-invalid artifacts fell back. Raw output: /job/evidence/artifact-contract-after.txt"
+    },
+    {
+      "command": "FLYDSL_AUTOTUNE=0 python -m pytest tests/unit/test_softmax_autotune.py tests/kernels/test_softmax_autotune.py::test_workgroup_size_tracks_block_threads tests/kernels/test_softmax_autotune.py::test_wrapper_matches_the_torch_reference tests/kernels/test_softmax_autotune.py::test_default_serves_without_searching_on_the_current_stream tests/kernels/test_softmax_autotune.py::test_compiled_cache_hit_bypasses_resolution_and_accepts_new_buffers_and_stream tests/kernels/test_rmsnorm_autotune.py::test_rmsnorm_autotuned_default_uses_current_stream_and_skips_search -v",
+      "exit_code": 0,
+      "what_was_measured": "52 tests passed on AMD Instinct MI355X/gfx950, including independent Torch numerical references, explicit no-search serving for Softmax and RMSNorm, hot compiled-cache reuse, declared tuning axes, and 256/512-thread compiler specialization. Raw output: /job/evidence/gpu-supported-kernels.txt"
+    },
+    {
+      "command": "FLYDSL_AUTOTUNE=0 python <inline Softmax numerical/cache/IR evidence script>",
+      "exit_code": 0,
+      "what_was_measured": "Two normal bf16 Softmax calls had max absolute error 2.8591603e-05 and max scaled error 0.00189361582 versus torch.softmax; outputs were identical and resolve_config ran once. Compiler output contained known_block_size=512 and ISA metadata max_flat_workgroup_size=512. Raw output: /job/evidence/softmax-numerical-isa.txt"
+    }
+  ],
+  "gpu_execution": true,
+  "native_rebuilt": false,
+  "remaining_limitations": "The defect and fix are in Python orchestration only; no FlyDSL C++ or LLVM source changed, so the prepared native rebuild was not applicable. GPU execution was verified on the assigned AMD Instinct MI355X/gfx950 (unique ID 0xc1a597582efe51ae) only. Raw evidence is retained under /job/evidence, including gpu-info.txt and softmax-numerical-isa.txt; tested Python source is /job/repo/python/flydsl/autotune.py and the unchanged pinned native module is /opt/venv/lib/python3.12/site-packages/flydsl/_mlir."
+}

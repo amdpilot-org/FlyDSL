@@ -494,12 +494,21 @@ class Autotuner:
     def _run_config(self, config, args, kwargs):
         """Run the chosen config as a real (non-benchmark) call. Re-applies
         reset_to_zero so cache hits and the post-tune run behave like a single
-        clean run (restore_value tensors are already restored by _bench_one)."""
+        clean run (restore_value tensors are already restored by _bench_one).
+        Apply the same setup and cleanup hooks used by benchmark repetitions so
+        the measured program and user-visible execution have identical semantics."""
         merged = dict(kwargs)
         merged.update(config.all_kwargs())
         with self._stream_context(args, merged):
             self._reset_tensors(args, merged)
-            return self._run_with_hints(config.compiler_opts(), args, merged)
+            if config.pre_hook:
+                config.pre_hook(merged)
+            if self.pre_hook:
+                self.pre_hook(merged)
+            result = self._run_with_hints(config.compiler_opts(), args, merged)
+            if self.post_hook:
+                self.post_hook(merged)
+            return result
 
     def _call_device(self, args, kwargs):
         if torch is None:

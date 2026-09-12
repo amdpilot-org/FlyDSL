@@ -455,6 +455,53 @@ def test_reset_to_zero_on_cache_hit():
     assert out2._data[0] == 1.0
 
 
+def test_execution_hooks_apply_to_final_and_cache_hit_calls(monkeypatch):
+    """The selected call must execute the same program setup/cleanup as the
+    benchmarked calls, including when the winner comes from the cache."""
+    monkeypatch.setenv("FLYDSL_AUTOTUNE", "1")
+    events = []
+    state = {"value": 0.0}
+
+    def kernel(a, out, BLOCK):
+        events.append(("kernel", BLOCK, state["value"]))
+        out._data[0] = state["value"] + 1.0
+
+    def config_pre_hook(kwargs):
+        events.append(("config_pre", kwargs["BLOCK"]))
+        state["value"] = 10.0
+
+    def pre_hook(kwargs):
+        events.append(("pre", kwargs["BLOCK"]))
+        state["value"] += 2.0
+
+    def post_hook(kwargs):
+        events.append(("post", kwargs["BLOCK"]))
+        state["value"] = 0.0
+
+    tuner = _make_tuner(
+        fn=kernel,
+        configs=[Config(BLOCK=64, pre_hook=config_pre_hook)],
+        pre_hook=pre_hook,
+        post_hook=post_hook,
+        do_bench_fn=lambda call, warmup, rep: (call(), 1.0)[1],
+    )
+    a = FakeTensor((4,))
+    first = FakeTensor((1,))
+    tuner(a, first)
+    assert first._data[0] == 13.0
+
+    monkeypatch.setenv("FLYDSL_AUTOTUNE", "0")
+    cached = FakeTensor((1,))
+    tuner(a, cached)
+    assert cached._data[0] == 13.0
+    assert events[-4:] == [
+        ("config_pre", 64),
+        ("pre", 64),
+        ("kernel", 64, 12.0),
+        ("post", 64),
+    ]
+
+
 # ── pruning ──────────────────────────────────────────────────────────────
 def test_prune_configs_by():
     def only_small(configs, sig_args):
