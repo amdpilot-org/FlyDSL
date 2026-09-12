@@ -1,0 +1,45 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/701",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/599",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/561",
+  "candidate_commit": "7958bd75ef622b1e01de9451aa42bad929e24f08",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_verified",
+  "recommendation": "accept",
+  "fully_resolves_original": true,
+  "summary": "Independent review reproduced the original unsigned Pointer reconstruction failure on the prepared base, then verified exact candidate commit 7958bd75ef622b1e01de9451aa42bad929e24f08. The candidate preserves Uint8 and Uint32 logical signedness through Pointer, Torch Tensor, and DLPack Tensor JIT/kernel reconstruction and scalar loads. Boundary-value GPU results match an independent PyTorch ROCm reference, and compiler dumps show unsigned versus signed shift lowering through distinct MLIR, LLVM IR, and AMDGPU ISA operations.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-69a6a6cb96db/venv/bin/python /job/review-evidence/j-69a6a6cb96db/independent_signedness.py",
+      "exit_code": 1,
+      "what_was_measured": "On base acf7e67b7d22847e345938ca54fcc137bd7b2a1f, the independent real-GPU reproducer failed at the first assertion that a Uint8 Pointer remain Uint8 at the JIT boundary, confirming signedness loss before candidate checkout. Raw output: /job/review-evidence/j-69a6a6cb96db/base-independent.log"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-69a6a6cb96db/venv/bin/python -m pytest -q tests/system/test_integer_signedness_e2e.py -s",
+      "exit_code": 0,
+      "what_was_measured": "At exact candidate commit 7958bd75ef622b1e01de9451aa42bad929e24f08, all 12 submitted real-GPU cases passed for Pointer, Torch Tensor, and DLPack Tensor reconstruction across Uint8, Int8, Uint32, and Int32 boundary values. Raw output: /job/review-evidence/j-69a6a6cb96db/candidate-regression.log"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-69a6a6cb96db/venv/bin/python /job/review-evidence/j-69a6a6cb96db/independent_signedness.py",
+      "exit_code": 0,
+      "what_was_measured": "Independent adversarial cases at the exact candidate compared Uint8 0x80/0xff, Uint32 0x80000000/0xffffffff, and signed controls across all three adapters with independent PyTorch ROCm int64-shift references; every GPU result matched. Raw output: /job/review-evidence/j-69a6a6cb96db/candidate-independent.log"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-69a6a6cb96db/venv/bin/python -m pytest -q tests/language/test_composite_types.py tests/language/test_arithmetic_types.py tests/unit/test_tensor_cache_signature.py",
+      "exit_code": 0,
+      "what_was_measured": "488 focused reconstruction, arithmetic, composite-type, and tensor-cache regressions passed. Raw output: /job/review-evidence/j-69a6a6cb96db/candidate-focused.log"
+    },
+    {
+      "command": "FLYDSL_DUMP_IR=1 FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-69a6a6cb96db/venv/bin/python -m pytest -q tests/system/test_integer_signedness_e2e.py -k 'Uint32 and pointer' -s",
+      "exit_code": 0,
+      "what_was_measured": "Actual compiler output for Uint32 contained arith.shrui, LLVM lshr, and s_lshr_b32. A separate Int32 dump contained arith.shrsi, LLVM ashr, and s_ashr_i32. Extracted evidence: /job/review-evidence/j-69a6a6cb96db/u32-shift-evidence.txt and /job/review-evidence/j-69a6a6cb96db/shift-evidence.txt"
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "Executed on one AMD Instinct MI355X with torch 2.9.1+rocm7.2.0.git7e1940d4 and HIP 7.2.26015-fc0010cf6a; device and import evidence appears at the start of candidate-independent.log. No GPU reset or node-wide modification was performed."
+  },
+  "native_rebuilt": false,
+  "remaining_counterexamples": [],
+  "remaining_limitations": "Validation was performed on the available AMD Instinct MI355X only; behavior on other GPU architectures was not executed. The candidate changes only Python files, so the native rebuild command was not applicable. Candidate Python imported from /job/repo/python/flydsl, while /job/repo/python/flydsl/_mlir remained a symlink to the unchanged pinned native package at /opt/venv/lib/python3.12/site-packages/flydsl/_mlir. PyTorch ROCm lacks direct uint32 right shift, so the independent GPU reference widened to int64, shifted on GPU, and converted back."
+}
