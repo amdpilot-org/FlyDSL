@@ -1,0 +1,38 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/621",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "candidate_commit": "262ac58265f711353c1afd7f1dd604206ebd0aac",
+  "outcome": "candidate_rejected",
+  "summary": "The candidate fixes the reproduced primary failure by rejecting mismatched, malformed, and corrupt on-disk AOT artifacts instead of accepting them or silently falling back to compilation. It fixes only a subset of the broad schema-robustness issue: schema_version=True is accepted as version 1, and set() leaves a non-CompiledArtifact in the in-memory cache after its validated disk write fails. Request changes for exact metadata-type validation and validation before memory-cache mutation.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-7c72979d9ca2/venv/bin/python <independent base JitCacheManager regression>",
+      "exit_code": 0,
+      "what_was_measured": "At base acf7e67, a pickle-valid dict was accepted as a cache hit and corrupt bytes were deleted and converted to a compile miss."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-7c72979d9ca2/venv/bin/python -m pytest -q tests/unit/test_aot_cache_schema.py tests/unit/test_jit_cache_key.py",
+      "exit_code": 0,
+      "what_was_measured": "Candidate schema regressions and existing argument cache-key behavior; 9 passed."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-7c72979d9ca2/venv/bin/python -m pytest -q tests/unit/test_jit_cache_key_completeness.py tests/unit/test_compile_hints.py tests/unit/test_aot_cache_schema.py",
+      "exit_code": 0,
+      "what_was_measured": "Related cache-key completeness, compile-hint identity, and candidate schema tests; 35 passed and 2 architecture-dependent tests skipped."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-7c72979d9ca2/venv/bin/python <independent candidate adversarial schema regression>",
+      "exit_code": 0,
+      "what_was_measured": "Mismatched keys were rejected, but boolean schema version True was accepted as version 1 and invalid set() input remained an in-memory cache hit despite no disk artifact."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_CACHE_DIR=<private-cache> FLYDSL_RUNTIME_ENABLE_CACHE=1 /tmp/amdpilot-repo-j-7c72979d9ca2/venv/bin/python examples/01-vectorAdd.py; then repeat in a fresh process with FLYDSL_RUNTIME_RUN_ONLY=1",
+      "exit_code": 0,
+      "what_was_measured": "Both export and run-only load printed PASS against torch.allclose(A + B, C) on AMD Instinct MI355X. The cached CompiledArtifact MLIR contains gpu.binary, rocdl.target, amdgpu, and gfx950."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "Fresh export and distinct run-only processes both passed on AMD Instinct MI355X with ROCm 7.2.26015-fc0010cf6; raw logs and the 31,838-byte artifact are under /job/review-evidence-j-7c72979d9ca2/.",
+  "native_rebuilt": false,
+  "remaining_limitations": "Candidate is Python-only, so no native C++ rebuild was needed. Only the available gfx950 MI355X architecture was tested. Two tests in the related suite were skipped as architecture-dependent. The pickle envelope is inspected only after deserialization and is not safe for untrusted artifacts. Existing pre-schema caches are intentionally incompatible and require regeneration."
+}
