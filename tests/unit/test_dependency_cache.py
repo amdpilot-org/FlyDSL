@@ -75,3 +75,54 @@ def test_nested_closure_helper_rebinding_invalidates_compile_factory():
 
     assert new_wrapper is not old_wrapper
     assert new_wrapper() == "new"
+
+
+def test_attribute_helper_closure_change_invalidates_compile_factory():
+    value = "old"
+
+    def helper():
+        return value
+
+    helpers = SimpleNamespace(fn=helper)
+
+    @flyc.dependency_lru_cache(maxsize=4)
+    def compile_factory(signature):
+        def traced_body():
+            return helpers.fn()
+
+        return traced_body
+
+    old_wrapper = compile_factory("same-static-signature")
+    assert old_wrapper() == "old"
+
+    value = "new"
+    new_wrapper = compile_factory("same-static-signature")
+
+    assert new_wrapper is not old_wrapper
+    assert new_wrapper() == "new"
+
+
+def test_rebound_helper_discovers_replacement_dependencies():
+    replacement_value = "replacement-v1"
+    helper = lambda: "original"
+
+    @flyc.dependency_lru_cache(maxsize=4)
+    def compile_factory(signature):
+        def traced_body():
+            return helper()
+
+        return traced_body
+
+    original_wrapper = compile_factory("same-static-signature")
+    assert original_wrapper() == "original"
+
+    helper = lambda: replacement_value
+    replacement_wrapper = compile_factory("same-static-signature")
+    assert replacement_wrapper is not original_wrapper
+    assert replacement_wrapper() == "replacement-v1"
+
+    replacement_value = "replacement-v2"
+    refreshed_wrapper = compile_factory("same-static-signature")
+
+    assert refreshed_wrapper is not replacement_wrapper
+    assert refreshed_wrapper() == "replacement-v2"
