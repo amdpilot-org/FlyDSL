@@ -1,0 +1,16 @@
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors.
+[aiter] start build [module_aiter_core] under /tmp/amdpilot-repo-j-e35453afe93b/cache/aiter/build/module_aiter_core
+[aiter] finish build [module_aiter_core]
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-e35453afe93b/cache/aiter/module_aiter_core.so
+Traceback (most recent call last):
+  File "/job/repo/tests/integration/test_aiter_flydsl_hgemm.py", line 87, in <module>
+    _run_aiter_flydsl_hgemm()
+  File "/job/repo/tests/integration/test_aiter_flydsl_hgemm.py", line 18, in _run_aiter_flydsl_hgemm
+    aiter = importlib.import_module("aiter")
+  File "/opt/aiter/aiter/__init__.py", line 107, in <module>
+    from .ops.attention import *
+  File "/opt/aiter/aiter/ops/attention.py", line 12, in <module>
+    from aiter.ops.triton.gluon.pa_decode_gluon import pa_decode_gluon
+  File "/opt/aiter/aiter/ops/triton/gluon/__init__.py", line 23, in <module>
+    raise RuntimeError(
+RuntimeError: aiter gluon kernels require triton>=3.6.0, found 3.5.1+rocm7.2.0.gita272dfa8
