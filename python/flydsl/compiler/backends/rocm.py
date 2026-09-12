@@ -5,6 +5,7 @@ from typing import List, Tuple
 
 from ...runtime.device import get_rocm_arch, get_rocm_toolkit_path, get_warp_size
 from ...utils import env
+from ..mlir_utils import quote_pass_option_value
 from .base import BaseBackend, GPUTarget
 
 
@@ -105,7 +106,7 @@ class RocmBackend(BaseBackend):
                 else []
             ),
         ]
-        toolkit_path = get_rocm_toolkit_path()
+        toolkit_path = quote_pass_option_value(get_rocm_toolkit_path())
         binary_fragment = (
             f'gpu-module-to-binary{{format=fatbin opts="{" ".join(bin_cli_opts)}" toolkit={toolkit_path}}}'
         )
