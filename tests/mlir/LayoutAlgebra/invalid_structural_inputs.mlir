@@ -43,10 +43,31 @@ func.func @logical_divide_requires_static_divisibility(
   return
 }
 
+func.func @logical_divide_tile_requires_static_divisibility(
+    %layout: !fly.layout<16:1>, %divisor: !fly.tile<[6:1]>) {
+  // expected-error@+1 {{static divisor size must evenly divide layout size; got 6 and 16}}
+  %result = fly.logical_divide(%layout, %divisor) : (!fly.layout<16:1>, !fly.tile<[6:1]>) -> !fly.layout<((6,3)):((1,6))>
+  return
+}
+
+func.func @complement_requires_congruent_shape_and_stride(
+    %layout: !fly.layout<((4,8),2):(1,(4,32))>) {
+  // expected-error@+1 {{shape and stride must have congruent tuple structure}}
+  %result = fly.complement(%layout) : (!fly.layout<((4,8),2):(1,(4,32))>) -> !fly.layout<1:0>
+  return
+}
+
 func.func @right_inverse_requires_contiguous_static_domain(
     %layout: !fly.layout<(4,8):(2,8)>) {
   // expected-error@+1 {{static layout must describe an invertible contiguous domain}}
   %result = fly.right_inverse(%layout) : (!fly.layout<(4,8):(2,8)>) -> !fly.layout<1:0>
+  return
+}
+
+func.func @left_inverse_requires_contiguous_static_domain(
+    %layout: !fly.layout<(4,8):(2,8)>) {
+  // expected-error@+1 {{static layout must describe an invertible contiguous domain}}
+  %result = fly.left_inverse(%layout) : (!fly.layout<(4,8):(2,8)>) -> !fly.layout<(2,32):(0,1)>
   return
 }
 
@@ -62,6 +83,7 @@ func.func @dynamic_make_layout_control(%m: i32, %n: i32, %s0: i32, %s1: i32) {
 
 func.func @dynamic_inverse_control(%layout: !fly.layout<?{i32}:1>) {
   %result = fly.right_inverse(%layout) : (!fly.layout<?{i32}:1>) -> !fly.layout<1:0>
+  %left = fly.left_inverse(%layout) : (!fly.layout<?{i32}:1>) -> !fly.layout<?:1>
   return
 }
 

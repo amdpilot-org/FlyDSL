@@ -66,6 +66,46 @@ std::optional<int64_t> staticProduct(IntTupleAttr value) {
   return product;
 }
 
+std::optional<int64_t> staticProduct(TileAttr tile) {
+  if (tile.isLeaf()) {
+    Attribute value = tile.getValue();
+    if (auto layout = dyn_cast<LayoutAttr>(value))
+      return staticProduct(layout.getShape());
+    if (auto extent = dyn_cast<IntAttr>(value)) {
+      if (extent.isNone())
+        return 1;
+      if (!extent.isStatic())
+        return std::nullopt;
+      return extent.getValue();
+    }
+    return std::nullopt;
+  }
+  int64_t product = 1;
+  for (int32_t i = 0; i < tile.rank(); ++i) {
+    Attribute mode = tile.at(i);
+    if (auto nested = dyn_cast<TileAttr>(mode)) {
+      auto child = staticProduct(nested);
+      if (!child)
+        return std::nullopt;
+      product *= *child;
+    } else if (auto layout = dyn_cast<LayoutAttr>(mode)) {
+      auto child = staticProduct(layout.getShape());
+      if (!child)
+        return std::nullopt;
+      product *= *child;
+    } else if (auto extent = dyn_cast<IntAttr>(mode)) {
+      if (extent.isNone())
+        continue;
+      if (!extent.isStatic())
+        return std::nullopt;
+      product *= extent.getValue();
+    } else {
+      return std::nullopt;
+    }
+  }
+  return product;
+}
+
 void flattenStaticLeaves(IntTupleAttr value, SmallVectorImpl<int64_t> &leaves,
                          bool &allStatic) {
   if (value.isLeaf()) {
@@ -226,6 +266,20 @@ LogicalResult validateLogicalDivide(std::optional<Location> location, LayoutAttr
     return failure();
   auto layoutSize = staticProduct(layout.getShape());
   auto divisorSize = staticProduct(divisor.getShape());
+  if (layoutSize && divisorSize && (*divisorSize <= 0 || *layoutSize % *divisorSize != 0))
+    return emitOptionalError(location,
+                             "LogicalDivideOp: static divisor size must evenly divide layout size; "
+                             "got ",
+                             *divisorSize, " and ", *layoutSize);
+  return success();
+}
+
+LogicalResult validateLogicalDivide(std::optional<Location> location, LayoutAttr layout,
+                                    TileAttr divisor) {
+  if (failed(validateLayoutStructure(location, "LogicalDivideOp layout", layout)))
+    return failure();
+  auto layoutSize = staticProduct(layout.getShape());
+  auto divisorSize = staticProduct(divisor);
   if (layoutSize && divisorSize && (*divisorSize <= 0 || *layoutSize % *divisorSize != 0))
     return emitOptionalError(location,
                              "LogicalDivideOp: static divisor size must evenly divide layout size; "
@@ -1355,6 +1409,8 @@ FLY_INFER_RETURN_TYPES(ComplementOp) {
   auto layoutAttr = GetLayoutAttrFromLayoutLikeType(inputTy);
   if (!layoutAttr)
     return emitOptionalError(location, "ComplementOp: expected NarrowLayoutType, got ", inputTy);
+  if (failed(validateLayoutStructure(location, "ComplementOp layout", layoutAttr)))
+    return failure();
 
   std::optional<IntTupleAttr> codomainSizeAttr;
   if (operands.size() > 1 && operands[1]) {
@@ -1394,6 +1450,12 @@ FLY_INFER_RETURN_TYPES(LeftInverseOp) {
   auto layoutAttr = GetLayoutAttrFromLayoutLikeType(inputTy);
   if (!layoutAttr)
     return emitOptionalError(location, "LeftInverseOp: expected NarrowLayoutType, got ", inputTy);
+  if (failed(validateLayoutStructure(location, "LeftInverseOp layout", layoutAttr)))
+    return failure();
+  if (!isStaticallyRightInvertible(layoutAttr))
+    return emitOptionalError(location,
+                             "LeftInverseOp: static layout must describe an invertible "
+                             "contiguous domain");
   LayoutBuilder<LayoutAttr> layoutBuilder(context);
   LayoutAttr inferred = layoutLeftInverse(layoutBuilder, layoutAttr);
   inferredReturnTypes.assign({RebuildLayoutLikeType(inputTy, inferred)});
@@ -1415,6 +1477,8 @@ FLY_INFER_RETURN_TYPES(LogicalDivideOp) {
       return failure();
     inferred = layoutLogicalDivide(layoutBuilder, layoutAttr, divisorLayoutTy.getAttr());
   } else if (auto divisorTileTy = dyn_cast<TileType>(divisorTy)) {
+    if (failed(validateLogicalDivide(location, layoutAttr, divisorTileTy.getAttr())))
+      return failure();
     inferred = layoutLogicalDivide(layoutBuilder, layoutAttr, divisorTileTy.getAttr());
   } else {
     return emitOptionalError(
@@ -1452,12 +1516,27 @@ LogicalResult RightInverseOp::verify() {
   return success();
 }
 
+LogicalResult ComplementOp::verify() {
+  return validateLayoutStructure(getLoc(), "ComplementOp layout",
+                                 GetLayoutAttrFromLayoutLikeType(getOperand(0).getType()));
+}
+
+LogicalResult LeftInverseOp::verify() {
+  LayoutAttr layout = GetLayoutAttrFromLayoutLikeType(getOperand().getType());
+  if (failed(validateLayoutStructure(getLoc(), "LeftInverseOp layout", layout)))
+    return failure();
+  if (!isStaticallyRightInvertible(layout))
+    return emitOpError("static layout must describe an invertible contiguous domain");
+  return success();
+}
+
 LogicalResult LogicalDivideOp::verify() {
-  auto divisor = dyn_cast<LayoutType>(getOperand(1).getType());
-  if (!divisor)
-    return success();
-  return validateLogicalDivide(getLoc(), GetLayoutAttrFromLayoutLikeType(getOperand(0).getType()),
-                               divisor.getAttr());
+  LayoutAttr layout = GetLayoutAttrFromLayoutLikeType(getOperand(0).getType());
+  if (auto divisor = dyn_cast<LayoutType>(getOperand(1).getType()))
+    return validateLogicalDivide(getLoc(), layout, divisor.getAttr());
+  if (auto divisor = dyn_cast<TileType>(getOperand(1).getType()))
+    return validateLogicalDivide(getLoc(), layout, divisor.getAttr());
+  return success();
 }
 
 FLY_INFER_RETURN_TYPES(ZippedDivideOp) {
