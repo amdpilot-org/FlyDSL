@@ -1,0 +1,25 @@
+{
+  "attempt": "/job/native-build-attempts/1789187952256326275",
+  "passed": true,
+  "state": "passed",
+  "toolchain": {
+    "llvm_hash": "e2a39f504fee836e4def9581bed817ecc327b9dc",
+    "patch_sha256": "082cca2b52291b122bd69e17126739ece7337f37c30b3676ba3dd446f9b4fca4",
+    "source_revision": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+    "build_profile": "amd-minimal",
+    "parallel_jobs": 32
+  },
+  "native": "/tmp/amdpilot-repo-j-57b45a810311/native-build/python_packages/flydsl/_mlir",
+  "working_tree_sha256": "9803d982de17a29afa334bdec6a1e36ec4ebb11159b9320987f074dbc0053bc6",
+  "wall_s": 48.36537877796218,
+  "smoke": {
+    "passed": true,
+    "operation": "FlyDSL vector_add 100x1000 (predicated border blocks)",
+    "gpu": "AMD Instinct MI355X",
+    "arch": "gfx950",
+    "device_count": 1,
+    "wall_s": 1.2208716159220785,
+    "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+    "hip": "7.2.26015-fc0010cf6a"
+  }
+}
