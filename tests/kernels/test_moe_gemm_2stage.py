@@ -194,7 +194,19 @@ def _launch(exe, out, *, x, w, scale_x, scale_w, routing, dim0, dim1, tokens, ze
 # Stage1 (gate-up + silu).
 # ---------------------------------------------------------------------------
 def _run_gemm1(
-    *, tokens, model_dim, inter_dim, experts, topk, tile_m, tile_n, tile_k, out_dtype, in_dtype="fp8", seed=0
+    *,
+    tokens,
+    model_dim,
+    inter_dim,
+    experts,
+    topk,
+    tile_m,
+    tile_n,
+    tile_k,
+    out_dtype,
+    in_dtype="fp8",
+    seed=0,
+    persistent=False,
 ):
     device = torch.device("cuda")
     doweight_stage1 = False
@@ -235,6 +247,7 @@ def _run_gemm1(
         doweight_stage1=doweight_stage1,
         out_dtype=out_dtype,
         in_dtype=in_dtype,
+        persistent=persistent,
     )
     _launch(
         exe,
@@ -408,6 +421,32 @@ def test_moe_gemm1_numeric(in_dtype, out_dtype, tile_m, tokens):
 
 
 @_requires_fp8
+@pytest.mark.parametrize("in_dtype", ["fp8", "int8", "int8smooth", "int4"])
+@pytest.mark.parametrize("tokens,tile_m", [(129, 16), (2051, 16)])
+def test_moe_gemm1_persistent_numeric(in_dtype, tokens, tile_m):
+    """The opt-in persistent worklist preserves GEMM1's torch-reference result.
+
+    Both cases have masked routing tails; the larger case produces more logical
+    tiles than gfx950 CUs so each persistent CTA executes multiple tiles.
+    """
+    out, ref = _run_gemm1_any(
+        in_dtype=in_dtype,
+        tokens=tokens,
+        model_dim=256,
+        inter_dim=128,
+        experts=4,
+        topk=2,
+        tile_m=tile_m,
+        tile_n=64,
+        tile_k=128,
+        out_dtype="bf16",
+        persistent=True,
+    )
+    cos = _cosine_sim(out, ref)
+    assert cos > 0.99, f"persistent stage1 cos={cos:.5f} (in_dtype={in_dtype}, tile_m={tile_m})"
+
+
+@_requires_fp8
 def test_moe_gemm1_int4_perturb():
     """W4A8 de-interleave order is load-bearing: swapping the low/high nibble halves
     of every packed byte (which re-orders the in-kernel unpack's even={v0..v3} /
@@ -518,7 +557,9 @@ def _build_stage1_int8smooth(x_fp32, w1_fp32, topk_ids):
     )
 
 
-def _run_gemm1_int8smooth(*, tokens, model_dim, inter_dim, experts, topk, tile_m, tile_n, tile_k, out_dtype, seed=0):
+def _run_gemm1_int8smooth(
+    *, tokens, model_dim, inter_dim, experts, topk, tile_m, tile_n, tile_k, out_dtype, seed=0, persistent=False
+):
     device = torch.device("cuda")
     doweight_stage1 = False
     topk_ids, topk_weights, routing = _make_routing(tokens, experts, topk, tile_m, device, seed)
@@ -542,6 +583,7 @@ def _run_gemm1_int8smooth(*, tokens, model_dim, inter_dim, experts, topk, tile_m
         doweight_stage1=doweight_stage1,
         out_dtype=out_dtype,
         in_dtype="int8smooth",
+        persistent=persistent,
     )
     _launch(
         exe,

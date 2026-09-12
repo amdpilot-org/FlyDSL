@@ -9,6 +9,8 @@ int8 shares the fp8 path via an i32 MFMA acc (converted to f32 in dequant).
 
 import functools
 
+import torch
+
 import flydsl.compiler as flyc
 import flydsl.expr as fx
 from flydsl.compiler.ast_rewriter import ASTRewriter
@@ -29,6 +31,8 @@ def _build_moe_gemm1_fp8_gateup(
     doweight_stage1: bool,
     out_dtype: str,
     in_dtype: str = "fp8",
+    persistent: bool = False,
+    persistent_grid_multiplier: int = 1,
 ):
     """Native gate-up GEMM (B-first MFMA, fp8/int8): out[t,slot,inter] =
     silu(gate*sx*sw_g)*(up*sx*sw_u)[*routed], scattered by sorted token ids.
@@ -53,6 +57,12 @@ def _build_moe_gemm1_fp8_gateup(
     TILE_K = int(tile_k)
     TOPK = int(topk)
     out_bf16 = out_dtype == "bf16"
+    persistent_grid = 1
+    if persistent:
+        if persistent_grid_multiplier <= 0:
+            raise ValueError(f"persistent_grid_multiplier must be positive, got {persistent_grid_multiplier}")
+        num_cu = int(torch.cuda.get_device_properties(torch.cuda.current_device()).multi_processor_count)
+        persistent_grid = num_cu * int(persistent_grid_multiplier)
 
     assert TILE_K in (128, 256), f"native gate-up needs tile_k in (128,256), got {TILE_K}"
     assert K % TILE_K == 0 and (K // TILE_K) % 2 == 0, f"K={K} must be an even multiple of TILE_K={TILE_K}"
@@ -380,123 +390,138 @@ def _build_moe_gemm1_fp8_gateup(
         i32_size_expert_ids_in: fx.Int32,
     ):
         tid = gpu.thread_idx.x
-        blk_n = gpu.block_idx.x  # tile along inter (channel/N)
-        e_idx = gpu.block_idx.y  # expert-block id (sorted M-block)
+        grid_n = fx.Int32(inter_dim // contiguous_n)
+        work_bound = grid_n * i32_size_expert_ids_in
+        if const_expr(persistent):
+            work_idx = fx.Int32(gpu.block_idx.x)
+            work_stride = fx.Int32(gpu.grid_dim.x)
+        else:
+            # Preserve the default 2-D launch and its x-fastest tile mapping.
+            work_idx = fx.Int32(gpu.block_idx.y) * grid_n + fx.Int32(gpu.block_idx.x)
+            work_stride = work_bound
 
-        M = i32_tokens_in
-
-        # Pointers / views.
-        in_ptr = fx.recast_iter(in_t, fx.get_iter(arg_x))
-        arg_p_input = fx.make_view(in_ptr, fx.make_layout((M, fx.Int32(K)), (fx.Int32(K), 1)))
-
-        max_valid_id = fxh.view_as_torch_tensor(fx.get_iter(arg_max_token_ids), (1,), fx.Int32)[0]
-
-        if e_idx * fx.Int32(BM) < max_valid_id:
-            lds = fx.SharedAllocator().allocate(SharedStorage)
-            lds.sorted_lds = lds.sorted_lds.peek()
-            lds.gemm = lds.gemm.peek()
-
-            arg_p_sorted_ids = fx.make_view(
-                fx.recast_iter(fx.Int32, fx.get_iter(arg_sorted_token_ids) + e_idx * fx.Int32(BM)),
-                fx.make_layout(BM, 1),
-            )
-            expert_id = fxh.view_as_torch_tensor(fx.get_iter(arg_expert_ids), (1,), fx.Int32)[e_idx]
-
-            w_ptr = fx.recast_iter(in_t, fx.get_iter(arg_w))
-            if const_expr(is_int4):
-                # Packed-int4: raw byte view; the ki-correct loader indexes per-expert.
-                arg_p_weight = fx.make_view(w_ptr, fx.make_layout((fx.Int32(experts * N_e * (K // 2)),), (1,)))
-            else:
-                arg_p_weight = fxh.make_gateup_weight_view(w_ptr, expert_id, contiguous_n, N_e, K)
-
-            # BUG GUARD: the A-gather/scatter TV layouts read up to 256/(tile_k/16)
-            # M-rows (32 at tile_k=128), EXCEEDING BM on decode (BM=16). Un-seeded
-            # slots decode to a VALID token 0 / slot 0, piling garbage onto token 0.
-            # Seed every readable slot (full 256 range, not just BM) with sentinel id
-            # == M (out of range -> hardware OOB clamp drops it), then write real rows.
-            sorted_ids_buf = fx.rocdl.make_buffer_tensor(arg_p_sorted_ids, max_size=False)
-            sentinel_view = fx.make_view(lds.sorted_lds.ptr, fx.make_layout(256, 1))
-            sentinel_view[tid] = M
+        # In persistent mode a CU-limited 1-D grid walks the same logical
+        # (expert-block, channel-block) tiles as the default launch. The default
+        # remains one iteration per CTA and therefore retains its execution mode.
+        for linear_idx in range(work_idx, work_bound, work_stride):
             gpu.barrier()
-            if tid < fx.Int32(BM):
-                lds_view = fx.make_view(lds.sorted_lds.ptr, fx.make_layout(BM, 1))
-                lds_view[tid] = sorted_ids_buf[tid]
-            gpu.barrier()
+            blk_n = fx.Int32(linear_idx) % grid_n
+            e_idx = fx.Int32(linear_idx) // grid_n
 
-            # Output [M, TOPK, inter] fp16/bf16; scatter index from sorted_lds.
-            out_elem = fx.BFloat16 if out_bf16 else fx.Float16
-            arg_p_output = fx.make_view(
-                fx.recast_iter(out_elem, fx.get_iter(arg_out)),
-                fx.make_layout(
-                    (M, fx.Int32(TOPK), fx.Int32(inter_dim)), (fx.Int32(TOPK * inter_dim), fx.Int32(inter_dim), 1)
-                ),
-            )
-            out_tensor = fx.rocdl.make_buffer_tensor(arg_p_output, max_size=False)
-            buf_atom_w128 = fx.make_copy_atom(fx.rocdl.BufferCopy128b(), out_elem)
-            # CShuffle read/scatter: 4-wave 2x2 thread grid over (BM x contiguous_n).
-            c_rw_copy = fx.make_tiled_copy(
-                buf_atom_w128,
-                fx.make_layout(((4, 16, 2, 2), 8), ((256, 1, 16, 1024), 32)),
-                fx.make_tile(32, 64),
-            )
-            c_index_copy = fx.make_tiled_copy(
-                fx.make_copy_atom(fx.UniversalCopy32b(), fx.Int32),
-                fx.make_layout(((4, 16, 2, 2), 1), ((0, 1, 16, 0), 0)),
-                fx.make_tile(32),
-            )
-            c_out_index_frag = fxh.read_sorted_index(c_index_copy, tid, lds.sorted_lds, BM)
-            c_out = fxh.make_tensor_with_index(
-                out_tensor, BM, contiguous_n, c_out_index_frag, c_rw_copy, tid, TOPK, is_read_from_mem=False
-            )
+            M = i32_tokens_in
 
-            # Per-token activation scale index (ptpc): one id per token_rep.
-            asc_index_copy = fx.make_tiled_copy(
-                fx.make_copy_atom(fx.UniversalCopy32b(), fx.Int32),
-                fx.make_layout(((16, 4, 4), 1), ((1, 0, 0), 0)),
-                fx.make_tile(16),
-            )
-            asc_lds = fx.make_view(lds.sorted_lds.ptr, fx.make_layout(BM, 1))
-            asc_thr = asc_index_copy.get_slice(tid).partition_S(asc_lds)
-            asc_idx = fx.make_fragment_like(asc_thr)
-            fx.copy(fx.make_copy_atom(fx.UniversalCopy32b(), fx.Int32), asc_thr, asc_idx)
+            # Pointers / views.
+            in_ptr = fx.recast_iter(in_t, fx.get_iter(arg_x))
+            arg_p_input = fx.make_view(in_ptr, fx.make_layout((M, fx.Int32(K)), (fx.Int32(K), 1)))
 
-            c_gate_frag, c_up_frag = _gemm_1x4(blk_n, arg_p_input, arg_p_weight, lds, M, expert_id)
+            max_valid_id = fxh.view_as_torch_tensor(fx.get_iter(arg_max_token_ids), (1,), fx.Int32)[0]
 
-            # dequant: sx (per token) * sw (per channel); int8 also i32->f32 here.
-            c_gate_frag, c_up_frag = _apply_dequant(
-                c_gate_frag, c_up_frag, tid, expert_id, blk_n, asc_idx, M, arg_scale_w, arg_scale_x
-            )
+            if e_idx * fx.Int32(BM) < max_valid_id:
+                lds = fx.SharedAllocator().allocate(SharedStorage)
+                lds.sorted_lds = lds.sorted_lds.peek()
+                lds.gemm = lds.gemm.peek()
 
-            # Optional routed-weight scale (per sorted row).
-            if const_expr(doweight_stage1):
-                _apply_doweight(c_gate_frag, c_up_frag, tid, e_idx, arg_sorted_weights)
+                arg_p_sorted_ids = fx.make_view(
+                    fx.recast_iter(fx.Int32, fx.get_iter(arg_sorted_token_ids) + e_idx * fx.Int32(BM)),
+                    fx.make_layout(BM, 1),
+                )
+                expert_id = fxh.view_as_torch_tensor(fx.get_iter(arg_expert_ids), (1,), fx.Int32)[e_idx]
 
-            # silu output dtype MUST match the CShuffle staging/store dtype (out_elem)
-            # or the raw fragment bits are reinterpreted (bf16 0x4480 -> f16 4.5).
-            c_out_bf16 = fxh.silu_pair_bf16(c_gate_frag, c_up_frag, out_dtype=out_elem)
+                w_ptr = fx.recast_iter(in_t, fx.get_iter(arg_w))
+                if const_expr(is_int4):
+                    # Packed-int4: raw byte view; the ki-correct loader indexes per-expert.
+                    arg_p_weight = fx.make_view(w_ptr, fx.make_layout((fx.Int32(experts * N_e * (K // 2)),), (1,)))
+                else:
+                    arg_p_weight = fxh.make_gateup_weight_view(w_ptr, expert_id, contiguous_n, N_e, K)
 
-            # CShuffle epilogue: stage silu to LDS (transpose, swz 3,3,3), read back
-            # channel-contiguous, scatter to out[t, slot, inter] via sorted-id index.
-            _, _tiled_mma = fxh.make_1x4_tiled_mma(in_t, acc_dtype)
-            cshuf_atom_w = fx.make_copy_atom(fx.UniversalCopy64b(), out_elem)
-            cshuf_atom_r = fx.make_copy_atom(fx.UniversalCopy128b(), out_elem)
-            cshuf_ptr = fx.recast_iter(out_elem, lds.gemm.a_ping.ptr)
-            swz_c = fx.SwizzleType.get(3, 3, 3)
-            lds_c_store = fx.make_view(
-                cshuf_ptr,
-                fx.make_composed_layout(fx.static(swz_c), fx.make_ordered_layout((contiguous_n, BM), order=(0, 1))),
-            )
-            lds_c = fx.make_view(
-                cshuf_ptr,
-                fx.make_composed_layout(fx.static(swz_c), fx.make_ordered_layout((BM, contiguous_n), order=(1, 0))),
-            )
-            gpu.barrier()
-            store_c = fx.make_tiled_copy_C(cshuf_atom_w, _tiled_mma).get_slice(tid)
-            fx.copy(cshuf_atom_w, store_c.retile(c_out_bf16), store_c.partition_D(lds_c_store))
-            gpu.barrier()
-            rd = fx.make_fragment_like(c_rw_copy.get_slice(tid).partition_S(lds_c))
-            fx.copy(cshuf_atom_r, c_rw_copy.get_slice(tid).partition_S(lds_c), rd)
-            c_out.copy(buf_atom_w128, blk_n, rd)
+                # BUG GUARD: the A-gather/scatter TV layouts read up to 256/(tile_k/16)
+                # M-rows (32 at tile_k=128), EXCEEDING BM on decode (BM=16). Un-seeded
+                # slots decode to a VALID token 0 / slot 0, piling garbage onto token 0.
+                # Seed every readable slot (full 256 range, not just BM) with sentinel id
+                # == M (out of range -> hardware OOB clamp drops it), then write real rows.
+                sorted_ids_buf = fx.rocdl.make_buffer_tensor(arg_p_sorted_ids, max_size=False)
+                sentinel_view = fx.make_view(lds.sorted_lds.ptr, fx.make_layout(256, 1))
+                sentinel_view[tid] = M
+                gpu.barrier()
+                if tid < fx.Int32(BM):
+                    lds_view = fx.make_view(lds.sorted_lds.ptr, fx.make_layout(BM, 1))
+                    lds_view[tid] = sorted_ids_buf[tid]
+                gpu.barrier()
+
+                # Output [M, TOPK, inter] fp16/bf16; scatter index from sorted_lds.
+                out_elem = fx.BFloat16 if out_bf16 else fx.Float16
+                arg_p_output = fx.make_view(
+                    fx.recast_iter(out_elem, fx.get_iter(arg_out)),
+                    fx.make_layout(
+                        (M, fx.Int32(TOPK), fx.Int32(inter_dim)), (fx.Int32(TOPK * inter_dim), fx.Int32(inter_dim), 1)
+                    ),
+                )
+                out_tensor = fx.rocdl.make_buffer_tensor(arg_p_output, max_size=False)
+                buf_atom_w128 = fx.make_copy_atom(fx.rocdl.BufferCopy128b(), out_elem)
+                # CShuffle read/scatter: 4-wave 2x2 thread grid over (BM x contiguous_n).
+                c_rw_copy = fx.make_tiled_copy(
+                    buf_atom_w128,
+                    fx.make_layout(((4, 16, 2, 2), 8), ((256, 1, 16, 1024), 32)),
+                    fx.make_tile(32, 64),
+                )
+                c_index_copy = fx.make_tiled_copy(
+                    fx.make_copy_atom(fx.UniversalCopy32b(), fx.Int32),
+                    fx.make_layout(((4, 16, 2, 2), 1), ((0, 1, 16, 0), 0)),
+                    fx.make_tile(32),
+                )
+                c_out_index_frag = fxh.read_sorted_index(c_index_copy, tid, lds.sorted_lds, BM)
+                c_out = fxh.make_tensor_with_index(
+                    out_tensor, BM, contiguous_n, c_out_index_frag, c_rw_copy, tid, TOPK, is_read_from_mem=False
+                )
+
+                # Per-token activation scale index (ptpc): one id per token_rep.
+                asc_index_copy = fx.make_tiled_copy(
+                    fx.make_copy_atom(fx.UniversalCopy32b(), fx.Int32),
+                    fx.make_layout(((16, 4, 4), 1), ((1, 0, 0), 0)),
+                    fx.make_tile(16),
+                )
+                asc_lds = fx.make_view(lds.sorted_lds.ptr, fx.make_layout(BM, 1))
+                asc_thr = asc_index_copy.get_slice(tid).partition_S(asc_lds)
+                asc_idx = fx.make_fragment_like(asc_thr)
+                fx.copy(fx.make_copy_atom(fx.UniversalCopy32b(), fx.Int32), asc_thr, asc_idx)
+
+                c_gate_frag, c_up_frag = _gemm_1x4(blk_n, arg_p_input, arg_p_weight, lds, M, expert_id)
+
+                # dequant: sx (per token) * sw (per channel); int8 also i32->f32 here.
+                c_gate_frag, c_up_frag = _apply_dequant(
+                    c_gate_frag, c_up_frag, tid, expert_id, blk_n, asc_idx, M, arg_scale_w, arg_scale_x
+                )
+
+                # Optional routed-weight scale (per sorted row).
+                if const_expr(doweight_stage1):
+                    _apply_doweight(c_gate_frag, c_up_frag, tid, e_idx, arg_sorted_weights)
+
+                # silu output dtype MUST match the CShuffle staging/store dtype (out_elem)
+                # or the raw fragment bits are reinterpreted (bf16 0x4480 -> f16 4.5).
+                c_out_bf16 = fxh.silu_pair_bf16(c_gate_frag, c_up_frag, out_dtype=out_elem)
+
+                # CShuffle epilogue: stage silu to LDS (transpose, swz 3,3,3), read back
+                # channel-contiguous, scatter to out[t, slot, inter] via sorted-id index.
+                _, _tiled_mma = fxh.make_1x4_tiled_mma(in_t, acc_dtype)
+                cshuf_atom_w = fx.make_copy_atom(fx.UniversalCopy64b(), out_elem)
+                cshuf_atom_r = fx.make_copy_atom(fx.UniversalCopy128b(), out_elem)
+                cshuf_ptr = fx.recast_iter(out_elem, lds.gemm.a_ping.ptr)
+                swz_c = fx.SwizzleType.get(3, 3, 3)
+                lds_c_store = fx.make_view(
+                    cshuf_ptr,
+                    fx.make_composed_layout(fx.static(swz_c), fx.make_ordered_layout((contiguous_n, BM), order=(0, 1))),
+                )
+                lds_c = fx.make_view(
+                    cshuf_ptr,
+                    fx.make_composed_layout(fx.static(swz_c), fx.make_ordered_layout((BM, contiguous_n), order=(1, 0))),
+                )
+                gpu.barrier()
+                store_c = fx.make_tiled_copy_C(cshuf_atom_w, _tiled_mma).get_slice(tid)
+                fx.copy(cshuf_atom_w, store_c.retile(c_out_bf16), store_c.partition_D(lds_c_store))
+                gpu.barrier()
+                rd = fx.make_fragment_like(c_rw_copy.get_slice(tid).partition_S(lds_c))
+                fx.copy(cshuf_atom_r, c_rw_copy.get_slice(tid).partition_S(lds_c), rd)
+                c_out.copy(buf_atom_w128, blk_n, rd)
 
     @flyc.jit
     def launch_moe_gemm1(
@@ -515,9 +540,15 @@ def _build_moe_gemm1_fp8_gateup(
         i32_size_expert_ids_in: fx.Int32,
         stream: fx.Stream,
     ):
-        # Each block produces `contiguous_n` output channels, so gx = inter / contiguous_n.
+        # Each block produces `contiguous_n` output channels. Persistent mode is
+        # explicitly opt-in; by default retain the existing 2-D one-tile-per-CTA
+        # launch and all API/mathematical behavior.
         gx = fx.Int64(i32_inter_in) // fx.Int64(contiguous_n)
         gy = fx.Int64(i32_size_expert_ids_in)
+        launch_grid = (gx, gy, 1)
+        if const_expr(persistent):
+            total_work = gx * gy
+            launch_grid = (fx.min(total_work, fx.Int64(persistent_grid)), 1, 1)
         moe_gemm1_fp8_gateup(
             arg_out,
             arg_x,
@@ -532,7 +563,7 @@ def _build_moe_gemm1_fp8_gateup(
             i32_inter_in,
             i32_k_in,
             i32_size_expert_ids_in,
-        ).launch(grid=(gx, gy, 1), block=(256, 1, 1), stream=stream)
+        ).launch(grid=launch_grid, block=(256, 1, 1), stream=stream)
 
     return launch_moe_gemm1
 
@@ -550,6 +581,8 @@ def compile_moe_gemm1(
     doweight_stage1: bool,
     out_dtype: str = "f16",
     in_dtype: str = "fp8",
+    persistent: bool = False,
+    persistent_grid_multiplier: int = 1,
 ):
     """Compile stage1 gate-up kernel (``moe_gemm1``) and return the executable.
 
@@ -557,6 +590,12 @@ def compile_moe_gemm1(
     ``out_dtype`` is f16/bf16. int8 variants share the fp8 pipeline (i32 MFMA acc,
     f32 dequant); int8smooth adds slot-major A/scale_x indexing; int4 swaps the
     weight load for the ki-correct packed-int4 loader (``load_weight_int4_frag``).
+
+    ``persistent=False`` intentionally preserves the existing 2-D launch and
+    one logical output tile per CTA. Opting into ``persistent=True`` launches at
+    most ``device_CUs * persistent_grid_multiplier`` CTAs and grid-strides over
+    the identical logical tiles; the public arguments and numerical operation
+    are unchanged.
     """
     _arch = get_rocm_arch()
     if not ("gfx95" in _arch or "gfx94" in _arch):
@@ -577,4 +616,6 @@ def compile_moe_gemm1(
         doweight_stage1=doweight_stage1,
         out_dtype=out_dtype,
         in_dtype=in_dtype,
+        persistent=persistent,
+        persistent_grid_multiplier=persistent_grid_multiplier,
     )

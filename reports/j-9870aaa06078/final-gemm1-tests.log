@@ -1,0 +1,10 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 762 items / 734 deselected / 28 selected
+
+tests/kernels/test_moe_gemm_2stage.py ............................
+
+===================== 28 passed, 734 deselected in 13.15s ======================
