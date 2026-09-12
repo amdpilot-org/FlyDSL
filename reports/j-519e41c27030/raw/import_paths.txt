@@ -1,0 +1,47 @@
+{
+  "flydsl": {
+    "file": "/job/repo/python/flydsl/__init__.py",
+    "origin": "/job/repo/python/flydsl/__init__.py",
+    "search_locations": [
+      "/job/repo/python/flydsl"
+    ]
+  },
+  "flydsl._mlir": {
+    "file": null,
+    "origin": null,
+    "search_locations": [
+      "/job/repo/python/flydsl/_mlir"
+    ]
+  },
+  "flydsl._mlir._mlir_libs": {
+    "file": "/job/repo/python/flydsl/_mlir/_mlir_libs/__init__.py",
+    "origin": "/job/repo/python/flydsl/_mlir/_mlir_libs/__init__.py",
+    "search_locations": [
+      "/job/repo/python/flydsl/_mlir/_mlir_libs"
+    ]
+  },
+  "flydsl._mlir._mlir_libs._mlir": {
+    "file": "/job/repo/python/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so",
+    "origin": "/job/repo/python/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so",
+    "search_locations": []
+  },
+  "flydsl._mlir.ir": {
+    "file": "/job/repo/python/flydsl/_mlir/ir.py",
+    "origin": "/job/repo/python/flydsl/_mlir/ir.py",
+    "search_locations": []
+  },
+  "flydsl.compiler": {
+    "file": "/job/repo/python/flydsl/compiler/__init__.py",
+    "origin": "/job/repo/python/flydsl/compiler/__init__.py",
+    "search_locations": [
+      "/job/repo/python/flydsl/compiler"
+    ]
+  },
+  "flydsl.expr": {
+    "file": "/job/repo/python/flydsl/expr/__init__.py",
+    "origin": "/job/repo/python/flydsl/expr/__init__.py",
+    "search_locations": [
+      "/job/repo/python/flydsl/expr"
+    ]
+  }
+}

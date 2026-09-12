@@ -1,0 +1,50 @@
+{
+  "CUDA_VISIBLE_DEVICES": null,
+  "HIP_VISIBLE_DEVICES": null,
+  "ROCR_VISIBLE_DEVICES": null,
+  "cuda_available": true,
+  "current_device": 0,
+  "device_count_visible": 1,
+  "device_name": "AMD Instinct MI355X",
+  "device_properties": "_CudaDeviceProperties(name='AMD Instinct MI355X', major=9, minor=5, gcnArchName='gfx950:sramecc+:xnack-', total_memory=294896MB, multi_processor_count=256, uuid=63316135-3937-3538-3265-666535316165, pci_bus_id=101, pci_device_id=0, pci_domain_id=0, L2_cache_size=4MB)",
+  "imports": {
+    "flydsl": {
+      "file": "/job/repo/python/flydsl/__init__.py",
+      "origin": "/job/repo/python/flydsl/__init__.py",
+      "resolved_file": "/job/repo/python/flydsl/__init__.py",
+      "search_locations": [
+        "/job/repo/python/flydsl"
+      ]
+    },
+    "flydsl._mlir._mlir_libs._mlir": {
+      "file": "/job/repo/python/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so",
+      "origin": "/job/repo/python/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so",
+      "resolved_file": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so",
+      "search_locations": []
+    },
+    "flydsl._mlir.ir": {
+      "file": "/job/repo/python/flydsl/_mlir/ir.py",
+      "origin": "/job/repo/python/flydsl/_mlir/ir.py",
+      "resolved_file": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/ir.py",
+      "search_locations": []
+    },
+    "flydsl.compiler": {
+      "file": "/job/repo/python/flydsl/compiler/__init__.py",
+      "origin": "/job/repo/python/flydsl/compiler/__init__.py",
+      "resolved_file": "/job/repo/python/flydsl/compiler/__init__.py",
+      "search_locations": [
+        "/job/repo/python/flydsl/compiler"
+      ]
+    },
+    "flydsl.expr": {
+      "file": "/job/repo/python/flydsl/expr/__init__.py",
+      "origin": "/job/repo/python/flydsl/expr/__init__.py",
+      "resolved_file": "/job/repo/python/flydsl/expr/__init__.py",
+      "search_locations": [
+        "/job/repo/python/flydsl/expr"
+      ]
+    }
+  },
+  "torch_hip_version": "7.2.26015-fc0010cf6a",
+  "torch_version": "2.9.1+rocm7.2.0.git7e1940d4"
+}
