@@ -1,0 +1,32 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/353",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "The checked-out implementation no longer reproduces the reported compiler assertion for vector bitwise-not or unary negation. Added an end-to-end gfx950 regression for signed and unsigned 32-bit vectors with boundary values, plus an explicit diagnostic for unsupported Python logical-not on Vector values.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-b82ca60f4cba/venv/bin/python -m pytest -q tests/language/test_arithmetic_types.py -k 'neg_int or invert or logical_not'",
+      "exit_code": 0,
+      "what_was_measured": "Focused compiler-level unary operator and logical-not diagnostic coverage; 9 tests passed."
+    },
+    {
+      "command": "FLYDSL_DUMP_IR=1 FLYDSL_DEBUG_DUMP_ASM=1 FLYDSL_DUMP_DIR=/job/artifacts/j-b82ca60f4cba/dumps-run2 /tmp/amdpilot-repo-j-b82ca60f4cba/venv/bin/python -m pytest -q tests/system/test_vector_unary.py",
+      "exit_code": 0,
+      "what_was_measured": "Four real-GPU comparisons against NumPy for Int32/Uint32 bitwise-not and modular unary negation, including minimum, maximum, zero, one, and all-bits-set boundary patterns; compiler IR and final ISA were dumped."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-b82ca60f4cba/venv/bin/python -m pytest -q tests/language/test_arithmetic_types.py tests/system/test_vector_unary.py",
+      "exit_code": 0,
+      "what_was_measured": "Combined regression run; 400 tests passed, including four GPU executions."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_evidence": "AMD Instinct MI350X (gfx950:sramecc+:xnack-) executed all four kernels. Origin MLIR contains arith.xori/arith.subi on vector<48xi32>; final ISA contains v_not_b32_e32 and v_sub_u32_e32. Raw log: /job/artifacts/j-b82ca60f4cba/gpu-vector-unary-run2.log; dumps: /job/artifacts/j-b82ca60f4cba/dumps-run2.",
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "Python logical `not` is intentionally unsupported for Vector because Python defines scalar truth testing rather than elementwise logical inversion; it now raises a direct TypeError. Elementwise predicates should be formed explicitly and consumed as vectors.",
+    "Torch/FlyDSL tensor arguments do not expose torch.uint32. The Uint32 vector kernels therefore pass identical uint32 bit patterns through signless i32 memrefs and assign Uint32 at the FlyDSL copy atom; NumPy uint32 is the independent reference.",
+    "The issue snapshot's list-valued make_tile spelling predates the current API; the regression uses the current positional make_tile form.",
+    "No native C++ files changed. The active source path was /job/repo/python/flydsl and the prepared native bindings path was /opt/venv/lib/python3.12/site-packages/flydsl/_mlir; consequently the native rebuild command was not applicable."
+  ]
+}

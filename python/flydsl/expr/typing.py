@@ -1754,6 +1754,12 @@ class Vector(ArithValue):
         result = ArithValue.__invert__(self.with_signedness(getattr(self._dtype, "signed", None)))
         return self._wrap_op_result(result, self._shape, self._dtype)
 
+    def __dsl_not__(self):
+        raise TypeError(
+            "logical `not` is not supported for Vector values; compare the vector "
+            "elementwise and consume the resulting predicate vector explicitly"
+        )
+
     def __abs__(self):
         signed = getattr(self._dtype, "signed", None)
         result = abs(self.with_signedness(signed))
