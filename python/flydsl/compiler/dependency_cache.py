@@ -30,7 +30,13 @@ def _snapshot(value: Any, seen: tuple[int, ...] = ()) -> Any:
     if callable(value):
         code = getattr(value, "__code__", None)
         code_identity = None if code is None else (code.co_code, repr(code.co_consts))
-        return ("callable", id(value), code_identity)
+        return (
+            "callable",
+            id(value),
+            code_identity,
+            _snapshot(getattr(value, "__defaults__", None), seen),
+            _snapshot(getattr(value, "__kwdefaults__", None), seen),
+        )
     return (type(value), id(value))
 
 
@@ -42,13 +48,18 @@ def _dependency_refs(func: Callable) -> tuple[tuple, ...]:
         root_dir = ""
     root_dir = root_dir.rsplit("/", 1)[0]
     refs: dict[tuple, tuple] = {}
-    visited_codes: set[int] = set()
+    visited_contexts: set[tuple] = set()
     root_cells = dict(zip(func.__code__.co_freevars, func.__closure__ or ()))
 
     def walk_code(code: types.CodeType, globals_dict: dict, cells: dict) -> None:
-        if id(code) in visited_codes:
+        context = (
+            id(code),
+            id(globals_dict),
+            tuple(sorted((name, id(cell)) for name, cell in cells.items())),
+        )
+        if context in visited_contexts:
             return
-        visited_codes.add(id(code))
+        visited_contexts.add(context)
         module_name = globals_dict.get("__name__", "?")
         instructions = tuple(dis.get_instructions(code))
         for index, instruction in enumerate(instructions):
@@ -72,7 +83,10 @@ def _dependency_refs(func: Callable) -> tuple[tuple, ...]:
                     attrs.append(following.argval)
                 else:
                     break
-            key = (kind, module_name, name, tuple(attrs))
+            # A code object may back multiple function objects whose closure
+            # cells differ. Keep those reads distinct instead of collapsing
+            # them by the shared free-variable name.
+            key = (kind, module_name, name, tuple(attrs), id(source))
             refs.setdefault(key, (kind, name, module_name, source, tuple(attrs)))
 
             try:

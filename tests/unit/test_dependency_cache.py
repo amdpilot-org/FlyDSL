@@ -126,3 +126,73 @@ def test_rebound_helper_discovers_replacement_dependencies():
 
     assert refreshed_wrapper is not replacement_wrapper
     assert refreshed_wrapper() == "replacement-v2"
+
+
+def test_helpers_sharing_code_track_distinct_closure_cells():
+    def make_helper(value):
+        def helper():
+            return value
+
+        return helper
+
+    first = make_helper("first")
+    second = make_helper("second-v1")
+    assert first.__code__ is second.__code__
+
+    @flyc.dependency_lru_cache(maxsize=4)
+    def compile_factory(signature):
+        def traced_body():
+            return first(), second()
+
+        return traced_body
+
+    old_wrapper = compile_factory("same-static-signature")
+    assert compile_factory("same-static-signature") is old_wrapper
+
+    second.__closure__[0].cell_contents = "second-v2"
+    new_wrapper = compile_factory("same-static-signature")
+
+    assert new_wrapper is not old_wrapper
+    assert new_wrapper() == ("first", "second-v2")
+
+
+def test_helper_defaults_change_invalidates_compile_factory():
+    def helper(value="default-v1"):
+        return value
+
+    @flyc.dependency_lru_cache(maxsize=4)
+    def compile_factory(signature):
+        def traced_body():
+            return helper()
+
+        return traced_body
+
+    old_wrapper = compile_factory("same-static-signature")
+    assert compile_factory("same-static-signature") is old_wrapper
+
+    helper.__defaults__ = ("default-v2",)
+    new_wrapper = compile_factory("same-static-signature")
+
+    assert new_wrapper is not old_wrapper
+    assert new_wrapper() == "default-v2"
+
+
+def test_helper_kwdefaults_change_invalidates_compile_factory():
+    def helper(*, value="kwdefault-v1"):
+        return value
+
+    @flyc.dependency_lru_cache(maxsize=4)
+    def compile_factory(signature):
+        def traced_body():
+            return helper()
+
+        return traced_body
+
+    old_wrapper = compile_factory("same-static-signature")
+    assert compile_factory("same-static-signature") is old_wrapper
+
+    helper.__kwdefaults__["value"] = "kwdefault-v2"
+    new_wrapper = compile_factory("same-static-signature")
+
+    assert new_wrapper is not old_wrapper
+    assert new_wrapper() == "kwdefault-v2"
