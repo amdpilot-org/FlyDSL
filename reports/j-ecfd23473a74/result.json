@@ -1,0 +1,46 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/453",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "The exact direct-global helper-rebinding stale-cache behavior is reproduced on the prepared base and invalidated at candidate e1da223932da0393754cc3f60469506c834455d6. The candidate only partially fulfills its broader dependency-tracking claim: module/object-attribute and closure-cell helper rebinding still reuse the same cached wrapper, so the recommendation is request changes or narrow the documented scope.",
+  "tests": [
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/job/private-cache-j-ecfd23473a74 /tmp/amdpilot-repo-j-ecfd23473a74/venv/bin/python /job/review-evidence-j-ecfd23473a74/repro_issue453.py --expect stale",
+      "exit_code": 0,
+      "what_was_measured": "On base acf7e67b, the same PA compile-factory signature returned the identical wrapper after direct helper rebinding; the sentinel appeared only after manual cache_clear()."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/job/private-cache-j-ecfd23473a74 /tmp/amdpilot-repo-j-ecfd23473a74/venv/bin/python -m pytest tests/unit/test_dependency_cache.py tests/unit/test_jit_cache_key_completeness.py -q",
+      "exit_code": 0,
+      "what_was_measured": "At exact candidate e1da2239, all 16 candidate and related cache-key unit tests passed."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/job/private-cache-j-ecfd23473a74 /tmp/amdpilot-repo-j-ecfd23473a74/venv/bin/python /job/review-evidence-j-ecfd23473a74/repro_issue453.py --expect invalidated",
+      "exit_code": 0,
+      "what_was_measured": "At exact candidate e1da2239, direct cdiv helper rebinding invalidated compile_pa_decode_tile and the sentinel was observed without manual cache clearing."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/job/private-cache-j-ecfd23473a74 /tmp/amdpilot-repo-j-ecfd23473a74/venv/bin/python /job/review-evidence-j-ecfd23473a74/adversarial_dependency_cache.py",
+      "exit_code": 1,
+      "what_was_measured": "Direct-global rebinding invalidated, but module/object-attribute and closure-cell helper rebinding retained the same cached wrapper; two adversarial assertions failed."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/job/private-cache-j-ecfd23473a74 /tmp/amdpilot-repo-j-ecfd23473a74/venv/bin/python /job/review-evidence-j-ecfd23473a74/gpu_pa_reference.py",
+      "exit_code": 0,
+      "what_was_measured": "On both base and candidate, real BF16 PA tile output on gfx950 was finite and matched an independent float32 PyTorch reference with max_abs_diff 0.0009765625 at unchanged rtol/atol 0.005."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo /tmp/amdpilot-repo-j-ecfd23473a74/venv/bin/python -m pytest tests/kernels/test_pa.py --collect-only -q -rs",
+      "exit_code": 0,
+      "what_was_measured": "The repository PA module was skipped because aiter requires Triton >=3.6.0 but the prepared environment has Triton 3.5.1+rocm7.2.0.gita272dfa8."
+    }
+  ],
+  "gpu_execution": true,
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "The candidate does not invalidate helpers referenced through module/object attributes or closure cells, despite broad referenced-helper documentation.",
+    "The historical compile_pa_decode_ps/_load_q_fragments implementation is absent from the prepared base, so the equivalent current PA tile factory was used for the same stale-wrapper mechanism.",
+    "The aiter-dependent repository PA test module could not be collected because aiter requires Triton >=3.6.0 and the pinned environment provides 3.5.1+rocm7.2.0.gita272dfa8.",
+    "No C++ or LLVM files changed, so native rebuilding was not applicable; the pinned native extension path was /opt/venv/lib/python3.12/site-packages/flydsl/_mlir."
+  ]
+}
