@@ -1,0 +1,42 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/821",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "reproduced",
+  "summary": "Reproduced the gfx942 fp8 M64 N16 K128 behavior and separated invalid BufferCopy usage from a compiler crash. The issue's exact BufferCopy32/64/128 patterns pass plain global memrefs to descriptor-only atoms and now receive an explicit buffer-tensor diagnostic. With fx.rocdl.make_buffer_tensor, BufferCopy32b and BufferCopy64b compile to gfx942 buffer_load ISA; BufferCopy128b is incompatible with the 64-bit per-lane fragment and previously aborted in LLVM while attempting an invalid 128-to-64-bit bitcast. The compiler now diagnoses that width mismatch without aborting. On this revision the dumped gfx942 ISA uses 24 VGPR for raw MFMA, 28 for fx.gemm with UniversalCopy32b, and 26 for fx.gemm with descriptor-backed BufferCopy32b/64b.",
+  "tests": [
+    {
+      "command": "ARCH=gfx942 FLYDSL_GPU_ARCH=gfx942 FLYDSL_DUMP_IR=1 FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-9649e03b770e/venv/bin/python /job/repro_821.py {raw 0|gemm 0|gemm 32|gemm 64|gemm 128|gemm 32 buffer|gemm 64 buffer|gemm 128 buffer}",
+      "exit_code": 1,
+      "what_was_measured": "Exact reported plain-global BufferCopy32/64/128 cases fail lowering; after the change they explain that a buffer-descriptor source is required. Raw and UniversalCopy GEMM compile to gfx942 ISA but cannot execute on gfx950. Descriptor-backed 32/64 compile to gfx942 ISA and then fail to load on gfx950. Descriptor-backed 128 now exits with DSLCompileError for a 128-bit atom versus vector<8xi8>, where the original compiler aborted with exit 134. Raw logs and dumps: /job/artifacts/issue821/before and /job/artifacts/issue821/after."
+    },
+    {
+      "command": "{ /tmp/amdpilot-repo-j-9649e03b770e/native-build/bin/fly-opt --split-input-file --convert-fly-to-rocdl tests/mlir/Conversion/buffer_copy_invalid.mlir 2>&1 || true; } | /opt/amdpilot/llvm-project/mlir_install/bin/FileCheck tests/mlir/Conversion/buffer_copy_invalid.mlir",
+      "exit_code": 0,
+      "what_was_measured": "Rebuilt native lowering emits stable diagnostics for BufferCopy load/store width mismatches and plain global memrefs instead of an LLVM assertion or unexplained pattern failure. Raw output: /job/artifacts/issue821/buffer_copy_invalid_final.log."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-9649e03b770e/venv/bin/python /opt/amdpilot/rebuild-native.py /job",
+      "exit_code": 0,
+      "what_was_measured": "Pinned LLVM native rebuild passed and switched imports to /tmp/amdpilot-repo-j-9649e03b770e/native-build/python_packages/flydsl/_mlir; its gfx950 vector-add numerical smoke passed. Build record: /job/native-build.json; source attempt: /job/native-build-attempts/1789183027820684227."
+    },
+    {
+      "command": "INPUT_PATTERN={random|ones} ARCH=gfx950 FLYDSL_GPU_ARCH=gfx950 FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-9649e03b770e/venv/bin/python /job/repro_821.py {raw 0|gemm 0|gemm 32 buffer|gemm 64 buffer}",
+      "exit_code": 0,
+      "what_was_measured": "Actual execution on the assigned gfx950 against independent torch.float32 matrix products. All original FNUZ MFMA variants failed numerical comparison; the ones case had max_abs=384.0 for raw, UniversalCopy GEMM, BufferCopy32b GEMM, and BufferCopy64b GEMM. These gfx950 results are evidence of execution only, not validation of the original gfx942 behavior. Logs: /job/artifacts/issue821/gfx950 and /job/artifacts/issue821/numerics."
+    },
+    {
+      "command": "rg -o 'amdhsa_next_free_vgpr [0-9]+' /job/artifacts/issue821/{before/raw_0,before/gemm_0,after/gemm_32_buffer,after/gemm_64_buffer}/*/21_final_isa.s",
+      "exit_code": 0,
+      "what_was_measured": "Actual final gfx942 ISA metadata: raw=24 VGPR, UniversalCopy fx.gemm=28 VGPR, descriptor-backed BufferCopy32b=26 VGPR, descriptor-backed BufferCopy64b=26 VGPR. Each ISA names amdgcn-amd-amdhsa-unknown-gfx942."
+    }
+  ],
+  "gpu_execution": true,
+  "native_rebuilt": true,
+  "remaining_limitations": [
+    "No gfx942 GPU was available, so numerical execution of the original gfx942 FNUZ MFMA kernel remains unverified.",
+    "The assigned gfx950 executes a different architecture. Retargeting the original FNUZ pattern to gfx950 produced incorrect results for both raw MFMA and fx.gemm, so those runs cannot validate gfx942 semantics.",
+    "The fx.gemm VGPR overhead remains: +4 VGPR versus raw MFMA with UniversalCopy32b on this checkout. Descriptor-backed BufferCopy32b/64b use +2 VGPR versus raw.",
+    "The exact reported BufferCopy patterns remain invalid until callers convert global tensors with fx.rocdl.make_buffer_tensor; this change makes that contract explicit rather than silently changing pointer semantics.",
+    "BufferCopy128b cannot represent this tiled MMA's 64-bit per-lane A/B fragment. It is now rejected cleanly; BufferCopy64b is the matching width."
+  ]
+}

@@ -95,7 +95,21 @@ FailureOr<Value> CopyOpCDNA3BufferCopyType::emitAtomCallSSA(OpBuilder &builder, 
   auto srcMemTy = srcTyArg ? dyn_cast<fly::MemRefType>(srcTyArg) : fly::MemRefType();
   auto dstMemTy = dstTyArg ? dyn_cast<fly::MemRefType>(dstTyArg) : fly::MemRefType();
 
+  auto getTypeBitWidth = [](Type type) -> std::optional<int64_t> {
+    if (auto vectorTy = dyn_cast<VectorType>(type))
+      return vectorTy.getNumElements() * vectorTy.getElementType().getIntOrFloatBitWidth();
+    if (type.isIntOrFloat())
+      return type.getIntOrFloatBitWidth();
+    return std::nullopt;
+  };
+
   if (srcMemTy && isTargetAddressSpace<BufferDescAddressAttr>(srcMemTy.getAddressSpace())) {
+    auto resultBits = getTypeBitWidth(resultTy);
+    if (!resultBits || *resultBits != getBitSize()) {
+      emitError(loc) << "BufferCopy" << getBitSize() << "b load requires a " << getBitSize()
+                     << "-bit register result, got " << resultTy;
+      return failure();
+    }
     // buffer -> reg
     Value soffset = computeSoffset(srcMemTy.getElemTy().getIntOrFloatBitWidth());
     BufferFatPtr bp(srcMemTy.getPointerType(), src);
@@ -110,6 +124,12 @@ FailureOr<Value> CopyOpCDNA3BufferCopyType::emitAtomCallSSA(OpBuilder &builder, 
   }
 
   if (dstMemTy && isTargetAddressSpace<BufferDescAddressAttr>(dstMemTy.getAddressSpace())) {
+    auto sourceBits = getTypeBitWidth(src.getType());
+    if (!sourceBits || *sourceBits != getBitSize()) {
+      emitError(loc) << "BufferCopy" << getBitSize() << "b store requires a " << getBitSize()
+                     << "-bit register source, got " << src.getType();
+      return failure();
+    }
     // reg -> buffer
     Value soffset = computeSoffset(dstMemTy.getElemTy().getIntOrFloatBitWidth());
     BufferFatPtr bp(dstMemTy.getPointerType(), dst);
@@ -124,6 +144,12 @@ FailureOr<Value> CopyOpCDNA3BufferCopyType::emitAtomCallSSA(OpBuilder &builder, 
     return stored;
   }
 
+  if (resultTy)
+    emitError(loc) << "BufferCopy load requires a buffer-descriptor source, got " << srcTyArg
+                   << ". Convert the global-memory tensor to a buffer tensor before copying";
+  else
+    emitError(loc) << "BufferCopy store requires a buffer-descriptor destination, got " << dstTyArg
+                   << ". Convert the global-memory tensor to a buffer tensor before copying";
   return failure();
 }
 
