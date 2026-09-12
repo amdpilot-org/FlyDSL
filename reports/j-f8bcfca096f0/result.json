@@ -1,0 +1,45 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/687",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "The base silently executed code after a runtime-conditional return (gfx950 expected [3], observed [9]). Candidate bdbb5574cae5fb9e16febb6dc960c63a6e1bec0c fixes the reported safety problem by issuing a source-located SyntaxError for returns under runtime scf.if/scf.for/scf.while while preserving supported compile-time and nested-function returns.",
+  "tests": [
+    {
+      "command": "ROCR_VISIBLE_DEVICES=0 HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-f8bcfca096f0/venv/bin/python -m pytest -q -s /job/review-evidence-j-f8bcfca096f0/test_independent_early_return.py (base)",
+      "exit_code": 1,
+      "what_was_measured": "Independent original-problem reproduction and boundaries: GPU expected [3] but observed [9], and runtime if/for/while returns were not diagnosed; 4 failed, 3 passed."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-f8bcfca096f0/venv/bin/python -m pytest -q -s tests/unit/test_early_return_control_flow.py (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Candidate regression coverage for rejection, source location, compile-time returns, and nested functions; 6 passed."
+    },
+    {
+      "command": "ROCR_VISIBLE_DEVICES=0 HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-f8bcfca096f0/venv/bin/python -m pytest -q -s tests/system/test_early_return_control_flow_e2e.py (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Real-GPU exact integer results for preserved compile-time return semantics and nested dynamic conditionals; 2 passed with rtol=0 and atol=0."
+    },
+    {
+      "command": "ROCR_VISIBLE_DEVICES=0 HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-f8bcfca096f0/venv/bin/python -m pytest -q -s /job/review-evidence-j-f8bcfca096f0/test_independent_early_return.py (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Independent original regression plus adversarial runtime if/for/while, const_expr, nested-function, and import-path boundaries; 7 passed."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-f8bcfca096f0/venv/bin/python -m pytest -q tests/unit (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Full unit regression suite; 1104 passed, 17 skipped."
+    },
+    {
+      "command": "ROCR_VISIBLE_DEVICES=0 HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/review-evidence-j-f8bcfca096f0/candidate-ir /tmp/amdpilot-repo-j-f8bcfca096f0/venv/bin/python -m pytest -q -s tests/system/test_early_return_control_flow_e2e.py (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Real GPU execution plus retained origin MLIR, lowering stages, LLVM IR, and final gfx950 ISA; 2 passed."
+    }
+  ],
+  "gpu_execution": true,
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "Only AMD Instinct MI350X/gfx950 was tested; other architectures and operating systems are unverified.",
+    "The candidate diagnoses runtime early return rather than implementing divergent exit semantics.",
+    "No native rebuild was needed because the candidate contains no C++ or native-extension changes."
+  ]
+}
