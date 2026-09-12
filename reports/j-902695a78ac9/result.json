@@ -1,0 +1,50 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/453",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "recommendation": "request_changes",
+  "fully_resolves_original": false,
+  "summary": "Exact candidate 8e565f0acdfded2ad7aa918e9cd072f909f12cb8 fixes direct global, direct object/module-attribute, and direct closure-cell helper rebinding, including the current compile_pa_decode_tile cdiv case. It does not fully satisfy the dependency-invalidation contract: dependencies behind an attribute target are not traversed, and dependency references are frozen at decoration time, so replacement helpers can introduce untracked dependencies. Both independent cases reused a stale wrapper and old compiled value.",
+  "tests": [
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/job/private-cache-j-902695a78ac9 /tmp/amdpilot-repo-j-902695a78ac9/venv/bin/python /job/review-evidence-j-902695a78ac9/repro_pa_factory.py --expect stale",
+      "exit_code": 0,
+      "what_was_measured": "Prepared-base reproduction on the actual compile_pa_decode_tile factory: the same signature returned the identical wrapper after cdiv rebinding; the sentinel appeared only after manual cache_clear()."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/job/private-cache-j-902695a78ac9 /tmp/amdpilot-repo-j-902695a78ac9/venv/bin/python -m pytest tests/unit/test_dependency_cache.py tests/unit/test_jit_cache_key_completeness.py -q",
+      "exit_code": 0,
+      "what_was_measured": "Exact-candidate submitted regression plus existing JIT cache-key tests: 19 passed."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/job/private-cache-j-902695a78ac9 /tmp/amdpilot-repo-j-902695a78ac9/venv/bin/python /job/review-evidence-j-902695a78ac9/repro_pa_factory.py --expect invalidated",
+      "exit_code": 0,
+      "what_was_measured": "Exact candidate invalidated the current PA compile factory and observed the rebound cdiv sentinel on the first repeated-signature call without manual clearing."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo /tmp/amdpilot-repo-j-902695a78ac9/venv/bin/python /job/review-evidence-j-902695a78ac9/adversarial_dependency_cache.py",
+      "exit_code": 1,
+      "what_was_measured": "Expected review failure: direct attribute rebinding invalidated, but an attributed helper's changed closure cell and a replacement helper's newly introduced dependency both returned the identical stale wrapper and old compiled value."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/job/private-cache-j-902695a78ac9 /tmp/amdpilot-repo-j-902695a78ac9/venv/bin/python -m pytest tests/unit -q",
+      "exit_code": 0,
+      "what_was_measured": "Exact-candidate full unit suite: 1102 passed, 17 skipped."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo /tmp/amdpilot-repo-j-902695a78ac9/venv/bin/python -m pytest tests/kernels/test_pa.py --collect-only -q -rs",
+      "exit_code": 0,
+      "what_was_measured": "No PA tests collected; module skipped because aiter requires Triton >=3.6.0 while the prepared environment has 3.5.1+rocm7.2.0.gita272dfa8."
+    }
+  ],
+  "gpu_execution": {
+    "value": false,
+    "evidence": "One AMD Instinct MI350X (gfx950-class, torch reports capability 9.5) was visible, but this independent review did not claim a numerical kernel run because the repository PA module could not collect with the pinned aiter/Triton combination. The original stale-wrapper mechanism and candidate behavior were exercised on the actual PA compile factory before launch."
+  },
+  "native_rebuilt": false,
+  "remaining_counterexamples": [
+    "A compile factory calls container.fn(), where fn is unchanged but a closure cell captured by fn is rebound. Attribute-path snapshotting sees the same callable identity/code and dependency discovery never traverses the attribute target, so the old wrapper is reused.",
+    "A directly referenced helper is rebound to a replacement helper with a new global/closure dependency. The helper rebinding invalidates once, but dependency references were frozen when the decorator was created; later changes to the replacement helper's dependency reuse the stale wrapper."
+  ],
+  "remaining_limitations": "Candidate changes are Python-only; no C++/LLVM files changed, so the prepared native rebuild was not applicable. Python imports were verified from /job/repo/python/flydsl and native flydsl._mlir remained /opt/venv/lib/python3.12/site-packages/flydsl/_mlir. The assigned MI350X is supported by the direct tile path, but independent GPU numerical execution remains unverified in this review because tests/kernels/test_pa.py is gated by an incompatible pinned aiter/Triton pair. Raw logs and standalone reproducers are retained outside the checkout at /job/review-evidence-j-902695a78ac9."
+}
