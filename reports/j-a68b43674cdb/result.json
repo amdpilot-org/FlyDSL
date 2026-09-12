@@ -1,0 +1,38 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/515",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_verified",
+  "summary": "Added a first-class Python API and CLI for analyzing final AMDGPU ISA dumps. It reports exact opcode counts, requested MFMA/WMMA, VMEM, LDS, wait and barrier families, and assembler-reported per-kernel VGPR, SGPR, LDS and scratch usage. This implements the issue's ISA analysis workflow, not the entire multi-part request.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-a68b43674cdb/venv/bin/python -m pytest -q tests/unit/test_isa_analyzer.py tests/unit/test_compile_hints.py tests/unit/test_external_llvm_codegen.py",
+      "exit_code": 0,
+      "what_was_measured": "29 tests passed and 2 were skipped; covered exact counts, metadata extraction, malformed metadata, comment/label rejection, JSON CLI output, and compatibility with compiler-hint and external-LLVM option forwarding tests."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-a68b43674cdb/venv/bin/python -m pytest -q 'tests/extension/coop/test_warp_rocdl.py::test_every_form_agrees_with_the_portable_one[reduce-w16]' 'tests/extension/coop/test_warp_rocdl.py::test_a_full_wave_fold_rakes_and_lifts_the_total_into_an_sgpr' --basetemp=/tmp/amdpilot-repo-j-a68b43674cdb/pytest-isa",
+      "exit_code": 0,
+      "what_was_measured": "Two tests passed on MI350X/gfx950: GPU numerical equality between the optimized ROCm reduction and the independent portable implementation, plus final-ISA generation and instruction-shape assertions."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-a68b43674cdb/venv/bin/python -m flydsl.tools.isa_analyzer --pretty reports/j-a68b43674cdb/raw/gfx950-final-isa.s",
+      "exit_code": 0,
+      "what_was_measured": "Parsed a compiler-emitted gfx950 final ISA: 28 instructions, 1 VMEM load, 1 VMEM store, 2 waitcnts, and kernel metadata reporting 4 next-free VGPRs, 6 next-free SGPRs, 0 LDS bytes and 0 scratch bytes."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "AMD Instinct MI350X (gfx950), HIP_VISIBLE_DEVICES=0; reports/j-a68b43674cdb/raw/gpu-pytest.log and gfx950-final-isa.s retain the numerical and compiler evidence.",
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "The original request is a six-part proposal. This candidate implements only the final-ISA analysis workflow and must not be treated as closing the overall issue.",
+    "Physical VGPR/SGPR pinning or named register reservation remains unimplemented. The pinned LLVM allocator has no FlyDSL-facing stable per-value physical-register pinning interface; implementing it requires LLVM/backend design work.",
+    "Exact hand-scheduled region preservation and assertions over MFMA co-execute windows remain unimplemented; existing sched_group_barrier operations are LLVM scheduling directives, not a guarantee of final adjacency.",
+    "Additional first-class inline-assembly instruction helpers and exact immediate-offset buffer load/store forms remain unimplemented.",
+    "Compiler-option sweep examples remain unimplemented, although llvm_options and maxnreg forwarding already exist at the recorded base.",
+    "The analyzer reports static instruction/resource facts, not cycles, occupancy, dependency correctness, or performance; profiler measurements remain necessary.",
+    "No native rebuild was performed because this change is Python, tests, and documentation only and does not modify native C++/MLIR sources.",
+    "Direct upstream issue inspection was blocked by ROCm organization's fine-grained-token lifetime policy; the supplied issue snapshot, accessible mirror issue, repository history, and current source were inspected instead.",
+    "The prepared environment exposed one MI350X/gfx950 path only; no other CDNA/RDNA hardware path was tested.",
+    "The pinned interpreter does not contain ruff or black, so those formatters were unavailable; git diff --check passed."
+  ]
+}
