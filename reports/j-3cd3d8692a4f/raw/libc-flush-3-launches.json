@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/tmp/amdpilot-repo-j-3cd3d8692a4f/venv/bin/python",
+    "/job/review-evidence/j-3cd3d8692a4f/pipe_probe.py",
+    "libc",
+    "--launches",
+    "3"
+  ],
+  "returncode": 0,
+  "stdout_before_release": "hello from thread 0\nhello from thread 1\nhello from thread 2\nhello from thread 3\nhello from thread 0\nhello from thread 1\nhello from thread 2\nhello from thread 3\nhello from thread 0\nhello from thread 1\nhello from thread 2\nhello from thread 3\n",
+  "stdout_after_exit": "hello from thread 0\nhello from thread 1\nhello from thread 2\nhello from thread 3\nhello from thread 0\nhello from thread 1\nhello from thread 2\nhello from thread 3\nhello from thread 0\nhello from thread 1\nhello from thread 2\nhello from thread 3\n",
+  "stderr": "PYTHON_SOURCE=/job/repo/python/flydsl/__init__.py\nREADY\n",
+  "lines_before_release": 12,
+  "lines_after_exit": 12
+}
