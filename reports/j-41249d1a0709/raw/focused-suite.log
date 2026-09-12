@@ -1,0 +1,12 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 33 items
+
+tests/unit/test_isa_analyzer.py .....                                    [ 15%]
+tests/unit/test_compile_hints.py .s...s...........                       [ 66%]
+tests/unit/test_external_llvm_codegen.py ...........                     [100%]
+
+======================== 31 passed, 2 skipped in 2.14s =========================

@@ -1,0 +1,5 @@
+mlir_python /job/repo/python/flydsl/_mlir/ir.py
+native_extension /job/repo/python/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so
+      Name:                    amdgcn-amd-amdhsa--gfx9-4-generic:sramecc+:xnack-
+      Name:                    amdgcn-amd-amdhsa--gfx950:sramecc+:xnack-
+  Name:                    gfx950                             
