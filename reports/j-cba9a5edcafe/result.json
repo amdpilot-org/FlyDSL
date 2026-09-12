@@ -1,0 +1,70 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/652",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/654",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/646",
+  "candidate_commit": "b22b3ad2dd0dcdaf14b9beec6823a4b9945353db",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "recommendation": "request_changes",
+  "fully_resolves_original": false,
+  "summary": "The exact candidate is a valid, tested partial documentation improvement, but it does not satisfy the original package-wide contract. Its focused four-symbol regression passes, as do the retained layout and assigned-GPU checks. Independent AST enumeration at the candidate still finds 510 syntactically public classes, functions, and methods without docstrings and 289 documented public symbols without an Example section (205 expr, 63 compiler, 21 utils). The candidate itself accurately calls the work bounded, but its result outcome of fixed is not valid when reviewed against the original issue.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-cba9a5edcafe/venv/bin/python /job/review-evidence-j-cba9a5edcafe/candidate_audit_public_docs.py acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+      "exit_code": 0,
+      "what_was_measured": "Original failure on the recorded base: 546 public symbols lacked docstrings (expr 410, compiler 127, utils 9), and 295 documented symbols lacked Example sections (expr 207, compiler 65, utils 23)."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-cba9a5edcafe/venv/bin/python /job/review-evidence-j-cba9a5edcafe/candidate_audit_public_docs.py aa3c22c8110937562cf3690f8e380da32e5012dd",
+      "exit_code": 0,
+      "what_was_measured": "Reproduced the parent review claim exactly: 510 missing docstrings (374 expr, 127 compiler, 9 utils); the four named classes had docstrings but lacked Example sections."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-cba9a5edcafe/venv/bin/python /job/review-evidence-j-cba9a5edcafe/candidate_audit_public_docs.py b22b3ad2dd0dcdaf14b9beec6823a4b9945353db",
+      "exit_code": 0,
+      "what_was_measured": "Independent adversarial package audit at the exact candidate: 510 public symbols still lacked docstrings and 289 documented public symbols still lacked Example sections. The four narrow reviewed classes became complete under this audit."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-cba9a5edcafe/venv/bin/python -m pytest tests/unit/test_public_doc_examples.py -q",
+      "exit_code": 0,
+      "what_was_measured": "Candidate checkout: 1 passed; the four newly added compiler/utils examples executed and met the candidate's five-line check."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-cba9a5edcafe/venv/bin/python -m pytest tests/unit/test_layout_algebra.py -q",
+      "exit_code": 0,
+      "what_was_measured": "Candidate checkout: 32 passed, 1 skipped; retained Pointer/Tensor/layout documentation regressions passed."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-cba9a5edcafe/venv/bin/python -m pytest tests/unit/test_pointer_argument_vec_add.py -q",
+      "exit_code": 0,
+      "what_was_measured": "Candidate checkout: 1 passed on the assigned AMD GPU."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-cba9a5edcafe/venv/bin/python examples/01-vectorAdd.py",
+      "exit_code": 0,
+      "what_was_measured": "Candidate checkout printed PASS against its PyTorch numerical reference on the assigned AMD GPU."
+    },
+    {
+      "command": "git diff --check acf7e67b7d22847e345938ca54fcc137bd7b2a1f..b22b3ad2dd0dcdaf14b9beec6823a4b9945353db",
+      "exit_code": 0,
+      "what_was_measured": "No whitespace errors in the candidate diff."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_evidence": "On the prepared ROCm environment, the candidate's pointer argument regression passed and examples/01-vectorAdd.py printed PASS against its PyTorch reference.",
+  "native_rebuilt": false,
+  "native_evidence": "The candidate changes only Python, tests, and reports; no C++ or native build input changed. Python imports resolved to /job/repo/python/flydsl while flydsl._mlir was the prepared namespace package from the pinned environment, so a native rebuild was not applicable.",
+  "remaining_counterexamples": [
+    "374 public classes/functions/methods in python/flydsl/expr still have no docstring; examples include flydsl.expr.derived.ThrCopy.thr_idx, flydsl.expr.gpu.thread_id, and flydsl.expr.gpu.barrier.",
+    "127 public classes/functions/methods in python/flydsl/compiler still have no docstring; examples include flydsl.compiler.ast_rewriter.ASTRewriter, ASTRewriter.register, and Transformer.visit_FunctionDef.",
+    "9 public classes/functions/methods in python/flydsl/utils still have no docstring; examples include EnvOption.parse_value, EnvManager.to_dict, EnvManager.help, and logger.log.",
+    "289 documented public symbols still lack an Example section: 205 in expr, 63 in compiler, and 21 in utils.",
+    "Because many symbols have no docstring at all, they also necessarily lack the required one-line summary, argument/return documentation, and at-most-five-line example."
+  ],
+  "remaining_limitations": [
+    "Only the assigned AMD GPU architecture was exercised; no claim is made for other GPU architectures.",
+    "The audit uses the candidate's documented syntactic-public rule: top-level non-underscore classes/functions and their direct non-underscore methods. Broader interpretations of public symbols can only reveal additional omissions.",
+    "No native C++ changed, so no native rebuild was performed. This does not limit the documentation finding.",
+    "Raw command output and import-path evidence are retained outside the revision-switching checkout at /job/review-evidence-j-cba9a5edcafe/."
+  ]
+}
