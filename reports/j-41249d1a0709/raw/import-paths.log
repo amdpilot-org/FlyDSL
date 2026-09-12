@@ -1,0 +1,9 @@
+b0d6d33d6256a013e0a5ba4a4f0a5308998ee954
+python /tmp/amdpilot-repo-j-41249d1a0709/venv/bin/python
+flydsl /job/repo/python/flydsl/__init__.py
+analyzer /job/repo/python/flydsl/tools/isa_analyzer.py
+flydsl._mlir None
+Traceback (most recent call last):
+  File "<stdin>", line 8, in <module>
+  File "<frozen importlib.util>", line 92, in find_spec
+ModuleNotFoundError: No module named 'flydsl._mlir_libs'

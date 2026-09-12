@@ -1,0 +1,63 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/515",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "recommendation": "request_changes",
+  "fully_resolves_original": false,
+  "summary": "PR 679 fixes the two prior-review parser counterexamples, but the exact candidate still misclassifies YAML AMDGPU metadata values as instructions in real final ISA and implements only the ISA-analysis portion of the original six-part request.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-41249d1a0709/venv/bin/python (import flydsl.tools.isa_analyzer on base acf7e67b7d22847e345938ca54fcc137bd7b2a1f)",
+      "exit_code": 1,
+      "what_was_measured": "Failing-before evidence: the recorded base raises ModuleNotFoundError because the final-ISA analyzer does not exist."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-41249d1a0709/venv/bin/python (multiline-comment and same-line-label assertions on parent candidate 716219a9b7bd7b2b9632123f95433a0745e3045a)",
+      "exit_code": 1,
+      "what_was_measured": "Independently reproduced the prior review: block-comment contents produced false MFMA/store counts and entry: s_nop 0 was omitted."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-41249d1a0709/venv/bin/python -m pytest -q tests/unit/test_isa_analyzer.py",
+      "exit_code": 0,
+      "what_was_measured": "All 5 candidate regression tests passed, including multiline block comments and same-line labels."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-41249d1a0709/venv/bin/python (independent adversarial analyzer assertions)",
+      "exit_code": 0,
+      "what_was_measured": "Adjacent multiline comments and multiple labels, commented metadata, hexadecimal resource values, and representative instruction-family counts passed."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-41249d1a0709/venv/bin/python -m pytest -q tests/unit/test_isa_analyzer.py tests/unit/test_compile_hints.py tests/unit/test_external_llvm_codegen.py",
+      "exit_code": 0,
+      "what_was_measured": "31 tests passed and 2 environment-dependent tests skipped; analyzer and existing compiler option/codegen compatibility were exercised."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-41249d1a0709/venv/bin/python -m pytest -q 'tests/extension/coop/test_warp_rocdl.py::test_every_form_agrees_with_the_portable_one[reduce-w16]' 'tests/extension/coop/test_warp_rocdl.py::test_a_full_wave_fold_rakes_and_lifts_the_total_into_an_sgpr' --basetemp=/tmp/amdpilot-repo-j-41249d1a0709/pytest-review-679",
+      "exit_code": 0,
+      "what_was_measured": "Two tests passed on gfx950: optimized GPU reduction agreed with the portable GPU reference and final-ISA generation/shape assertions passed."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-41249d1a0709/venv/bin/python -m flydsl.tools.isa_analyzer --pretty reports/j-a68b43674cdb/raw/gfx950-final-isa.s",
+      "exit_code": 0,
+      "what_was_measured": "Adversarial real-output failure: reported 35 instructions rather than 28 by counting seven YAML metadata values as opcodes."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "One available gfx950 device; two independent extension tests passed, including a portable numerical reference. Raw output is in reports/j-41249d1a0709/raw/gpu.log.",
+  "native_rebuilt": false,
+  "remaining_counterexamples": [
+    "Real LLVM AMDGPU final assembly contains a YAML block between .amdgpu_metadata and .end_amdgpu_metadata. Scalar values such as global_buffer, by_value, kernel_0, kernel_0.kd, and false are accepted as opcodes, inflating the retained gfx950 sample from 28 to 35 instructions.",
+    "Physical VGPR/SGPR pinning or named register-region reservation remains unimplemented.",
+    "Exact hand-scheduled region preservation and MFMA co-execute-window assertions remain unimplemented.",
+    "The requested first-class AMD instruction helpers remain unimplemented.",
+    "The requested exact low-level buffer load/store API remains unimplemented.",
+    "The requested compiler-option sweep example remains unimplemented."
+  ],
+  "remaining_limitations": [
+    "The candidate is a partial ISA-analysis feature and does not fully resolve the original issue.",
+    "Static counts do not establish cycle timing, dependency correctness, occupancy, performance parity, scheduling preservation, or physical register placement.",
+    "No native rebuild was performed because the candidate changes only Python, tests, documentation, and reports; native source is unchanged.",
+    "Only gfx950 hardware was available; other CDNA and RDNA architectures were not tested.",
+    "Direct upstream issue API access was blocked by the ROCm organization's token-lifetime policy; the supplied snapshot and accessible mirror/repository evidence were used."
+  ]
+}

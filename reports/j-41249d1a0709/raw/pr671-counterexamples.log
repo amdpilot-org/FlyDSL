@@ -1,0 +1,5 @@
+block_comment {'instruction_count': 3, 'families': {'mfma_wmma': 1, 'vmem_load': 0, 'vmem_store': 1, 'lds_read': 0, 'lds_write': 0, 'waitcnt': 0, 'barrier': 0}, 'opcodes': {'buffer_store_dword': 1, 's_nop': 1, 'v_mfma_f32_16x16x16_f16': 1}, 'kernels': {}}
+label_instruction {'instruction_count': 0, 'families': {'mfma_wmma': 0, 'vmem_load': 0, 'vmem_store': 0, 'lds_read': 0, 'lds_write': 0, 'waitcnt': 0, 'barrier': 0}, 'opcodes': {}, 'kernels': {}}
+Traceback (most recent call last):
+  File "<stdin>", line 6, in <module>
+AssertionError: {'instruction_count': 3, 'families': {'mfma_wmma': 1, 'vmem_load': 0, 'vmem_store': 1, 'lds_read': 0, 'lds_write': 0, 'waitcnt': 0, 'barrier': 0}, 'opcodes': {'buffer_store_dword': 1, 's_nop': 1, 'v_mfma_f32_16x16x16_f16': 1}, 'kernels': {}}
