@@ -1,0 +1,76 @@
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-bf3c6b11071c/cache/aiter/module_aiter_core.so
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /tmp/flydsl-issue510/FlyDSL-b2e0961da3be4415c09f7cbfad43dedade02f63c/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 1 item
+
+tests/kernels/test_pa_swa.py [aiter] [pid=3732 pname=MainProcess] start build [module_pa_metadata] under /tmp/amdpilot-repo-j-bf3c6b11071c/cache/aiter/build/module_pa_metadata
+[aiter] Current hipcc not support: -mllvm -amdgpu-coerce-illegal-types=1, skip it.
+Triton version: 3.5.1+rocm7.2.0.gita272dfa8
+
+Total test cases: 1
+Running all 1 cases
+
+[1/1] Testing: compute_type=torch.float8_e4m3fn, quant_mode=per_token, trans_v=True, kv_varlen=False, context_partition_size=256, block_size=1024, num_heads=(12, 2), context_length=3000, batch_size=128, query_length=4, head_size=128, sliding_window=1023, global_window=3
+[aiter] [pid=3732 pname=MainProcess] [32mfinish build [module_pa_metadata], cost 93.9s [0m
+[aiter] import [module_pa_metadata] under /tmp/amdpilot-repo-j-bf3c6b11071c/cache/aiter/module_pa_metadata.so
+F
+
+=================================== FAILURES ===================================
+_________________ test_multi_case_set[global_window_accuracy] __________________
+python/flydsl/compiler/jit_argument.py:129: in convert_to_jit_arguments
+    jit_arg = jit_arg_constructor(value)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+python/flydsl/compiler/jit_argument.py:162: in __init__
+    self.tensor_adaptor = DLTensorAdaptor(dl, assumed_align, use_32bit_stride)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: __init__(): incompatible function arguments. The following argument types are supported:
+E       1. __init__(self, dlpack_capsule: object) -> None
+E   
+E   Invoked with types: flydsl._mlir._mlir_libs._mlirDialectsFly.DLTensorAdaptor, PyCapsule, NoneType, bool
+
+The above exception was the direct cause of the following exception:
+tests/kernels/test_pa_swa.py:1371: in test_multi_case_set
+    global_window_accuracy_test()
+tests/kernels/test_pa_swa.py:1361: in global_window_accuracy_test
+    parse_arg_and_run_test(output_tag="ps_global_window_accuracy")
+tests/kernels/test_pa_swa.py:1241: in parse_arg_and_run_test
+    results_df = run_multi_pa_decode_ps_test(
+tests/kernels/test_pa_swa.py:1213: in run_multi_pa_decode_ps_test
+    results.append(_run_single_test((test_config, idx + 1, len(test_configs))))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/kernels/test_pa_swa.py:1145: in _run_single_test
+    return run_pa_decode_ps_test(**test_config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/kernels/test_pa_swa.py:968: in run_pa_decode_ps_test
+    flydsl_ps_time = measure_us(flydsl_ps_call)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/kernels/test_pa_swa.py:489: in measure_us
+    fn()
+tests/kernels/test_pa_swa.py:947: in flydsl_ps_call
+    run_flydsl_ps(
+tests/kernels/test_pa_swa.py:634: in run_flydsl_ps
+    flydsl_ps_launch(
+kernels/pa_decode_swa.py:2505: in pa_decode_ps_launch
+    compiled_sw['launch'](
+python/flydsl/compiler/jit_function.py:876: in __call__
+    param_names, jit_args, dsl_types, constexpr_values = convert_to_jit_arguments(sig, bound)
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+python/flydsl/compiler/jit_argument.py:131: in convert_to_jit_arguments
+    raise TypeError(f"Failed to construct JitArgument for parameter '{param_name}': {e}") from e
+E   TypeError: Failed to construct JitArgument for parameter 'es': __init__(): incompatible function arguments. The following argument types are supported:
+E       1. __init__(self, dlpack_capsule: object) -> None
+E   
+E   Invoked with types: flydsl._mlir._mlir_libs._mlirDialectsFly.DLTensorAdaptor, PyCapsule, NoneType, bool
+=============================== warnings summary ===============================
+../../../opt/aiter/aiter/ops/triton/gluon/__init__.py:16
+  /opt/aiter/aiter/ops/triton/gluon/__init__.py:16: UserWarning: [aiter] AITER_USE_SYSTEM_TRITON=1: aiter gluon kernels require triton>=3.6.0, found 3.5.1+rocm7.2.0.gita272dfa8. Please install a compatible version via .github/scripts/install_triton.sh, otherwise unexpected errors may occur.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/kernels/test_pa_swa.py::test_multi_case_set[global_window_accuracy]
+=================== 1 failed, 1 warning in 101.66s (0:01:41) ===================

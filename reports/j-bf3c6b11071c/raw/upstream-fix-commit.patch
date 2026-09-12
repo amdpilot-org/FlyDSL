@@ -1,0 +1,22 @@
+From 0494957dce75dd5b7c913f73273ea67174562ee3 Mon Sep 17 00:00:00 2001
+From: sixifang <sixifang@amd.com>
+Date: Tue, 12 May 2026 05:20:49 +0000
+Subject: [PATCH] fix chunked buffer
+
+---
+ kernels/pa_decode_swa.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/kernels/pa_decode_swa.py b/kernels/pa_decode_swa.py
+index c8820261a..7b26ac088 100644
+--- a/kernels/pa_decode_swa.py
++++ b/kernels/pa_decode_swa.py
+@@ -177,7 +177,7 @@ def _widen_nonnegative_i32_to_i64(value):
+     value = arith.unwrap(value)
+     if value.type == T.i64:
+         return value
+-    return _mlir_arith.ExtUIOp(T.i64, value).result
++    return _mlir_arith.ExtSIOp(T.i64, value).result
+ 
+ 
+ def _compute_block_base_dw(phys_block, block_stride, head_offset):

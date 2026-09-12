@@ -1,0 +1,6 @@
+{
+  "attempt": "/tmp/flydsl-issue510/rebuild-workdir/native-build-attempts/1789183130086976960",
+  "passed": false,
+  "state": "failed",
+  "error": "[Errno 2] No such file or directory: '/tmp/flydsl-issue510/FlyDSL-b2e0961da3be4415c09f7cbfad43dedade02f63c/thirdparty/llvm-build-info.json'"
+}
