@@ -1,0 +1,43 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/453",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/649",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/623",
+  "review_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/640",
+  "candidate_commit": "bdd00893955ad9c5d33e3cca4891373456543860",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Preserved PR 623's dependency-aware compile-factory cache and reproduced PR 640's remaining counterexamples against its exact head before changing code. Dependency traversal now distinguishes identical code objects used with different globals or closure cells, closure reads from those contexts are retained separately, and callable snapshots include __defaults__ and __kwdefaults__. All three reproduced stale-wrapper cases now retrace.",
+  "tests": [
+    {
+      "command": "git checkout --detach bdd00893955ad9c5d33e3cca4891373456543860 && FLYDSL_RUNTIME_ENABLE_CACHE=0 PYTHONPATH=/job/repo/python:/job/repo /tmp/amdpilot-repo-j-e55c61cc3674/venv/bin/python /job/review-evidence-j-e55c61cc3674/adversarial_candidate.py",
+      "exit_code": 1,
+      "what_was_measured": "Exact candidate reproduction with runtime/disk caching disabled. The second of two helpers sharing one code object, a __defaults__ mutation, and a __kwdefaults__ mutation each reused the identical old wrapper. Raw output: /job/review-evidence-j-e55c61cc3674/candidate-adversarial.log"
+    },
+    {
+      "command": "FLYDSL_RUNTIME_ENABLE_CACHE=0 PYTHONPATH=/job/repo/python:/job/repo /tmp/amdpilot-repo-j-e55c61cc3674/venv/bin/python /job/review-evidence-j-e55c61cc3674/adversarial_candidate.py",
+      "exit_code": 0,
+      "what_was_measured": "The same independent reproducer passed after correction: all three changes produced a new wrapper. Raw output: /job/review-evidence-j-e55c61cc3674/after-adversarial.log"
+    },
+    {
+      "command": "FLYDSL_RUNTIME_ENABLE_CACHE=0 PYTHONPATH=/job/repo/python:/job/repo /tmp/amdpilot-repo-j-e55c61cc3674/venv/bin/python -m pytest -q tests/unit/test_dependency_cache.py tests/unit/test_jit_cache_key_completeness.py",
+      "exit_code": 0,
+      "what_was_measured": "All 24 focused dependency-cache and adjacent JIT cache-key regressions passed, including wrapper-identity sentinels for shared-code closures and both kinds of defaults. Raw output: /job/review-evidence-j-e55c61cc3674/after-focused.log"
+    },
+    {
+      "command": "FLYDSL_RUNTIME_ENABLE_CACHE=0 PYTHONPATH=/job/repo/python:/job/repo /tmp/amdpilot-repo-j-e55c61cc3674/venv/bin/python -m pytest -q tests/unit",
+      "exit_code": 0,
+      "what_was_measured": "Complete unit suite passed: 1107 passed, 17 skipped. Raw output: /job/review-evidence-j-e55c61cc3674/unit-suite.log"
+    },
+    {
+      "command": "ROCR_VISIBLE_DEVICES=0 /tmp/amdpilot-repo-j-e55c61cc3674/venv/bin/python < recorded CPU-referenced Torch matmul script",
+      "exit_code": 0,
+      "what_was_measured": "One assigned AMD Instinct MI350X (gfx950) ran a float32 matrix multiplication compared with an independent CPU float64 reference; max_abs_diff=1.1444091796875e-05. This is environment evidence, not proof of the Python cache correction. Raw output: /job/review-evidence-j-e55c61cc3674/gpu-sanity.log"
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "ROCR_VISIBLE_DEVICES=0 restricted execution to one assigned AMD Instinct MI350X (gfx950); the recorded CPU-referenced numerical sanity check passed with max_abs_diff=1.1444091796875e-05."
+  },
+  "native_rebuilt": false,
+  "remaining_limitations": "The correction is Python-only, so the prepared native C++/LLVM rebuild was not applicable; Python sources loaded from /job/repo/python/flydsl and the unchanged native package remained at /opt/venv/lib/python3.12/site-packages/flydsl/_mlir. Automatic discovery remains limited to statically visible bytecode reads; dynamic getattr names and state hidden behind descriptors are not automatically discovered. The cache behavior itself is architecture-independent and was verified directly by wrapper identity with runtime/disk caching disabled; the separate GPU sanity check is not claimed as cache-fix evidence. Direct upstream issue inspection was blocked by the ROCm organization token-lifetime policy, so the supplied issue snapshot and accessible mirror issue were used without changing credentials."
+}
