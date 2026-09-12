@@ -1,8 +1,8 @@
 {
   "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/862",
   "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
-  "outcome": "fixed",
-  "summary": "Measured cold JIT for the maintained gfx950 GEMM and RMSNorm kernels against independent Torch references. The JIT serialized freshly generated source IR twice: once to retain CompiledArtifact.source_ir and immediately again to create the parse copy required before lowering. MlirCompiler.compile now accepts and reuses the retained text. Cold cache keys and source/compiled IR hashes were unchanged. The isolated cold observations were RMSNorm 148.51 ms before versus 141.49 ms after and GEMM 712.20 ms before versus 710.80 ms after; these single-run wall-clock differences are reported as observations, not claimed speedups. Parsing the retained source independently cost 2.67/2.56 ms for RMSNorm and 8.91/8.63 ms for GEMM before/after, while the removed operation is the preceding duplicate serialization.",
+  "outcome": "candidate_verified",
+  "summary": "Verified partial optimization: the JIT serialized freshly generated source IR twice, and MlirCompiler.compile now reuses the retained text for the required parse copy. Cold cache keys and source/compiled IR hashes were unchanged. The isolated cold observations are not evidence of an end-to-end speedup and this narrow reduction does not resolve the broad original compile-time request.",
   "tests": [
     {
       "command": "PYTHONPATH=/job/repo FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-af0bbbf36b8f/cache/issue862-baseline-rms-v2 FLYDSL_RUNTIME_ENABLE_CACHE=1 /tmp/amdpilot-repo-j-af0bbbf36b8f/venv/bin/python -u reports/j-af0bbbf36b8f/measure_cold_jit.py rmsnorm",

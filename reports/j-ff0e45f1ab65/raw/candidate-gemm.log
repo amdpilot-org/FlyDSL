@@ -1,0 +1,14 @@
+{
+  "arch": "gfx950:sramecc+:xnack-",
+  "cache_dir": "/tmp/amdpilot-repo-j-ff0e45f1ab65/cache/correction-candidate-gemm-20260912/gemm_a16w16_gfx950_c7511b26b492a00f3ea376d4a0eaf8d6",
+  "cache_key_sha256": "04e622430284fa20516644ac0fd57b2b8c8bdab290a6f1639b856bc16c3cdbbc",
+  "cold_first_call_s": 0.7501561101526022,
+  "compiler_pipeline_s": [0.2256885077804327],
+  "device": "AMD Instinct MI350X",
+  "max_abs_error": 0.4954681396484375,
+  "removed_text_parse_reference_s": 0.009148088283836842,
+  "source_ir_bytes": 185041,
+  "source_ir_sha256": "174d4278bc9bd49e5cb3c24bf44e8e16b701b2006ae9e22d9e30cf8affce9fc5",
+  "compiled_ir_bytes": 33107,
+  "compiled_ir_sha256": "a81f2221c5fbbac66f0d8813ffc086a5a736f5f27844596945558316b46c9c41"
+}

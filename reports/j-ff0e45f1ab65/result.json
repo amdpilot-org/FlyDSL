@@ -1,0 +1,57 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/862",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/611",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/512",
+  "review_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/607",
+  "candidate_commit": "3f0b181c6df97ac367652df3425091161dec9daf",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_verified",
+  "summary": "The candidate's narrow source change is verified and retained: it reuses source IR already serialized for CompiledArtifact and avoids a second get_asm call before the required parse copy. The base rejects the retained-source argument and the candidate regression passes. Identical cache, source-IR, and compiled-IR hashes plus independent Torch GPU references establish unchanged compilation identity and correctness. Independent fresh-cache observations do not demonstrate an end-to-end speedup, and no evidence justified a broader speculative compiler change, so this correction changes the claim from a full fix to a verified partial optimization.",
+  "tests": [
+    {
+      "command": "PYTHONPATH=/job/repo/python /tmp/amdpilot-repo-j-ff0e45f1ab65/venv/bin/python - (base signature/source_ir probe)",
+      "exit_code": 0,
+      "what_was_measured": "Failing-before behavior: base MlirCompiler.compile has no source_ir parameter and raises TypeError when it is supplied."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-ff0e45f1ab65/cache/correction-base-rms-20260912 FLYDSL_RUNTIME_ENABLE_CACHE=1 measure_cold_jit.py rmsnorm",
+      "exit_code": 0,
+      "what_was_measured": "Base fresh-cache RMSNorm cold call 145.40 ms and compiler pipeline 82.65 ms; GPU output matched Torch with max absolute error 0.0009765625."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-ff0e45f1ab65/cache/correction-base-gemm-20260912 FLYDSL_RUNTIME_ENABLE_CACHE=1 measure_cold_jit.py gemm",
+      "exit_code": 0,
+      "what_was_measured": "Base fresh-cache GEMM cold call 714.05 ms and compiler pipeline 229.50 ms; GPU output matched Torch within the maintained tolerance with max absolute error 0.4954681396484375."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python /tmp/amdpilot-repo-j-ff0e45f1ab65/venv/bin/python -m pytest -q tests/unit/test_mlir_compiler.py tests/unit/test_jit_cache_key.py tests/unit/test_jit_cache_key_completeness.py",
+      "exit_code": 0,
+      "what_was_measured": "Passing-after regression and cache identity/completeness coverage; 20 tests passed."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-ff0e45f1ab65/cache/correction-candidate-rms-20260912 FLYDSL_RUNTIME_ENABLE_CACHE=1 /tmp/amdpilot-repo-j-ff0e45f1ab65/venv/bin/python -u reports/j-af0bbbf36b8f/measure_cold_jit.py rmsnorm",
+      "exit_code": 0,
+      "what_was_measured": "Candidate fresh-cache RMSNorm cold call 149.69 ms and compiler pipeline 83.96 ms; hashes and numerical error match base."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-ff0e45f1ab65/cache/correction-candidate-gemm-20260912 FLYDSL_RUNTIME_ENABLE_CACHE=1 /tmp/amdpilot-repo-j-ff0e45f1ab65/venv/bin/python -u reports/j-af0bbbf36b8f/measure_cold_jit.py gemm",
+      "exit_code": 0,
+      "what_was_measured": "Candidate fresh-cache GEMM cold call 750.16 ms and compiler pipeline 225.69 ms; hashes and numerical error match base."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python /tmp/amdpilot-repo-j-ff0e45f1ab65/venv/bin/python -c 'import flydsl.expr.vector'",
+      "exit_code": 1,
+      "what_was_measured": "The issue-linked external RMSNorm dependency remains incompatible because flydsl.expr.vector is absent."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "One assigned AMD Instinct MI350X (gfx950:sramecc+:xnack-) executed base and candidate RMSNorm and GEMM against independent Torch references; raw logs retain cache identities, IR hashes, and errors.",
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "The candidate is a structural reduction of duplicate work; isolated cold wall-clock observations were slower and are not evidence of an end-to-end speedup.",
+    "Most measured compiler-pipeline time remains: about 84 ms for maintained RMSNorm and 226 ms for maintained GEMM after the change. No additional avoidable duplicate path was established within the approved investigation.",
+    "The exact issue-linked external RMSNorm workload remains unverified because it imports the removed flydsl.expr.vector API. Missing compatibility is not used to justify a source change.",
+    "The reported MI355 was unavailable. Validation used the assigned MI350X, which shares gfx950 but is not identical hardware.",
+    "No native rebuild was needed because the retained correction changes Python orchestration only."
+  ]
+}

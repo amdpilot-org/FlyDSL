@@ -1,0 +1,12 @@
+Assigned GPU reported by rocminfo:
+Name: gfx950
+Marketing Name: AMD Instinct MI350X
+
+Issue-linked API compatibility check:
+ModuleNotFoundError: No module named 'flydsl.expr.vector'
+
+Candidate validation:
+tests/unit/test_mlir_compiler.py .
+tests/unit/test_jit_cache_key.py ....
+tests/unit/test_jit_cache_key_completeness.py ...............
+20 passed in 0.97s
