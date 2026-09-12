@@ -775,11 +775,10 @@ class Layout(BuiltinDslType):
     Pass coordinates as separate arguments; one tuple denotes one nested mode.
 
     Example:
+        import flydsl.compiler as flyc, flydsl.expr as fx
         @flyc.jit
-        def inspect():
-            layout = fx.make_layout((4, 8), (1, 4))
-            assert fx.get_scalar(layout(1, 2)) == 9
-        inspect()
+        def example(): assert fx.get_scalar(fx.make_layout((4, 8), (1, 4))(1, 2)) == 9
+        example()
     """
     @property
     def rank(self) -> int:
@@ -842,16 +841,43 @@ class Layout(BuiltinDslType):
         Returns:
             An ``IntTuple`` matching the nesting of :attr:`shape`.
         Example:
-            assert layout.get_hier_coord(9).to_py_value() == (1, 2)
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.jit
+            def example(): assert fx.make_layout((4, 8), (1, 4)).get_hier_coord(9).to_py_value() == (1, 2)
+            example()
         """
         return idx2crd(index, self)
 
     @dsl_loc_tracing
     def get_flat_coord(self, index):
+        """Return a fully flattened coordinate for a linear ``index``.
+
+        Args:
+            index: Linear index to map through this layout.
+        Returns:
+            A flat ``IntTuple`` with one coordinate per leaf mode.
+        Example:
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.jit
+            def example(): assert fx.make_layout((4, 8), (1, 4)).get_flat_coord(9).to_py_value() == (1, 2)
+            example()
+        """
         return get_flat_coord(index, self)
 
     @dsl_loc_tracing
     def get_1d_coord(self, index):
+        """Map a flat ``index`` through this layout to one 1-D coordinate.
+
+        Args:
+            index: Flat index in the layout's natural coordinate space.
+        Returns:
+            A single-element ``IntTuple`` containing the mapped offset.
+        Example:
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.jit
+            def example(): assert fx.get_scalar(fx.make_layout((4, 8), (8, 1)).get_1d_coord(5)) == 20
+            example()
+        """
         return get_1d_coord(index, self)
 
 
@@ -973,36 +999,99 @@ class Pointer(BuiltinDslType):
     an integer advances by that many elements, not bytes.
 
     Example:
+        import flydsl.compiler as flyc, flydsl.expr as fx
         @flyc.kernel
-        def write(ptr: fx.Pointer):
-            ptr[2] = ptr[0]
+        def example(ptr: fx.Pointer): ptr[2] = ptr[0]
     """
     @property
     def element_type(self):
+        """Return the scalar FlyDSL numeric type stored at this address.
+
+        Returns:
+            A ``Numeric`` type such as ``Float32`` or ``Int32``.
+        Example:
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(ptr: fx.Pointer): dtype = ptr.element_type
+        """
         return Numeric.from_ir_type(self.type.element_type)
 
     @property
     def dtype(self):
+        """Alias for :attr:`element_type`.
+
+        Returns:
+            The pointer's ``Numeric`` element type.
+        Example:
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(ptr: fx.Pointer): dtype = ptr.dtype
+        """
         return self.element_type
 
     @property
     def value_type(self):
+        """Alias for :attr:`element_type`.
+
+        Returns:
+            The pointer's ``Numeric`` element type.
+        Example:
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(ptr: fx.Pointer): dtype = ptr.value_type
+        """
         return self.element_type
 
     @property
     def address_space(self):
+        """Return the pointer's generic or target-specific address space.
+
+        Returns:
+            An ``AddressSpace`` or target-specific address-space attribute.
+        Example:
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(ptr: fx.Pointer): space = ptr.address_space
+        """
         return address_space_from_attr(self.type.address_space)
 
     @property
     def memspace(self):
+        """Alias for :attr:`address_space`.
+
+        Returns:
+            The pointer's generic or target-specific address space.
+        Example:
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(ptr: fx.Pointer): space = ptr.memspace
+        """
         return self.address_space
 
     @property
     def alignment(self):
+        """Return the pointer's guaranteed byte alignment.
+
+        Returns:
+            The alignment in bytes.
+        Example:
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(ptr: fx.Pointer): byte_alignment = ptr.alignment
+        """
         return self.type.alignment
 
     @property
     def llvm_ptr(self):
+        """Convert this Fly pointer to a backend-address-space LLVM pointer.
+
+        Returns:
+            An MLIR LLVM pointer value for use by low-level wrappers.
+        Example:
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(ptr: fx.Pointer): raw_ptr = ptr.llvm_ptr
+        """
         return to_llvm_ptr(self)
 
     @dsl_loc_tracing
@@ -1014,7 +1103,9 @@ class Pointer(BuiltinDslType):
         Returns:
             A scalar DSL value.
         Example:
-            value = ptr.load()
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(ptr: fx.Pointer): value = ptr.load()
         """
         return ptr_load(self, result_type=dtype)
 
@@ -1027,7 +1118,9 @@ class Pointer(BuiltinDslType):
         Returns:
             The generated store operation.
         Example:
-            ptr.store(1.0)
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(ptr: fx.Pointer): ptr.store(1.0)
         """
         if isinstance(value, (bool, int, float)):
             value = self.element_type(value)
@@ -1062,7 +1155,9 @@ class Pointer(BuiltinDslType):
         Returns:
             A :class:`Tensor` sharing this pointer's storage.
         Example:
-            tile = ptr.view(fx.make_layout((4, 8), (8, 1)))
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(ptr: fx.Pointer): tile = ptr.view(fx.make_layout((4, 8), (8, 1)))
         """
         return make_view(self, layout)
 
@@ -1076,39 +1171,101 @@ class Tensor(BuiltinDslType):
     :func:`make_view`; calling ``Tensor`` directly is an internal IR cast.
 
     Example:
+        import flydsl.compiler as flyc, flydsl.expr as fx
         @flyc.kernel
-        def inspect(tensor: fx.Tensor):
-            m, n = tensor.shape.unpack()
-            tensor[0, 0] = tensor[m - 1, n - 1]
+        def example(tensor: fx.Tensor): tensor[0, 0] = tensor[1, 1]
     """
     @property
     def element_type(self):
+        """Return the element type of a memory or register tensor.
+
+        Returns:
+            A ``Numeric`` type; coordinate tensors raise ``TypeError``.
+        Example:
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(tensor: fx.Tensor): dtype = tensor.element_type
+        """
         if isinstance(self.type, CoordTensorType):
             raise TypeError("CoordTensor doesn't have an element type")
         return Numeric.from_ir_type(self.type.element_type)
 
     @property
     def dtype(self):
+        """Alias for :attr:`element_type`.
+
+        Returns:
+            The tensor's ``Numeric`` element type.
+        Example:
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(tensor: fx.Tensor): dtype = tensor.dtype
+        """
         return self.element_type
 
     @property
     def value_type(self):
+        """Alias for :attr:`element_type`.
+
+        Returns:
+            The tensor's ``Numeric`` element type.
+        Example:
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(tensor: fx.Tensor): dtype = tensor.value_type
+        """
         return self.element_type
 
     @property
     def address_space(self):
+        """Return the tensor storage's generic or target address space.
+
+        Returns:
+            An ``AddressSpace`` or target-specific address-space attribute.
+        Example:
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(tensor: fx.Tensor): space = tensor.address_space
+        """
         return address_space_from_attr(self.type.address_space)
 
     @property
     def memspace(self):
+        """Alias for :attr:`address_space`.
+
+        Returns:
+            The tensor storage's address space.
+        Example:
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(tensor: fx.Tensor): space = tensor.memspace
+        """
         return self.address_space
 
     @property
     def alignment(self):
+        """Return the tensor storage's guaranteed byte alignment.
+
+        Returns:
+            The alignment in bytes.
+        Example:
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(tensor: fx.Tensor): byte_alignment = tensor.alignment
+        """
         return self.type.alignment
 
     @property
     def leading_dim(self):
+        """Return the unit-stride dimension recorded by the tensor type.
+
+        Returns:
+            The zero-based leading-dimension index.
+        Example:
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(tensor: fx.Tensor): contiguous_axis = tensor.leading_dim
+        """
         return self.type.leading_dim
 
     @property
@@ -1116,16 +1273,36 @@ class Tensor(BuiltinDslType):
         """Return the tensor's logical-to-linear layout.
 
         Example:
-            assert tensor.layout.shape.to_py_value() == (4, 8)
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(tensor: fx.Tensor): layout = tensor.layout
         """
         return get_layout(self)
 
     @property
     def shape(self) -> IntTuple:
+        """Return the tensor layout's possibly nested shape.
+
+        Returns:
+            An ``IntTuple`` of mode extents.
+        Example:
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(tensor: fx.Tensor): shape = tensor.shape
+        """
         return self.layout.shape
 
     @property
     def stride(self) -> IntTuple:
+        """Return the tensor layout's element strides.
+
+        Returns:
+            An ``IntTuple`` congruent with :attr:`shape`.
+        Example:
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(tensor: fx.Tensor): stride = tensor.stride
+        """
         return self.layout.stride
 
     @property
@@ -1135,7 +1312,9 @@ class Tensor(BuiltinDslType):
         Returns:
             The iterator used as the base by :func:`make_view`.
         Example:
-            reshaped = fx.make_view(tensor.iter, new_layout)
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(tensor: fx.Tensor): base = tensor.iter
         """
         return get_iter(self)
 
@@ -1166,7 +1345,9 @@ class Tensor(BuiltinDslType):
         Returns:
             A vector containing every element of this register-backed tensor.
         Example:
-            values = fragment.load()
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(fragment: fx.Tensor): values = fragment.load()
         """
         return memref_load_vec(self)
 
@@ -1179,12 +1360,25 @@ class Tensor(BuiltinDslType):
         Returns:
             The generated vector-store operation.
         Example:
-            fragment.store(values)
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(fragment: fx.Tensor): fragment.store(fragment.load())
         """
         return memref_store_vec(vector, self)
 
     @dsl_loc_tracing
     def fill(self, value):
+        """Fill every element of a register-backed tensor with ``value``.
+
+        Args:
+            value: Scalar convertible to the tensor's element type.
+        Returns:
+            The generated vector-store operation.
+        Example:
+            import flydsl.compiler as flyc, flydsl.expr as fx
+            @flyc.kernel
+            def example(fragment: fx.Tensor): fragment.fill(0)
+        """
         filled_vec = full(self.shape.to_py_value(), value, self.dtype)
         return self.store(filled_vec)
 

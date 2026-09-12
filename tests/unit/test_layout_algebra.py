@@ -9,8 +9,10 @@ Layout algebra tests using the Fly dialect API with static types.
 Each test corresponds to a specific cell in the reference layout-algebra notebook.
 """
 
+import importlib.util
 import inspect
 import sys
+import textwrap
 
 import pytest
 
@@ -71,12 +73,59 @@ def test_basic_size(frontend_only_jit):
     build()
 
 
-def test_pointer_tensor_layout_docstrings_and_example(frontend_only_jit):
-    """Public memory/layout APIs document traced use and the example is valid."""
+def test_pointer_tensor_layout_docstrings_and_examples(frontend_only_jit, tmp_path):
+    """The corrected public surface has independently runnable examples."""
 
-    for symbol in (fx.Layout, fx.Pointer, fx.Tensor, fx.make_layout, fx.make_view):
+    symbols = (
+        fx.make_layout,
+        fx.make_layout_like,
+        fx.make_view,
+        fx.get_shape,
+        fx.get_stride,
+        fx.get_layout,
+        fx.get_iter,
+        fx.crd2idx,
+        fx.Layout,
+        fx.Layout.get_hier_coord,
+        fx.Layout.get_flat_coord,
+        fx.Layout.get_1d_coord,
+        fx.Pointer,
+        fx.Pointer.element_type,
+        fx.Pointer.dtype,
+        fx.Pointer.value_type,
+        fx.Pointer.address_space,
+        fx.Pointer.memspace,
+        fx.Pointer.alignment,
+        fx.Pointer.llvm_ptr,
+        fx.Pointer.load,
+        fx.Pointer.store,
+        fx.Pointer.view,
+        fx.Tensor,
+        fx.Tensor.element_type,
+        fx.Tensor.dtype,
+        fx.Tensor.value_type,
+        fx.Tensor.address_space,
+        fx.Tensor.memspace,
+        fx.Tensor.alignment,
+        fx.Tensor.leading_dim,
+        fx.Tensor.layout,
+        fx.Tensor.shape,
+        fx.Tensor.stride,
+        fx.Tensor.iter,
+        fx.Tensor.load,
+        fx.Tensor.store,
+        fx.Tensor.fill,
+    )
+    for number, symbol in enumerate(symbols):
         doc = inspect.getdoc(symbol)
         assert doc and "Example:" in doc
+        example = textwrap.dedent(doc.split("Example:\n", 1)[1])
+        assert len(example.splitlines()) <= 5
+        path = tmp_path / f"doc_example_{number}.py"
+        path.write_text(example)
+        spec = importlib.util.spec_from_file_location(path.stem, path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
 
     @flyc.jit
     def build():
