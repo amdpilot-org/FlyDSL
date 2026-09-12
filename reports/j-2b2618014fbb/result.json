@@ -1,0 +1,50 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/732",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Reproduced the distinct UniversalCopy128b load and UniversalAtomicAdd store cases. A one-tile, per-thread register fragment with layout (4,2):(1,4) is valid input to retile: it contains the required eight contiguous values, but retile incorrectly sent it through a residual-tile path and aborted in intTupleZip2By. The fix directly repartitions such one-tile fragments by the consumer atom value layout. Copying the fragment without retile is invalid because source and destination have incompatible value-group counts (2 versus 8); CopyOp now reports that contract violation rather than silently emitting an incomplete copy. The explicit make_view workaround remains valid.",
+  "tests": [
+    {
+      "command": "for c in 1 2 3; do ... /tmp/amdpilot-repo-j-2b2618014fbb/venv/bin/python /job/repro_retile_atomic.py $c; done",
+      "exit_code": 134,
+      "what_was_measured": "Baseline reproduction in isolated processes: case 1 compiled but left the GPU result at 0 instead of CPU-f64 reference -99.932795524247922; case 2 aborted at IntTupleUtils.h intTupleZip2ByImpl; case 3 passed with GPU result -99.932807922363281 (absolute error 1.23981154e-05). Raw logs: /job/artifacts/baseline/case{1,2,3}.log. Reproducer source: /job/repro_retile_atomic.py."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-2b2618014fbb/venv/bin/python /opt/amdpilot/rebuild-native.py /job",
+      "exit_code": 0,
+      "what_was_measured": "Pinned LLVM native rebuild plus real MI350X/gfx950 vector-add smoke passed. Build metadata: /job/native-build.json; native library: /tmp/amdpilot-repo-j-2b2618014fbb/native-build/python_packages/flydsl/_mlir; build log: /job/artifacts/native-build/rebuild-verifier2.log."
+    },
+    {
+      "command": "FLYDSL_RUNTIME_CACHE_DIR=/job/artifacts/final-cache-v2 FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/artifacts/final-dump-v2 /tmp/amdpilot-repo-j-2b2618014fbb/venv/bin/python -m pytest -q -s tests/kernels/test_retile_atomic.py",
+      "exit_code": 0,
+      "what_was_measured": "Both regressions passed: retiled distinct load/store atoms produced the bounded 64x64 GPU sum against a CPU float64 reference, and the unretiled case raised the expected incompatible value-group diagnostic. Raw log: /job/artifacts/final-tests/retile-atomic-pytest-v2.log."
+    },
+    {
+      "command": "FLYDSL_RUNTIME_CACHE_DIR=/job/artifacts/regression-cache /tmp/amdpilot-repo-j-2b2618014fbb/venv/bin/python -m pytest -q tests/unit/test_layout_algebra.py tests/unit/test_universal_atomic.py",
+      "exit_code": 0,
+      "what_was_measured": "Existing layout algebra and UniversalAtomic coverage: 37 passed, 1 skipped. Raw log: /job/artifacts/final-tests/layout-and-atomic.log."
+    },
+    {
+      "command": "FLYDSL_RUNTIME_CACHE_DIR=/job/artifacts/unit-all-cache /tmp/amdpilot-repo-j-2b2618014fbb/venv/bin/python -m pytest -q tests/unit",
+      "exit_code": 0,
+      "what_was_measured": "Full unit suite after the verifier and layout changes: 1098 passed, 17 skipped. Raw log: /job/artifacts/final-tests/unit-all.log."
+    },
+    {
+      "command": "FLYDSL_RUNTIME_CACHE_DIR=/job/artifacts/repro-final-cache FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/artifacts/repro-final-dump /tmp/amdpilot-repo-j-2b2618014fbb/venv/bin/python /job/repro_retile_atomic.py 2",
+      "exit_code": 0,
+      "what_was_measured": "Independent CPU float64 reference -99.932795524247922 versus GPU float32 -99.932807922363281 (absolute error 1.23981154e-05). Final LLVM IR contains 16 atomicrmw fadd operations and final gfx950 ISA contains 16 global_atomic_cmpswap instructions. Raw log and compiler artifacts: /job/artifacts/final-tests/repro-case2.log and /job/artifacts/repro-final-dump/sum_kernel_0/."
+    },
+    {
+      "command": "FLYDSL_RUNTIME_CACHE_DIR=/job/artifacts/repro-invalid-cache /tmp/amdpilot-repo-j-2b2618014fbb/venv/bin/python /job/repro_retile_atomic.py 1",
+      "exit_code": 1,
+      "what_was_measured": "The invalid unretiled fragment is rejected with: source and destination have incompatible value-group counts: 2 versus 8; retile the register fragment for this copy atom. Raw log: /job/artifacts/final-tests/repro-case1-invalid.log."
+    }
+  ],
+  "gpu_execution": true,
+  "native_rebuilt": true,
+  "remaining_limitations": [
+    "The report named an MI308X, while the assigned GPU is an MI350X/gfx950; the exact MI308X target was not available for validation.",
+    "The public upstream issue API could not be queried with the prepared GitHub token because the ROCm organization rejects tokens whose lifetime exceeds 30 days; the supplied issue snapshot and mirror issue were used.",
+    "Case 1 is intentionally rejected rather than made executable: its unretiled source and destination value grouping violates the copy contract."
+  ]
+}

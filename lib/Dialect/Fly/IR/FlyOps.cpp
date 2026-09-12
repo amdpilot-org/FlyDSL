@@ -1611,6 +1611,27 @@ FLY_INFER_RETURN_TYPES(TiledCopyRetileOp) {
   return success();
 }
 
+LogicalResult CopyOp::verify() {
+  auto srcTy = cast<MemRefType>(getSrc().getType());
+  auto dstTy = cast<MemRefType>(getDst().getType());
+  LayoutAttr srcLayout = getLinearLayoutAttr(srcTy.getLayout());
+  LayoutAttr dstLayout = getLinearLayoutAttr(dstTy.getLayout());
+  if (!srcLayout || !dstLayout || srcLayout.rank() != dstLayout.rank() || srcLayout.rank() < 2)
+    return success();
+
+  IntTupleBuilder<IntTupleAttr> builder(getContext());
+  IntTupleAttr srcGrouped = intTupleGroup(builder, srcLayout.getShape(), 1, srcLayout.rank());
+  IntTupleAttr dstGrouped = intTupleGroup(builder, dstLayout.getShape(), 1, dstLayout.rank());
+  IntAttr srcGroups = intTupleProduct(builder, srcGrouped.at(1)).getLeafAsInt();
+  IntAttr dstGroups = intTupleProduct(builder, dstGrouped.at(1)).getLeafAsInt();
+  if (srcGroups.isStatic() && dstGroups.isStatic() &&
+      srcGroups.getValue() != dstGroups.getValue())
+    return emitOpError("source and destination have incompatible value-group counts: ")
+           << srcGroups.getValue() << " versus " << dstGroups.getValue()
+           << "; retile the register fragment for this copy atom";
+  return success();
+}
+
 FLY_INFER_RETURN_TYPES(TiledMmaPartitionOp) {
   auto operandId = properties.as<Properties *>()->operand_id.getValue();
   auto tiledMmaTy = dyn_cast<TiledMmaType>(operands[0].getType());
