@@ -1,0 +1,17 @@
+M	kernels/conv/conv3d_implicit.py
+A	reports/j-d8da4d1336e8/raw/bounded-chain-reference.txt
+A	reports/j-d8da4d1336e8/raw/diff-check.txt
+A	reports/j-d8da4d1336e8/raw/full-conv3d-tests-final.txt
+A	reports/j-d8da4d1336e8/raw/full-conv3d-tests.txt
+A	reports/j-d8da4d1336e8/raw/layout-tests.txt
+A	reports/j-d8da4d1336e8/raw/ncdhw-trace.json
+A	reports/j-d8da4d1336e8/raw/ndhwc-trace.json
+A	reports/j-d8da4d1336e8/raw/py-compile.txt
+A	reports/j-d8da4d1336e8/raw/rank-and-layout-regression.txt
+A	reports/j-d8da4d1336e8/raw/reproduce-before.txt
+A	reports/j-d8da4d1336e8/raw/ruff-check.txt
+A	reports/j-d8da4d1336e8/raw/ruff-format.txt
+A	reports/j-d8da4d1336e8/raw/transpose-profile.txt
+A	reports/j-d8da4d1336e8/raw/upstream-issue.json
+A	reports/j-d8da4d1336e8/result.json
+M	tests/kernels/test_conv3d_implicit.py
