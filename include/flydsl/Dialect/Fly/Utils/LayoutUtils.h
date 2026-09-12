@@ -1399,15 +1399,60 @@ Layout layoutZippedDivide(LayoutBuilder<Layout> &builder, Layout layout, TileAtt
   using IntTuple = typename LayoutBuilder<Layout>::IntTuple;
 
   Layout logicalDiv = layoutLogicalDivide(builder, layout, divisorTile);
-  auto *ctx = builder.getLayoutAttr(layout).getContext();
 
-  SmallVector<Attribute> guideElems;
-  for (int i = 0; i < divisorTile.rank(); ++i) {
-    guideElems.push_back(IntTupleAttr::getLeafNone(ctx));
+  if (divisorTile.isLeaf()) {
+    auto zipLeaf = [&](IntTuple tuple) {
+      assert(tuple.rank() == 2 && "divided layout must contain tile and remainder");
+      typename LayoutBuilder<Layout>::ElemCollector tile;
+      typename LayoutBuilder<Layout>::ElemCollector zipped;
+      tile.push_back(builder.at(tuple, 0));
+      zipped.push_back(builder.makeTuple(tile));
+      zipped.push_back(builder.at(tuple, 1));
+      return builder.makeTuple(zipped);
+    };
+    return builder.makeLayout(zipLeaf(builder.getShape(logicalDiv)),
+                              zipLeaf(builder.getStride(logicalDiv)));
   }
-  IntTupleAttr guide = IntTupleAttr::get(ArrayAttr::get(ctx, guideElems));
-  IntTuple retShape = intTupleZip2By(builder, builder.getShape(logicalDiv), guide);
-  IntTuple retStride = intTupleZip2By(builder, builder.getStride(logicalDiv), guide);
+
+  auto zipByTile = [&](auto &&self, IntTuple tuple, TileAttr tile,
+                       bool isStride) -> std::pair<IntTuple, IntTuple> {
+    typename LayoutBuilder<Layout>::ElemCollector firsts;
+    typename LayoutBuilder<Layout>::ElemCollector seconds;
+    int32_t tupleRank = tuple.rank();
+    int32_t tileRank = tile.rank();
+    assert(tupleRank >= tileRank && "zipped divide tile rank exceeds layout rank");
+    for (int i = 0; i < tileRank; ++i) {
+      IntTuple elem = builder.at(tuple, i);
+      if (tile.isNoneMode(i)) {
+        firsts.push_back(builder.materializeConstantLeaf(isStride ? 0 : 1));
+        seconds.push_back(elem);
+      } else if (auto nestedTile = dyn_cast<TileAttr>(tile.at(i))) {
+        auto [first, second] = self(self, elem, nestedTile, isStride);
+        firsts.push_back(first);
+        seconds.push_back(second);
+      } else {
+        assert(elem.rank() == 2 && "divided mode must contain tile and remainder");
+        firsts.push_back(builder.at(elem, 0));
+        seconds.push_back(builder.at(elem, 1));
+      }
+    }
+    for (int i = tileRank; i < tupleRank; ++i)
+      seconds.push_back(builder.at(tuple, i));
+    return {builder.makeTuple(firsts), builder.makeTuple(seconds)};
+  };
+
+  auto [tileShape, restShape] =
+      zipByTile(zipByTile, builder.getShape(logicalDiv), divisorTile, false);
+  auto [tileStride, restStride] =
+      zipByTile(zipByTile, builder.getStride(logicalDiv), divisorTile, true);
+  typename LayoutBuilder<Layout>::ElemCollector retShapes;
+  typename LayoutBuilder<Layout>::ElemCollector retStrides;
+  retShapes.push_back(tileShape);
+  retShapes.push_back(restShape);
+  retStrides.push_back(tileStride);
+  retStrides.push_back(restStride);
+  IntTuple retShape = builder.makeTuple(retShapes);
+  IntTuple retStride = builder.makeTuple(retStrides);
   return builder.makeLayout(retShape, retStride);
 }
 

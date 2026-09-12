@@ -1,0 +1,46 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/739",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Reproduced the native assertion for zipped_divide with tilers (32, None, None) and (32, None, 40), then changed TileAttr-based zipped division to distinguish active modes, None identity modes, and layout modes beyond a lower-rank tiler. The exact logical_divide and zipped_divide result types for all three issue examples are now regression-tested against independently enumerated coordinate-to-offset mappings.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-da5585142cbc/venv/bin/python /job/reproduce_739.py 0",
+      "exit_code": 0,
+      "what_was_measured": "Before-fix lower-rank tiler behavior: logical_divide and zipped_divide both returned Layout<(32,(2,50,80)):(16000,(512000,160,1))>. Raw output: /job/raw/j-da5585142cbc/before-0.log"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-da5585142cbc/venv/bin/python /job/reproduce_739.py 1",
+      "exit_code": 134,
+      "what_was_measured": "Before-fix reproduction of the reported native intTupleZip2By rank assertion for tiler (32, None, None). Raw output: /job/raw/j-da5585142cbc/before-1.log"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-da5585142cbc/venv/bin/python /job/reproduce_739.py 2",
+      "exit_code": 134,
+      "what_was_measured": "Before-fix reproduction of the same native assertion for the third exact tiler, (32, None, 40). Raw output: /job/raw/j-da5585142cbc/before-2.log"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-da5585142cbc/venv/bin/python /opt/amdpilot/rebuild-native.py /job",
+      "exit_code": 0,
+      "what_was_measured": "Rebuilt the changed C++ against pinned LLVM e2a39f504fee836e4def9581bed817ecc327b9dc and switched python/flydsl/_mlir to /tmp/amdpilot-repo-j-da5585142cbc/native-build/python_packages/flydsl/_mlir. The rebuild's GPU vector-add smoke passed on one AMD Instinct MI350X (gfx950). Evidence: /job/native-build.json and /job/raw/j-da5585142cbc/native-rebuild.log"
+    },
+    {
+      "command": "for i in 0 1 2; do /tmp/amdpilot-repo-j-da5585142cbc/venv/bin/python /job/reproduce_739.py $i; done",
+      "exit_code": 0,
+      "what_was_measured": "The rebuilt native implementation produced all exact expected logical/zipped layouts without a crash. Raw outputs: /job/raw/j-da5585142cbc/after-0.log, after-1.log, and after-2.log"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-da5585142cbc/venv/bin/python -m pytest -q tests/unit/test_layout_algebra.py",
+      "exit_code": 0,
+      "what_was_measured": "34 passed and 1 skipped. The three regression cases assert emitted compiler layout types and exhaustively compare 256,000 independently enumerated transformed offsets per tiler with the original layout mapping. Raw output: /job/raw/j-da5585142cbc/regression-pytest.log"
+    },
+    {
+      "command": "readelf -n /tmp/amdpilot-repo-j-da5585142cbc/native-build/python_packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFly.cpython-312-x86_64-linux-gnu.so",
+      "exit_code": 0,
+      "what_was_measured": "Loaded rebuilt compiler extension evidence; ELF build ID 134737549a016b7b3946e0f8b75a6fd3c9b34ae3. Raw output: /job/raw/j-da5585142cbc/native-import-evidence.log"
+    }
+  ],
+  "gpu_execution": true,
+  "native_rebuilt": true,
+  "remaining_limitations": "The public upstream issue API could not be queried with the image's fine-grained GitHub credential because the ROCm organization rejects its token lifetime; the supplied issue snapshot was used as problem data. No LLVM change was required. GPU execution covers the prescribed rebuilt-library numerical smoke; the affected operation has no runtime GPU output because it computes compiler layout metadata. Raw artifacts remain under /job/raw/j-da5585142cbc, and the rebuilt native source/binary tree is /tmp/amdpilot-repo-j-da5585142cbc/native-build."
+}
