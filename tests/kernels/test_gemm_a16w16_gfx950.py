@@ -1195,7 +1195,7 @@ def run_gemm_a16w16_cli_benchmark(
     test_graph: bool = False,
 ):
     """Benchmark one A16W16 policy using the legacy HGEMM CLI contract."""
-    from tests.test_common import run_perftest, verify_output
+    from flydsl.testing import run_perftest, verify_output
 
     if _ARCH not in ("gfx942", "gfx950"):
         pytest.skip(f"A16W16 GEMM benchmark requires gfx942 or gfx950, got {_ARCH}")

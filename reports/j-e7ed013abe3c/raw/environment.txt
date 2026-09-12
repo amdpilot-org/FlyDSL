@@ -1,0 +1,7 @@
+flydsl /job/repo/python/flydsl/__init__.py
+testing /job/repo/python/flydsl/testing.py
+torch 2.9.1+rocm7.2.0.git7e1940d4
+cuda_available True
+device_count 1
+device AMD Instinct MI350X
+capability (9, 5)

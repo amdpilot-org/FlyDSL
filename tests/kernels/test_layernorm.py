@@ -20,6 +20,7 @@ import pytest
 import flydsl.compiler as flyc
 import flydsl.expr as fx
 from flydsl.runtime.device import get_rocm_arch
+from flydsl.testing import run_perftest
 from kernels.norm.layernorm_kernel import (
     build_fused_add_layernorm_dynamicquant_module,
     build_fused_add_layernorm_module,
@@ -36,7 +37,6 @@ from tests.kernels.benchmark_common import (
     maybe_enable_aiter,
     print_perf_table,
 )
-from tests.test_common import run_perftest
 
 pytestmark = [pytest.mark.l2_device, pytest.mark.rocm_lower]
 

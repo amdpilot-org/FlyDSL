@@ -16,6 +16,7 @@ import os
 
 import pytest
 
+from flydsl.testing import run_perftest
 from kernels.norm.softmax_autotune import _RTOL
 from kernels.norm.softmax_kernel import build_softmax_module
 from tests.kernels.benchmark_common import (
@@ -24,7 +25,6 @@ from tests.kernels.benchmark_common import (
     maybe_enable_aiter,
     print_perf_table,
 )
-from tests.test_common import run_perftest
 
 pytestmark = [pytest.mark.l2_device, pytest.mark.rocm_lower]
 

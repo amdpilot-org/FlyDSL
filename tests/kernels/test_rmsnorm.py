@@ -31,6 +31,7 @@ if torch is None or not torch.cuda.is_available():
 import flydsl.compiler as flyc  # noqa: E402
 import kernels.norm.rmsnorm_kernel as rmsnorm_kernel_impl  # noqa: E402
 from flydsl.runtime.device import get_rocm_arch  # noqa: E402
+from flydsl.testing import run_perftest  # noqa: E402
 from kernels.common.tensor_shim import _run_compiled  # noqa: E402
 from kernels.norm.rmsnorm_kernel import (  # noqa: E402
     build_fused_add_rmsnorm_bwd_module,
@@ -52,7 +53,6 @@ from tests.kernels.benchmark_common import (  # noqa: E402
     maybe_enable_aiter,
     print_perf_table,
 )
-from tests.test_common import run_perftest  # noqa: E402
 
 DTYPE_FP32 = torch.float32
 DTYPE_FP16 = torch.float16

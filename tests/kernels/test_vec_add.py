@@ -12,7 +12,7 @@ import pytest
 import flydsl.compiler as flyc
 import flydsl.expr as fx
 from flydsl.runtime.device import get_rocm_arch
-from tests.test_common import checkAllclose, run_perftest
+from flydsl.testing import checkAllclose, run_perftest
 
 try:
     import torch
