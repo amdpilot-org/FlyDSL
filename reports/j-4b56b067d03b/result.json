@@ -1,0 +1,42 @@
+{
+  "job_id": "j-4b56b067d03b",
+  "source_revision": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "initial_checkpoint_nonce": "9d5491fa-c39f-4470-a5e4-c69bfc6eaa30",
+  "platform_context": "https://github.com/amdpilot-org/amdpilotv2/pull/439",
+  "gpu": {
+    "device": "AMD Instinct MI355X",
+    "visible_device_count": 1,
+    "gcn_arch_name": "gfx950:sramecc+:xnack-"
+  },
+  "software": {
+    "python": "/tmp/amdpilot-repo-j-4b56b067d03b/venv/bin/python",
+    "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+    "hip": "7.2.26015-fc0010cf6a"
+  },
+  "measured_tests": [
+    {
+      "name": "existing raw-pointer vector-add unit test",
+      "command": "/tmp/amdpilot-repo-j-4b56b067d03b/venv/bin/python -m pytest tests/unit/test_pointer_argument_vec_add.py",
+      "exit_code": 0,
+      "result": "passed",
+      "summary": "1 passed in 0.96s",
+      "raw_output": "raw/initial_pointer_argument_vec_add.txt"
+    },
+    {
+      "name": "independent deterministic raw-pointer vector-add control with masked tails",
+      "command": "/tmp/amdpilot-repo-j-4b56b067d03b/venv/bin/python reports/j-4b56b067d03b/probes/raw_pointer_masked_tail.py",
+      "exit_code": 0,
+      "result": "passed",
+      "sizes": [1, 255, 257, 4099],
+      "active_max_abs_error": 0.0,
+      "tail_sentinel_unchanged": true,
+      "raw_output": "raw/masked_tail_control.txt"
+    }
+  ],
+  "limitations": [
+    "This is an AMDPilot interrupted-stream qualification report, not a claim to fix an upstream FlyDSL issue.",
+    "The measurements cover one assigned AMD Instinct MI355X GPU and the prepared pinned Torch/ROCm environment only.",
+    "Passing evidence does not establish that the qualification platform recovered; recovery is checked externally.",
+    "No upstream repository was modified and no broad FlyDSL regression suite was run."
+  ]
+}
