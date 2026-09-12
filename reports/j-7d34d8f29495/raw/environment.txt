@@ -1,0 +1,16 @@
+{
+  "python_executable": "/tmp/amdpilot-repo-j-7d34d8f29495/venv/bin/python",
+  "python_version": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]",
+  "flydsl_package": "/job/repo/python/flydsl/__init__.py",
+  "flydsl_compiler": "/job/repo/python/flydsl/compiler/__init__.py",
+  "flydsl_expr": "/job/repo/python/flydsl/expr/__init__.py",
+  "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+  "torch_file": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+  "hip_version": "7.2.26015-fc0010cf6a",
+  "cuda_available": true,
+  "cuda_device_count": 1,
+  "visible_devices": null,
+  "current_device": 0,
+  "device_name": "AMD Instinct MI355X",
+  "device_properties": "_CudaDeviceProperties(name='AMD Instinct MI355X', major=9, minor=5, gcnArchName='gfx950:sramecc+:xnack-', total_memory=294896MB, multi_processor_count=256, uuid=39313232-3263-3137-6630-663634386437, pci_bus_id=21, pci_device_id=0, pci_domain_id=0, L2_cache_size=4MB)"
+}

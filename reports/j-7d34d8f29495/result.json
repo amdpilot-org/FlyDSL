@@ -1,0 +1,52 @@
+{
+  "job_id": "j-7d34d8f29495",
+  "scope": "bounded FlyDSL GPU qualification for AMDPilot PR-receipt recovery work",
+  "platform_context": "https://github.com/amdpilot-org/amdpilotv2/pull/438",
+  "repository": "https://github.com/amdpilot-org/FlyDSL.git",
+  "branch": "amdpilot/j-7d34d8f29495",
+  "base_revision": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "source_revision_tested": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "paths": {
+    "checkout": "/job/repo",
+    "source": "/job/repo/python/flydsl",
+    "test_source": "/job/repo/tests/unit/test_pointer_argument_vec_add.py",
+    "python": "/tmp/amdpilot-repo-j-7d34d8f29495/venv/bin/python",
+    "native_import": "/job/repo/python/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so",
+    "native_resolved": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so"
+  },
+  "device": {
+    "count": 1,
+    "index": 0,
+    "name": "AMD Instinct MI355X",
+    "architecture": "gfx950:sramecc+:xnack-",
+    "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+    "hip": "7.2.26015-fc0010cf6a"
+  },
+  "runs": [
+    {
+      "name": "prepared pointer argument vector-add test",
+      "command": "/tmp/amdpilot-repo-j-7d34d8f29495/venv/bin/python -m pytest -rA -vv -s tests/unit/test_pointer_argument_vec_add.py",
+      "exit_code": 0,
+      "measurement": "1 passed in 0.90s",
+      "raw_output": "reports/j-7d34d8f29495/raw/pytest-pointer-argument-vec-add.txt"
+    },
+    {
+      "name": "independent deterministic GPU numerical control",
+      "command": "/tmp/amdpilot-repo-j-7d34d8f29495/venv/bin/python reports/j-7d34d8f29495/numerical_control.py",
+      "exit_code": 0,
+      "measurement": {
+        "elements": 1031,
+        "maximum_absolute_error": 0.0,
+        "all_outputs_finite": true
+      },
+      "raw_output": "reports/j-7d34d8f29495/raw/numerical-control.txt"
+    }
+  ],
+  "qualification_result": "pass for the tested FlyDSL raw-pointer vector-add workload on the recorded device and software stack",
+  "limitations": [
+    "This is a bounded platform report, not an upstream FlyDSL fix or a broad FlyDSL qualification.",
+    "Only one raw-pointer float32 vector-add test and one deterministic numerical control were run on one MI355X GPU.",
+    "Torch and ROCm were used as prepared and were not replaced or modified.",
+    "The external receipt-loss fault occurs after this work; this report does not test or claim successful platform recovery."
+  ]
+}
