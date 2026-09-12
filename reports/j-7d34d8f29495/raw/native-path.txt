@@ -1,0 +1,2 @@
+flydsl._mlir.__path__=['/job/repo/python/flydsl/_mlir']
+flydsl._mlir._mlir_libs._mlir=/job/repo/python/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so
