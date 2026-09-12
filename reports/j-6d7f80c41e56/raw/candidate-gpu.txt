@@ -1,0 +1,18 @@
+Candidate: 697129d402848711037a0169f3bb09b0882257aa
+GPU: AMD Instinct MI355X (gfx950)
+
+Candidate regression: 1 passed in 0.67s.
+Observed first row: [nan, nan, 1.0, 1.0, nan, nan]
+
+Independent adversarial output (last two columns are vector min/max):
+NaN lane 0: [nan, nan]
+NaN lane 1: [nan, nan]
+NaN lane 2: [nan, nan]
+NaN lane 3: [nan, nan]
+zeros [-0,+0,-0,+0]: [-0.0, +0.0]
+zeros [+0,-0,+0,-0]: [-0.0, +0.0]
+infinities: [-inf, +inf]
+finite extremes: [-3.4028234663852886e+38, +3.4028234663852886e+38]
+
+Scalar minimumf/maximumf propagated NaN in either operand order. Scalar
+minnumf/maxnumf selected 1.0 when paired with NaN. Exit code: 0.

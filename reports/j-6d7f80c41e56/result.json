@@ -1,0 +1,47 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/934",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "candidate_commit": "697129d402848711037a0169f3bb09b0882257aa",
+  "outcome": "candidate_verified",
+  "recommendation": "accept",
+  "fully_resolves_original": true,
+  "summary": "The prepared base already fixes Numeric.minimumf, but reproduces the Vector.reduce max/min NaN discrepancy on a real gfx950 GPU. The exact candidate changes floating max reduction from maxnumf to maximumf and passes its regression plus independent adversarial NaN-position, signed-zero, infinity, and finite-boundary checks. This fully resolves the approved narrow defect scope, not the umbrella issue's deferred migrations.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-6d7f80c41e56/venv/bin/python -m pytest -s /job/review-evidence/j-6d7f80c41e56/candidate-gpu-test.py (prepared base)",
+      "exit_code": 1,
+      "what_was_measured": "Real GPU scalar extrema and vector reductions; reproduced Vector.reduce(max) returning +inf rather than propagating NaN while Numeric.minimumf propagated NaN."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-6d7f80c41e56/venv/bin/python -m pytest -q tests/unit/test_typed_arith_ops.py -k 'minimumf or maximumf' (prepared base)",
+      "exit_code": 0,
+      "what_was_measured": "Compile-tier Numeric.minimumf/maximumf coverage on the prepared base, confirming minimumf is already implemented."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-6d7f80c41e56/venv/bin/python -m pytest -s tests/unit/test_extrema_nan_semantics_gpu.py (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Candidate's real-GPU regression for scalar propagating, scalar number-style, and vector reduction extrema semantics."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-6d7f80c41e56/venv/bin/python /job/review-evidence/j-6d7f80c41e56/adversarial_extrema.py (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Independent real-GPU adversarial cases: NaN in every vector lane, both scalar operand orders, signed-zero permutations, infinities, and float32 finite extremes."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-6d7f80c41e56/venv/bin/python -m pytest -q tests/unit/test_vector.py tests/language/test_arithmetic_types.py tests/unit/test_typed_arith_ops.py tests/unit/test_arith_ops.py tests/unit/test_extrema_nan_semantics_gpu.py (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "534 focused vector, arithmetic, IR, and GPU regression tests."
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "AMD Instinct MI355X (gfx950), ROCm 7.2; base failure and candidate/adversarial passes executed kernels and synchronized device output."
+  },
+  "native_rebuilt": false,
+  "remaining_counterexamples": [],
+  "remaining_limitations": [
+    "Validated on one gfx950 AMD Instinct MI355X only; other GPU architectures were not available.",
+    "No native rebuild was performed because candidate 697129d changes no C++ or native source.",
+    "The umbrella issue's deferred kernel migrations and broad arithmetic-style cleanup are outside the approved investigation boundary and remain unresolved by this candidate."
+  ]
+}
