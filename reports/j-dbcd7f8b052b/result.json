@@ -1,0 +1,44 @@
+{
+  "job_id": "j-dbcd7f8b052b",
+  "source_revision": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "initial_checkpoint_nonce": "f637a4d2-7759-48e4-b7c4-dccfb93082af",
+  "platform_context": "https://github.com/amdpilot-org/amdpilotv2/pull/439",
+  "gpu": {
+    "device_index": 0,
+    "name": "AMD Instinct MI355X",
+    "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+    "torch_hip_version": "7.2.26015-fc0010cf6a"
+  },
+  "measured_tests": [
+    {
+      "name": "prepared raw-pointer vector-add unit test",
+      "command": "/tmp/amdpilot-repo-j-dbcd7f8b052b/venv/bin/python -m pytest tests/unit/test_pointer_argument_vec_add.py",
+      "exit_code": 0,
+      "result": "1 passed in 0.92s",
+      "raw_output": "raw/initial_pointer_argument_vec_add.txt",
+      "raw_output_sha256": "23af9983481ae987bd7348f4fd0a0c296df8201516fb3869cf78ccbd091e4334",
+      "continuity": "Executed before interruption and not repeated during continuation."
+    },
+    {
+      "name": "independent deterministic raw-pointer vector-add control with masked tail",
+      "command": "PYTHONPATH=/job/repo/python /tmp/amdpilot-repo-j-dbcd7f8b052b/venv/bin/python reports/j-dbcd7f8b052b/probes/raw_pointer_masked_tail.py",
+      "exit_code": 0,
+      "result": {
+        "logical_size": 1031,
+        "allocation_size": 1280,
+        "block_dim": 256,
+        "tail_elements": 249,
+        "max_abs_error": 0.0,
+        "tail_unchanged": true
+      },
+      "raw_output": "raw/raw_pointer_masked_tail.txt",
+      "raw_output_sha256": "e6601d73c408b743badffc634489016c1239f338a170b83270ce091c9912f0a6"
+    }
+  ],
+  "limitations": [
+    "This is an interrupted-stream qualification report, not a claim to fix an upstream issue or to establish platform recovery.",
+    "Measurements cover one assigned AMD Instinct MI355X GPU and one execution of each focused validation.",
+    "No broad FlyDSL test suite or performance benchmark was run within the original JobD wall-clock budget.",
+    "The control exercises scalar predication over a non-block-aligned logical length and verifies that rounded-up tail storage remains untouched."
+  ]
+}
