@@ -1,0 +1,24 @@
+Environment capture command:
+  rocm-smi --showproductname --showuniqueid --showserial --showmeminfo vram
+  /tmp/amdpilot-repo-j-833dd346ed89/venv/bin/python <inline import/device probe>
+
+Source revision: acf7e67b7d22847e345938ca54fcc137bd7b2a1f
+Branch: amdpilot/j-833dd346ed89
+Python: /tmp/amdpilot-repo-j-833dd346ed89/venv/bin/python
+Python source module: /job/repo/python/flydsl/expr/__init__.py
+FlyDSL package: /job/repo/python/flydsl/__init__.py
+FlyDSL MLIR namespace: /job/repo/python/flydsl/_mlir
+Pinned native path: /opt/venv/lib/python3.12/site-packages/flydsl/_mlir
+Native extension: /opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so
+Torch: 2.9.1+rocm7.2.0.git7e1940d4
+Torch path: /opt/venv/lib/python3.12/site-packages/torch/__init__.py
+HIP: 7.2.26015-fc0010cf6a
+torch.cuda.is_available(): true
+torch.cuda.device_count(): 1
+Device 0: AMD Instinct MI355X
+Architecture: gfx950 (Torch capability 9.5)
+GPU unique ID: 0xc7f45338dc68744c
+GPU serial: 692517019277
+VRAM total bytes: 309220868096
+VRAM used at capture: 308056064
+Environment capture exit code: 0
