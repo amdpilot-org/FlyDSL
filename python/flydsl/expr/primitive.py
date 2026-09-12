@@ -450,9 +450,10 @@ def make_layout(shape, stride):
         A ``Layout`` usable only while tracing FlyDSL code.
 
     Example:
-        layout = fx.make_layout((4, 8), (1, 4))
-        assert layout.shape.to_py_value() == (4, 8)
-        assert fx.get_scalar(layout(1, 2)) == 9
+        import flydsl.compiler as flyc, flydsl.expr as fx
+        @flyc.jit
+        def example(): assert fx.get_scalar(fx.make_layout((4, 8), (1, 4))(1, 2)) == 9
+        example()
     """
     if not _is_int_tuple_value(shape):
         shape = make_int_tuple(shape)
@@ -464,6 +465,18 @@ def make_layout(shape, stride):
 
 @dsl_loc_tracing
 def make_layout_like(ref):
+    """Create a layout with the same type and dynamic values as ``ref``.
+
+    Args:
+        ref: Layout whose shape and stride should be reproduced.
+    Returns:
+        A new traced ``Layout`` equivalent to ``ref``.
+    Example:
+        import flydsl.compiler as flyc, flydsl.expr as fx
+        @flyc.jit
+        def example(): assert fx.make_layout_like(fx.make_layout((4, 8), (1, 4))).shape.to_py_value() == (4, 8)
+        example()
+    """
     return fly.make_layout_like(ref)
 
 
@@ -538,7 +551,9 @@ def make_view(iter, layout):
     Returns:
         A ``Tensor`` that does not allocate or copy storage.
     Example:
-        matrix = fx.make_view(ptr, fx.make_layout((4, 8), (8, 1)))
+        import flydsl.compiler as flyc, flydsl.expr as fx
+        @flyc.kernel
+        def example(ptr: fx.Pointer): matrix = fx.make_view(ptr, fx.make_layout((4, 8), (8, 1)))
     """
     return fly.make_view(iter, layout)
 
@@ -621,7 +636,10 @@ def get_shape(layout):
     """Return a layout's possibly nested shape as an ``IntTuple``.
 
     Example:
-        assert fx.get_shape(layout).to_py_value() == (4, 8)
+        import flydsl.compiler as flyc, flydsl.expr as fx
+        @flyc.jit
+        def example(): assert fx.get_shape(fx.make_layout((4, 8), (1, 4))).to_py_value() == (4, 8)
+        example()
     """
     return fly.get_shape(layout)
 
@@ -631,7 +649,10 @@ def get_stride(layout):
     """Return a plain layout's possibly nested element strides.
 
     Example:
-        assert fx.get_stride(layout).to_py_value() == (1, 4)
+        import flydsl.compiler as flyc, flydsl.expr as fx
+        @flyc.jit
+        def example(): assert fx.get_stride(fx.make_layout((4, 8), (1, 4))).to_py_value() == (1, 4)
+        example()
     """
     return fly.get_stride(layout)
 
@@ -645,13 +666,26 @@ def get_layout(memref):
     Returns:
         Its ``Layout``.
     Example:
-        layout = fx.get_layout(tensor)
+        import flydsl.compiler as flyc, flydsl.expr as fx
+        @flyc.kernel
+        def example(tensor: fx.Tensor): layout = fx.get_layout(tensor)
     """
     return fly.get_layout(memref)
 
 
 @dsl_loc_tracing
 def get_iter(memref):
+    """Return the pointer or coordinate iterator underlying a tensor view.
+
+    Args:
+        memref: Tensor view created by ``make_view`` or a JIT argument.
+    Returns:
+        The iterator to which the tensor layout applies offsets.
+    Example:
+        import flydsl.compiler as flyc, flydsl.expr as fx
+        @flyc.kernel
+        def example(tensor: fx.Tensor): base = fx.get_iter(tensor)
+    """
     return fly.get_iter(memref)
 
 
@@ -870,9 +904,11 @@ def crd2idx(crd, layout):
     Nested / composed layouts recurse through sub-layouts, apply offsets, and may
     apply swizzles, so the general case is richer than a single multiply-add.
 
-    Examples:
-        index = fx.crd2idx((1, 2), fx.make_layout((4, 8), (1, 4)))
-        assert fx.get_scalar(index) == 9
+    Example:
+        import flydsl.compiler as flyc, flydsl.expr as fx
+        @flyc.jit
+        def example(): assert fx.get_scalar(fx.crd2idx((1, 2), fx.make_layout((4, 8), (1, 4)))) == 9
+        example()
     """
     if not _is_int_tuple_value(crd):
         crd = make_int_tuple(crd)
