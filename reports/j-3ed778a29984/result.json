@@ -1,0 +1,56 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/739",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/588",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/569",
+  "candidate_commit": "948ad74092478fd7bea98b2e478a3c83b8161837",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "recommendation": "request_changes",
+  "fully_resolves_original": false,
+  "summary": "PR 569 is a substantive partial fix: with its rebuilt native library, the three tilers in the issue and the previously identified ((8, 4), None, 40) boundary pass. It does not fully satisfy the original lower-rank-tiler contract. The independently selected lower-rank nested tiler ((8, 4),) is accepted by logical_divide but zipped_divide aborts with exit 134 at the candidate's new tuple.rank() == 2 assertion. The review therefore requests changes rather than accepting the candidate as a full fix.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-3ed778a29984/venv/bin/python /job/review-evidence-j-3ed778a29984/repro.py <tiler> (prepared base acf7e67)",
+      "exit_code": 134,
+      "what_was_measured": "Reproduced the original native assertion for (32, None, None) and (32, None, 40), and the known nested ((8, 4), None, 40) failure. The control (32,) exited 0. Raw logs are under /job/review-evidence-j-3ed778a29984/base-*.log."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-3ed778a29984/venv/bin/python /opt/amdpilot/rebuild-native.py /job (detached exact candidate 948ad74092478fd7bea98b2e478a3c83b8161837)",
+      "exit_code": 0,
+      "what_was_measured": "Built the candidate C++ changes with pinned LLVM e2a39f504fee836e4def9581bed817ecc327b9dc and switched native imports to /tmp/amdpilot-repo-j-3ed778a29984/native-build/python_packages/flydsl/_mlir. The rebuild tool's numerical vector-add smoke passed on one AMD Instinct MI350X (gfx950). Evidence: /job/review-evidence-j-3ed778a29984/native-rebuild.log and native-build.json."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-3ed778a29984/venv/bin/python -m pytest -q tests/unit/test_layout_algebra.py -k 'issue_739 or zipped_divide'",
+      "exit_code": 0,
+      "what_was_measured": "Exact-candidate rebuilt-native regression selection: 5 passed, 31 deselected. This includes the candidate's compiler layout checks and exhaustive offset enumeration for its asserted cases. Raw output: /job/review-evidence-j-3ed778a29984/candidate-pytest.log."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-3ed778a29984/venv/bin/python /job/review-evidence-j-3ed778a29984/repro.py <tiler> (15-case independent candidate matrix)",
+      "exit_code": 134,
+      "what_was_measured": "Fourteen lower-rank, None, mixed, and nested cases exited 0, including all three issue tilers and ((8, 4), None, 40). The independent counterexample ((8, 4),) aborted at LayoutUtils.h:1405 in the candidate's rank-2 assertion. Summary and per-case logs: /job/review-evidence-j-3ed778a29984/adversarial-summary.log and adversarial-*.log."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-3ed778a29984/venv/bin/python /job/review-evidence-j-3ed778a29984/logical_only.py (exact candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Confirmed logical_divide accepts the remaining counterexample ((8, 4),), producing Layout<((8,8),(4,13),80):((16000,128000),(160,640),1)>, while zipped_divide for the same tiler aborts."
+    }
+  ],
+  "gpu_execution": true,
+  "native_rebuilt": true,
+  "remaining_counterexamples": [
+    {
+      "layout": "(64, 50, 80):(16000, 160, 1)",
+      "tiler": "((8, 4),)",
+      "logical_divide": "accepted; Layout<((8,8),(4,13),80):((16000,128000),(160,640),1)>",
+      "zipped_divide": "aborts with exit 134 at LayoutUtils.h:1405: tuple.rank() == 2 && divided layout must contain tile and remainder",
+      "contract_relevance": "The tiler rank is smaller than the input layout, one of the two conditions explicitly called out by the original issue."
+    }
+  ],
+  "remaining_limitations": [
+    "The divide operation produces compiler metadata and does not itself launch a GPU kernel; GPU execution evidence is the rebuild tool's independent vector-add numerical smoke, not proof of divide semantics.",
+    "The reporter's MI308X was unavailable. Native build and GPU smoke validation used the assigned MI350X with gfx950.",
+    "PyCuTe was unavailable, so there was no live NVIDIA CuTe comparison. Candidate-claimed mappings were checked through its exhaustive coordinate-enumeration tests, while the remaining counterexample is established by the logical-success/zipped-abort contract violation.",
+    "A sole (None,) tiler remains rejected by the Python make_tile binding before reaching native zipped_divide; this was not attributed to the candidate's C++ change.",
+    "The native rebuild metadata records the prepared source revision separately from the detached checkout; exact candidate identity was independently confirmed by git HEAD and the candidate working-tree hash in the rebuild evidence."
+  ]
+}
