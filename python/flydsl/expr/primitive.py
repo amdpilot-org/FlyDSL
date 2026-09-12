@@ -190,6 +190,7 @@ __all__ = [
     "memref_store_vec",
     "memref_load",
     "memref_store",
+    "global_load",
     "printf",
     "assume",
     "make_tile",
@@ -1307,6 +1308,79 @@ def memref_store(value, memref, indices):
     indices = make_int_tuple(indices)
     _check_profile(is_profile_weakly_congruent, indices, memref)
     return fly.memref_store(value, memref, indices)
+
+
+@dsl_loc_tracing
+def global_load(result_type, tensor, *, elem_offset=None, byte_offset=None, alignment=None, mask=None, other=0):
+    """Load a scalar or flat vector from a global tensor at a computed offset.
+
+    Exactly one of ``elem_offset`` and ``byte_offset`` is required.  Element
+    offsets are measured in the result element type; byte offsets preserve raw
+    packed-addressing use cases.  ``mask`` may be a scalar predicate or a
+    lane-wise boolean vector; masked lanes return ``other`` without accessing
+    memory.
+    """
+    from .._mlir.dialects import llvm as _llvm
+    from .numeric import Boolean, Int8, Numeric
+    from .typing import Tensor, Vector, as_ir_value
+
+    if not isinstance(tensor, Tensor):
+        raise TypeError(f"tensor must be an fx.Tensor, got {type(tensor).__name__}")
+    if tensor.address_space != AddressSpace.Global:
+        raise ValueError(f"global_load requires global address space, got {tensor.address_space}")
+    if (elem_offset is None) == (byte_offset is None):
+        raise ValueError("exactly one of elem_offset or byte_offset is required")
+
+    if isinstance(result_type, ir.Type):
+        ir_result_type = result_type
+        if isinstance(result_type, ir.VectorType):
+            dtype = Numeric.from_ir_type(result_type.element_type)
+            shape = tuple(result_type.shape)
+        else:
+            dtype = Numeric.from_ir_type(result_type)
+            shape = None
+    elif isinstance(result_type, type) and issubclass(result_type, Vector):
+        ir_result_type = result_type.ir_type
+        dtype = Numeric.from_ir_type(ir.VectorType(ir_result_type).element_type)
+        shape = tuple(ir.VectorType(ir_result_type).shape)
+    elif isinstance(result_type, type) and issubclass(result_type, Numeric):
+        ir_result_type = result_type.ir_type
+        dtype = result_type
+        shape = None
+    else:
+        raise TypeError("result_type must be a scalar numeric type, concrete vector type, or MLIR type")
+
+    ptr = get_iter(tensor)
+    ptr_alignment = tensor.alignment if alignment is None else alignment
+    if not isinstance(ptr_alignment, int) or isinstance(ptr_alignment, bool) or ptr_alignment < 1:
+        raise ValueError(f"alignment must be a positive integer, got {ptr_alignment!r}")
+    offset = elem_offset
+    if byte_offset is not None:
+        ptr = recast_iter(PointerType.get(Int8.ir_type, ptr.address_space, ptr_alignment), ptr)
+        ptr = add_offset(ptr, byte_offset)
+    else:
+        ptr = recast_iter(PointerType.get(dtype.ir_type, ptr.address_space, ptr_alignment), ptr)
+        ptr = add_offset(ptr, offset)
+    ptr = recast_iter(PointerType.get(dtype.ir_type, ptr.address_space, ptr_alignment), ptr)
+
+    if mask is None:
+        from .llvm import generic_load
+
+        return generic_load(ptr, dtype=dtype, count=None if shape is None else Vector._numel_from_shape(shape))
+
+    lanes = 1 if shape is None else Vector._numel_from_shape(shape)
+    mask_vec = mask if isinstance(mask, Vector) else Vector.filled((lanes,), mask, Boolean)
+    if mask_vec.dtype is not Boolean:
+        mask_vec = mask_vec != 0
+    if mask_vec.numel != lanes:
+        raise ValueError(f"mask has {mask_vec.numel} lanes, expected {lanes}")
+    pass_thru = other if isinstance(other, Vector) else Vector.filled((lanes,), other, dtype)
+    vector_type = Vector.make_type(lanes, dtype)
+    loaded = _llvm.MaskedLoadOp(
+        vector_type, ptr.llvm_ptr, as_ir_value(mask_vec), ptr_alignment, pass_thru=as_ir_value(pass_thru)
+    ).result
+    value = Vector(loaded, shape or (1,), dtype)
+    return value[0] if shape is None else value
 
 
 # ===----------------------------------------------------------------------=== #
