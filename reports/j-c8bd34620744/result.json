@@ -1,0 +1,47 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/813",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "summary": "Candidate 08c66ccee87802d8fcbd123d18e0ec9115cab634 fixes and validates the ROCm JIT runtime's HIP-SDK build/link dependency, but only a subset of the original RFC: backend autodetection and the proposed rocdl;nvvm dual-backend wheel remain unimplemented.",
+  "tests": [
+    {
+      "command": "cmake -S /job/repo -B /tmp/amdpilot-repo-j-c8bd34620744/base-sdkfree-config-review -G Ninja -DMLIR_DIR=/opt/amdpilot/llvm-project/mlir_install/lib/cmake/mlir -DPython3_EXECUTABLE=/tmp/amdpilot-repo-j-c8bd34620744/venv/bin/python -Dnanobind_DIR=/opt/venv/lib/python3.12/site-packages/nanobind/cmake -DCMAKE_DISABLE_FIND_PACKAGE_hip=TRUE",
+      "exit_code": 1,
+      "what_was_measured": "Prepared base reproduction: configure failed because required HIP package discovery could not be disabled."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-c8bd34620744/venv/bin/python /opt/amdpilot/rebuild-native.py /job",
+      "exit_code": 0,
+      "what_was_measured": "Candidate native C++ rebuild with pinned LLVM plus one-GPU vector-add smoke on AMD Instinct MI355X gfx950."
+    },
+    {
+      "command": "cmake configure with CMAKE_DISABLE_FIND_PACKAGE_hip=TRUE, then cmake --build ... --target FlyJitRuntime -j2",
+      "exit_code": 0,
+      "what_was_measured": "Candidate runtime configured and built without HIP package discovery."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-c8bd34620744/venv/bin/python -m pytest -q tests/unit/test_backend_cmake_defaults.py",
+      "exit_code": 0,
+      "what_was_measured": "Candidate focused regression: 5 passed."
+    },
+    {
+      "command": "FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/candidate-isa FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-c8bd34620744/review-cache /tmp/amdpilot-repo-j-c8bd34620744/venv/bin/python -m pytest -q -s tests/unit/test_pointer_argument_vec_add.py",
+      "exit_code": 0,
+      "what_was_measured": "Uncached GPU pointer vector-add versus PyTorch reference at unchanged 1e-5 tolerance; 1 passed; emitted gfx950 ISA showed global loads, v_add_f32_e32, and global store."
+    },
+    {
+      "command": "ctypes lazy-load and adversarial HIP wrapper boundary script",
+      "exit_code": 0,
+      "what_was_measured": "No libamdhip64 mapping after loading the candidate library; exact odd-count memset32/memset16 results, one-byte allocation/free, and event/stream lifecycle all passed."
+    },
+    {
+      "command": "readelf -d and nm -D --undefined-only on candidate libfly_jit_runtime.so",
+      "exit_code": 0,
+      "what_was_measured": "No libamdhip64 DT_NEEDED entry and no undefined HIP symbols."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "One assigned AMD Instinct MI355X (gfx950) ran the required native smoke, the independent pointer vector-add reference check, and adversarial device-memory/event/stream checks. ISA target was amdgcn-amd-amdhsa-unknown-gfx950.",
+  "native_rebuilt": true,
+  "remaining_limitations": "ROCm 7.2 was installed on the host, so a physically SDK-free host and a complete built wheel were not tested. Only gfx950 AMD hardware was available. CUDA/NVVM, NVIDIA hardware, dual-backend packaging, backend autodetection, and cluster-launch behavior remain unverified or unimplemented."
+}
