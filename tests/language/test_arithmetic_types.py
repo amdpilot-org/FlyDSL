@@ -469,6 +469,15 @@ class TestOperators:
 
         run(body)
 
+    def test_logical_not_raises_clear_error(self):
+        """Python logical `not` has scalar truth semantics and is unsupported for vectors."""
+
+        def body():
+            with pytest.raises(TypeError, match="logical `not` is not supported for Vector"):
+                not vec(Int32)
+
+        run(body)
+
     def test_abs_preserves_dtype(self):
         """`abs()` keeps the element dtype for signed int, unsigned int, and float."""
 
