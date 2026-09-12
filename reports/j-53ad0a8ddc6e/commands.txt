@@ -1,0 +1,3 @@
+/tmp/amdpilot-repo-j-53ad0a8ddc6e/venv/bin/python -m pytest -q -s tests/unit/test_pointer_argument_vec_add.py
+/tmp/amdpilot-repo-j-53ad0a8ddc6e/venv/bin/python reports/j-53ad0a8ddc6e/masked_tail_probe.py
+/tmp/amdpilot-repo-j-53ad0a8ddc6e/venv/bin/python reports/j-53ad0a8ddc6e/environment_probe.py

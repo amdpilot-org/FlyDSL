@@ -1,0 +1,36 @@
+{
+  "current_device": 0,
+  "device_count": 1,
+  "device_name": "AMD Instinct MI355X",
+  "device_total_memory_bytes": 309220868096,
+  "module_paths": {
+    "flydsl": "/job/repo/python/flydsl/__init__.py",
+    "flydsl._mlir": null,
+    "flydsl._mlir.dialects._fly_ops_gen": "/job/repo/python/flydsl/_mlir/dialects/_fly_ops_gen.py",
+    "flydsl._mlir.ir": "/job/repo/python/flydsl/_mlir/ir.py",
+    "flydsl.expr": "/job/repo/python/flydsl/expr/__init__.py"
+  },
+  "native_shared_objects": [
+    "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so",
+    "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFly.cpython-312-x86_64-linux-gnu.so",
+    "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFlyROCDL.cpython-312-x86_64-linux-gnu.so",
+    "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsGPU.cpython-312-x86_64-linux-gnu.so",
+    "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirDialectsLLVM.cpython-312-x86_64-linux-gnu.so",
+    "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirExecutionEngine.cpython-312-x86_64-linux-gnu.so",
+    "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirGPUPasses.cpython-312-x86_64-linux-gnu.so",
+    "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlirRegisterEverything.cpython-312-x86_64-linux-gnu.so",
+    "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libMLIRPythonSupport-mlir.so",
+    "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so",
+    "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libmlir_c_runner_utils.so",
+    "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/libnanobind-mlir.so"
+  ],
+  "prepared_native_root": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir",
+  "python_executable": "/tmp/amdpilot-repo-j-53ad0a8ddc6e/venv/bin/python",
+  "torch_hip": "7.2.26015-fc0010cf6a",
+  "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+  "visibility": {
+    "CUDA_VISIBLE_DEVICES": null,
+    "HIP_VISIBLE_DEVICES": null,
+    "ROCR_VISIBLE_DEVICES": null
+  }
+}
