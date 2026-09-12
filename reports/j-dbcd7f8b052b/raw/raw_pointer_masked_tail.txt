@@ -1,0 +1,1 @@
+{"allocation_size": 1280, "block_dim": 256, "device_index": 0, "gpu_name": "AMD Instinct MI355X", "logical_size": 1031, "max_abs_error": 0.0, "status": "passed", "tail_elements": 249, "tail_unchanged": true, "torch_hip_version": "7.2.26015-fc0010cf6a", "torch_version": "2.9.1+rocm7.2.0.git7e1940d4"}
