@@ -1,0 +1,68 @@
+{
+  "job_id": "j-dc614abb0e10",
+  "source_revision": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "qualification_scope": "Task workflow qualification for raw pointer-argument vector addition only; not a claim about all FlyDSL repository behavior.",
+  "environment": {
+    "python": "/tmp/amdpilot-repo-j-dc614abb0e10/venv/bin/python",
+    "checkout": "/job/repo",
+    "flydsl_source_import": "/job/repo/python/flydsl/__init__.py",
+    "flydsl_expr_import": "/job/repo/python/flydsl/expr/__init__.py",
+    "native_import_reported": "/job/repo/python/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so",
+    "native_import_resolved": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so",
+    "torch_import": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+    "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+    "hip_version": "7.2.26015-fc0010cf6a",
+    "visible_gpu_count": 1,
+    "gpu_name": "AMD Instinct MI355X",
+    "gpu_arch": "gfx950:sramecc+:xnack-",
+    "gpu_unique_id": "0x89e8c5cd3767811a",
+    "gpu_serial": "692517002127",
+    "driver_version": "6.18.6"
+  },
+  "commands": [
+    {
+      "name": "pointer_argument_vector_add_unit_test",
+      "command": "/tmp/amdpilot-repo-j-dc614abb0e10/venv/bin/python -m pytest -vv -s tests/unit/test_pointer_argument_vec_add.py::test_pointer_argument_vector_add",
+      "exit_code": 0,
+      "result": "1 passed in 0.99s",
+      "input_length": 4099,
+      "reference": "a_dev + b_dev computed by Torch on the GPU",
+      "acceptance_threshold_max_abs_error": 1e-05
+    },
+    {
+      "name": "independent_masked_tail_probe",
+      "command": "/tmp/amdpilot-repo-j-dc614abb0e10/venv/bin/python reports/j-dc614abb0e10/masked_tail_probe.py",
+      "exit_code": 0,
+      "input_length": 1009,
+      "block_dim": 256,
+      "grid_x": 4,
+      "masked_tail_lanes": 15,
+      "reference": "independently evaluated torch.add(a, b)",
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "mismatch_count_at_rtol_1e-6_atol_1e-6": 0,
+      "guard_elements_each_side": 37,
+      "sentinel_value": -123456.75,
+      "prefix_sentinel_untouched": true,
+      "suffix_sentinel_untouched": true
+    },
+    {
+      "name": "gpu_identity",
+      "command": "rocm-smi --showproductname --showuniqueid --showserial --showdriverversion",
+      "exit_code": 0
+    },
+    {
+      "name": "import_path_probe",
+      "command": "/tmp/amdpilot-repo-j-dc614abb0e10/venv/bin/python - <<'PY' ... import and print FlyDSL, native extension, and Torch paths ... PY",
+      "exit_code": 0
+    }
+  ],
+  "limitations": [
+    "This is a focused artifact-delivery qualification, not comprehensive FlyDSL validation.",
+    "Only the assigned single visible GPU was used.",
+    "No native or other product sources were changed; the environment was not rebuilt or reinstalled.",
+    "The repository unit test reports pass/fail and enforces max absolute error below 1e-5 but does not print its measured error; the independent probe records explicit numerical measurements."
+  ],
+  "raw_results": "raw-results.txt",
+  "reproducible_probe": "masked_tail_probe.py"
+}
