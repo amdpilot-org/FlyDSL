@@ -1,0 +1,61 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/603",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/585",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/562",
+  "candidate_commit": "5fad5553f7f542c723c492379e5c4e7a9f80736a",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "recommendation": "request_changes",
+  "fully_resolves_original": false,
+  "summary": "The candidate is test-only hardening at an AITER/FlyDSL HGEMM boundary, not a verified SGLang or vLLM integration fix. At the exact candidate commit, its direct invocation and pytest regression both fail during the top-level AITER import because the prepared amd-aiter requires Triton >=3.6.0 while the pinned ROCm environment supplies Triton 3.5.1. No downstream tensor operation, non-default-stream launch, or numerical comparison executes. The candidate also does not wire the new executable into CI. The prepared base already contains dedicated FlyDSL SGLang and vLLM nightly workflows, so the candidate neither creates nor validates the original issue's requested integration coverage.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-b5a4a1193b00/venv/bin/python tests/integration/test_aiter_flydsl_hgemm.py (base acf7e67)",
+      "exit_code": 2,
+      "what_was_measured": "Failing-before evidence: the candidate regression does not exist on the prepared base. This reflects that the candidate adds a test, not that the already-present SGLang/vLLM workflows are absent."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-b5a4a1193b00/venv/bin/python -m py_compile tests/integration/test_aiter_flydsl_hgemm.py (candidate 5fad555)",
+      "exit_code": 0,
+      "what_was_measured": "The added Python file is syntactically valid only."
+    },
+    {
+      "command": "XDG_CACHE_HOME=/tmp/amdpilot-repo-j-b5a4a1193b00/cache/xdg TORCH_EXTENSIONS_DIR=/tmp/amdpilot-repo-j-b5a4a1193b00/cache/torch FLYDSL_CACHE_DIR=/tmp/amdpilot-repo-j-b5a4a1193b00/cache/flydsl /tmp/amdpilot-repo-j-b5a4a1193b00/venv/bin/python tests/integration/test_aiter_flydsl_hgemm.py (candidate 5fad555)",
+      "exit_code": 1,
+      "what_was_measured": "The real AITER import failed with RuntimeError requiring triton>=3.6.0 before FlyDSL HGEMM or downstream GPU execution."
+    },
+    {
+      "command": "XDG_CACHE_HOME=/tmp/amdpilot-repo-j-b5a4a1193b00/cache/xdg TORCH_EXTENSIONS_DIR=/tmp/amdpilot-repo-j-b5a4a1193b00/cache/torch FLYDSL_CACHE_DIR=/tmp/amdpilot-repo-j-b5a4a1193b00/cache/flydsl /tmp/amdpilot-repo-j-b5a4a1193b00/venv/bin/python -m pytest -q tests/integration/test_aiter_flydsl_hgemm.py (candidate 5fad555)",
+      "exit_code": 1,
+      "what_was_measured": "The candidate's regression is not a passing or skipped test in the prepared environment; pytest.importorskip does not catch AITER's RuntimeError."
+    },
+    {
+      "command": "XDG_CACHE_HOME=/tmp/amdpilot-repo-j-b5a4a1193b00/cache/xdg FLYDSL_CACHE_DIR=/tmp/amdpilot-repo-j-b5a4a1193b00/cache/flydsl TORCH_EXTENSIONS_DIR=/tmp/amdpilot-repo-j-b5a4a1193b00/cache/torch /tmp/amdpilot-repo-j-b5a4a1193b00/venv/bin/python -m pytest -q -s tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] (candidate 5fad555)",
+      "exit_code": 0,
+      "what_was_measured": "Standalone FlyDSL produced 1,048,576 float32 GPU outputs on gfx950 with maximum absolute error 0.00e+00 against Torch. This is GPU health evidence only, not SGLang/vLLM/AITER integration evidence."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "One assigned AMD Instinct MI350X (gfx950) executed the standalone FlyDSL vector-add check with max error 0.00e+00. The candidate AITER/FlyDSL integration path performed no GPU work because import failed first.",
+  "native_rebuilt": false,
+  "native_rebuild_reason": "The candidate changes only a Python test and its prior job report; the diff contains no native C++ or binding changes. Source imported from /job/repo/python/flydsl, and native bindings remained the pinned wheel content at /opt/venv/lib/python3.12/site-packages/flydsl/_mlir.",
+  "remaining_counterexamples": [
+    "With the prepared pinned environment, importing AITER raises RuntimeError because amd-aiter requires Triton >=3.6.0 but Triton 3.5.1+rocm7.2.0.gita272dfa8 is installed; the candidate test fails before its claimed tensor and stream boundary.",
+    "Neither sglang nor vllm is installed in the prepared interpreter, so no actual SGLang/FlyDSL or vLLM/FlyDSL package boundary was exercised locally.",
+    "The candidate adds no workflow invocation or test registration for tests/integration/test_aiter_flydsl_hgemm.py, so landing it alone does not create continuous integration coverage.",
+    "The test imports and calls AITER directly rather than importing or executing SGLang or vLLM, so even a future AITER HGEMM pass would not by itself establish either original downstream integration contract.",
+    "The prepared base already has .github/workflows/flydsl-sglang-integration.yaml and .github/workflows/flydsl-vllm-integration.yaml; the candidate does not demonstrate a failing behavior in those workflows or improve them."
+  ],
+  "remaining_limitations": [
+    "The assigned system exposes one gfx950 AMD Instinct MI350X, while the candidate report calls it an MI355X; architecture-level gfx950 validation is available but the exact marketing-name claim differs.",
+    "SGLang and vLLM require their compatible downstream containers, packages, model assets, and multi-GPU workflow infrastructure; those prerequisites are not present in this single-GPU prepared interpreter.",
+    "No native rebuild was appropriate because the candidate has no native changes.",
+    "Raw review evidence is preserved outside the revision-switched checkout at /job/review-evidence-j-b5a4a1193b00."
+  ],
+  "paths": {
+    "flydsl_source": "/job/repo/python/flydsl",
+    "flydsl_native": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir",
+    "aiter_source": "/opt/aiter/aiter",
+    "review_evidence": "/job/review-evidence-j-b5a4a1193b00"
+  }
+}
