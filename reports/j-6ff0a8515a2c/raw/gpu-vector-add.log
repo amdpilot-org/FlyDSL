@@ -1,0 +1,25 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 1 item
+
+tests/kernels/test_vec_add.py 
+================================================================================
+ROCm GPU Benchmark - Vector Addition with flydsl API
+GPU: gfx950
+================================================================================
+
+================================================================================
+Benchmark: Vector Addition (C = A + B) - flydsl API
+  - Threads per block: 256
+  - Vec width: 4 floats (128 bits)
+  - Tile elems: 1024
+Size: 1048576 elements (1.0M floats, ~0.00 GB)
+Memory Traffic: 3 x 1048576 x 4 bytes = 0.01 GB per kernel
+================================================================================
+  Correctness: max error = 0.00e+00
+.
+
+============================== 1 passed in 1.10s ===============================

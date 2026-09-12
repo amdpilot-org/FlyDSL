@@ -13,8 +13,7 @@ _libc.setvbuf.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int, ctypes
 _libc.setvbuf.restype = ctypes.c_int
 
 # POSIX follows the C values used by glibc: unbuffered, line buffered, fully buffered.
-_IOLBF = 1
-_BUFSIZ = 8192
+_IONBF = 2
 _configured = False
 
 
@@ -27,9 +26,10 @@ def configure_device_printf_stdout() -> None:
 
     HIP writes device ``printf`` output through the process' C ``stdout``
     stream.  libc normally block-buffers that stream when it is redirected or
-    piped, including the pipe used by Jupyter kernels.  FlyDSL configures it as
-    line buffered so records delivered by a completed GPU synchronization are
-    visible without a separate host-side flush.
+    piped, including the pipe used by Jupyter kernels. FlyDSL configures it as
+    unbuffered so records delivered by a completed GPU synchronization are
+    visible without a separate host-side flush, including when another C stdio
+    writer used stdout before FlyDSL was imported.
 
     The process-wide setting is applied once and also affects other C/C++
     writers to stdout.  Python's own text stream keeps its existing buffering.
@@ -43,19 +43,19 @@ def configure_device_printf_stdout() -> None:
     stdout = _stdout_stream()
     if _libc.fflush(stdout) != 0:
         errno = ctypes.get_errno()
-        raise OSError(errno, "failed to flush host stdout before configuring line buffering")
-    if _libc.setvbuf(stdout, None, _IOLBF, _BUFSIZ) != 0:
+        raise OSError(errno, "failed to flush host stdout before disabling buffering")
+    if _libc.setvbuf(stdout, None, _IONBF, 0) != 0:
         errno = ctypes.get_errno()
-        raise OSError(errno, "failed to configure host stdout line buffering")
+        raise OSError(errno, "failed to disable host stdout buffering")
     _configured = True
 
 
 def flush_device_printf() -> None:
     """Flush completed device ``printf`` output and all other C stdio streams.
 
-    This explicit helper remains useful for device format strings that do not
-    end in a newline.  It does not synchronize GPU work, so callers must first
-    synchronize the relevant stream or device.
+    This explicit helper remains available for callers that also need to flush
+    other C stdio streams. It does not synchronize GPU work, so callers must
+    first synchronize the relevant stream or device.
 
     Raises:
         OSError: If libc reports that a stream could not be flushed.

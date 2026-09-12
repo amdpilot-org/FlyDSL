@@ -1,0 +1,23 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 20 items
+
+tests/system/test_device_printf_pipe.py .....
+tests/unit/test_device_runtime.py .........
+tests/unit/test_rocir_print.py ....module {
+  gpu.module @mod {
+    gpu.func @kern() kernel {
+      %c1_i32 = arith.constant 1 : i32
+      %cst = arith.constant 2.000000e+00 : f32
+      gpu.printf "a=%d, b=%.2f\0A", %c1_i32, %cst : i32, f32
+      gpu.return
+    }
+  }
+}
+
+..
+
+============================== 20 passed in 7.88s ==============================

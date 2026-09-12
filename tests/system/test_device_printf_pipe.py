@@ -16,6 +16,12 @@ pytestmark = [pytest.mark.l2_device, pytest.mark.rocm_lower]
 
 
 def _run_child() -> None:
+    import ctypes
+
+    preimport_write = sys.argv[sys.argv.index(_CHILD_FLAG) + 3] == "preimport"
+    if preimport_write:
+        ctypes.CDLL(None).printf(b"pre-import libc stdout\n")
+
     import torch
 
     import flydsl.compiler as flyc
@@ -50,13 +56,26 @@ if _CHILD_FLAG in sys.argv:
 
 
 @pytest.mark.parametrize(
-    ("launches", "explicit_flush"),
-    [(1, False), (3, False), (1, True), (3, True)],
+    ("launches", "explicit_flush", "preimport_write"),
+    [
+        (1, False, False),
+        (3, False, False),
+        (1, True, False),
+        (3, True, False),
+        (1, False, True),
+    ],
 )
-def test_device_printf_visible_in_pipe_after_synchronize(launches, explicit_flush):
+def test_device_printf_visible_in_pipe_after_synchronize(launches, explicit_flush, preimport_write):
     """The unchanged synchronize-only sequence exposes output while the child lives."""
     process = subprocess.Popen(
-        [sys.executable, __file__, _CHILD_FLAG, str(launches), "flush" if explicit_flush else "automatic"],
+        [
+            sys.executable,
+            __file__,
+            _CHILD_FLAG,
+            str(launches),
+            "flush" if explicit_flush else "automatic",
+            "preimport" if preimport_write else "clean",
+        ],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -87,6 +106,8 @@ def test_device_printf_visible_in_pipe_after_synchronize(launches, explicit_flus
 
         assert process.poll() is None, "output was visible only after process teardown"
         lines = stdout.decode().splitlines()
+        if preimport_write:
+            assert lines.pop(0) == "pre-import libc stdout"
         assert len(lines) == expected_lines
         observed_threads = [int(line.removeprefix("hello from thread ")) for line in lines]
         assert sorted(observed_threads) == sorted([0, 1, 2, 3] * launches)
