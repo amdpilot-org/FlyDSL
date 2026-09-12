@@ -1,0 +1,11 @@
+  Name:                    AMD EPYC 9965 192-Core Processor   
+  Marketing Name:          AMD EPYC 9965 192-Core Processor   
+  Vendor Name:             CPU                                
+  Name:                    AMD EPYC 9965 192-Core Processor   
+torch= 2.9.1+rocm7.2.0.git7e1940d4
+hip= 7.2.26015-fc0010cf6a
+available= True
+count= 1
+0 AMD Instinct MI350X gfx950:sramecc+:xnack-
+historical_llvm=7f77ca0dbda4abbf9af06537b2c475f20ccd6007
+prepared_llvm=e2a39f504fee836e4def9581bed817ecc327b9dc
