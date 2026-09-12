@@ -68,6 +68,7 @@ def Fly_MakeCoordOp : Fly_Op<"make_coord", [Pure]> {
 def Fly_MakeLayoutOp : Fly_Op<"make_layout", [Pure, DeclareOpInterfaceMethods<InferTypeOpInterface>]> {
   let arguments = (ins Fly_IntTuple:$shape, Fly_IntTuple:$stride);
   let results = (outs Fly_Layout:$result);
+  let hasVerifier = 1;
 }
 
 def Fly_MakeLayoutLikeOp : Fly_Op<"make_layout_like", [Pure, DeclareOpInterfaceMethods<InferTypeOpInterface>]> {
@@ -287,20 +288,24 @@ def Fly_CoalesceOp : Fly_Op<"coalesce", [Pure, DeclareOpInterfaceMethods<InferTy
 def Fly_CompositionOp : Fly_Op<"composition", [Pure, DeclareOpInterfaceMethods<InferTypeOpInterface>]> {
   let arguments = (ins Fly_LayoutLikeType:$outer, AnyTypeOf<[Fly_Layout, Fly_Tile]>:$inner);
   let results = (outs Fly_LayoutLikeType:$result);
+  let hasVerifier = 1;
 }
 def Fly_ComplementOp : Fly_Op<"complement", [Pure, DeclareOpInterfaceMethods<InferTypeOpInterface>]> {
   let arguments = (ins Fly_NarrowLayoutType:$layout, Optional<Fly_IntTuple>:$codomain_size);
   let results = (outs Fly_NarrowLayoutType:$result);
+  let hasVerifier = 1;
   let assemblyFormat = "`(` $layout (`,` $codomain_size^)? `)` attr-dict `:` functional-type(operands, results)";
 }
 
 def Fly_RightInverseOp : Fly_Op<"right_inverse", [Pure, DeclareOpInterfaceMethods<InferTypeOpInterface>]> {
   let arguments = (ins Fly_NarrowLayoutType:$layout);
   let results = (outs Fly_NarrowLayoutType:$result);
+  let hasVerifier = 1;
 }
 def Fly_LeftInverseOp : Fly_Op<"left_inverse", [Pure, DeclareOpInterfaceMethods<InferTypeOpInterface>]> {
   let arguments = (ins Fly_NarrowLayoutType:$layout);
   let results = (outs Fly_NarrowLayoutType:$result);
+  let hasVerifier = 1;
 }
 
 class Fly_LayoutDivideOp<string mnemonic>
@@ -314,7 +319,9 @@ class Fly_LayoutProductOp<string mnemonic>
   let results = (outs Fly_NarrowLayoutType:$result);
 }
 
-def Fly_LogicalDivideOp : Fly_LayoutDivideOp<"logical_divide">;
+def Fly_LogicalDivideOp : Fly_LayoutDivideOp<"logical_divide"> {
+  let hasVerifier = 1;
+}
 def Fly_ZippedDivideOp : Fly_LayoutDivideOp<"zipped_divide">;
 def Fly_TiledDivideOp : Fly_LayoutDivideOp<"tiled_divide">;
 def Fly_FlatDivideOp : Fly_LayoutDivideOp<"flat_divide">;

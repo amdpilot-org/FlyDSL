@@ -19,12 +19,274 @@
 #include "flydsl/Dialect/Fly/IR/FlyOps.cpp.inc"
 
 #include <algorithm>
+#include <optional>
 #include <tuple>
 
 using namespace mlir;
 using namespace mlir::fly;
 
 namespace {
+
+bool areCongruent(IntTupleAttr lhs, IntTupleAttr rhs) {
+  if (lhs.isLeaf() != rhs.isLeaf())
+    return false;
+  if (lhs.isLeaf())
+    return true;
+  if (lhs.rank() != rhs.rank())
+    return false;
+  for (int32_t i = 0; i < lhs.rank(); ++i)
+    if (!areCongruent(lhs.at(i), rhs.at(i)))
+      return false;
+  return true;
+}
+
+LogicalResult validateLayoutStructure(std::optional<Location> location, StringRef opName,
+                                      LayoutAttr layout) {
+  if (!areCongruent(layout.getShape(), layout.getStride()))
+    return emitOptionalError(location, opName,
+                             ": shape and stride must have congruent tuple structure; got ",
+                             layout.getShape(), " and ", layout.getStride());
+  return success();
+}
+
+std::optional<int64_t> staticProduct(IntTupleAttr value) {
+  if (value.isLeaf()) {
+    auto leaf = value.extractIntFromLeaf();
+    if (!leaf.isStatic())
+      return std::nullopt;
+    return leaf.getValue();
+  }
+  int64_t product = 1;
+  for (int32_t i = 0; i < value.rank(); ++i) {
+    auto child = staticProduct(value.at(i));
+    if (!child)
+      return std::nullopt;
+    product *= *child;
+  }
+  return product;
+}
+
+std::optional<int64_t> staticProduct(TileAttr tile) {
+  if (tile.isLeaf()) {
+    Attribute value = tile.getValue();
+    if (auto layout = dyn_cast<LayoutAttr>(value))
+      return staticProduct(layout.getShape());
+    if (auto extent = dyn_cast<IntAttr>(value)) {
+      if (extent.isNone())
+        return 1;
+      if (!extent.isStatic())
+        return std::nullopt;
+      return extent.getValue();
+    }
+    return std::nullopt;
+  }
+  int64_t product = 1;
+  for (int32_t i = 0; i < tile.rank(); ++i) {
+    Attribute mode = tile.at(i);
+    if (auto nested = dyn_cast<TileAttr>(mode)) {
+      auto child = staticProduct(nested);
+      if (!child)
+        return std::nullopt;
+      product *= *child;
+    } else if (auto layout = dyn_cast<LayoutAttr>(mode)) {
+      auto child = staticProduct(layout.getShape());
+      if (!child)
+        return std::nullopt;
+      product *= *child;
+    } else if (auto extent = dyn_cast<IntAttr>(mode)) {
+      if (extent.isNone())
+        continue;
+      if (!extent.isStatic())
+        return std::nullopt;
+      product *= extent.getValue();
+    } else {
+      return std::nullopt;
+    }
+  }
+  return product;
+}
+
+void flattenStaticLeaves(IntTupleAttr value, SmallVectorImpl<int64_t> &leaves,
+                         bool &allStatic) {
+  if (value.isLeaf()) {
+    auto leaf = value.extractIntFromLeaf();
+    if (!leaf.isStatic()) {
+      allStatic = false;
+      return;
+    }
+    leaves.push_back(leaf.getValue());
+    return;
+  }
+  for (int32_t i = 0; i < value.rank(); ++i)
+    flattenStaticLeaves(value.at(i), leaves, allStatic);
+}
+
+bool isStaticallyRightInvertible(LayoutAttr layout) {
+  SmallVector<int64_t> shapes, strides;
+  bool allStatic = true;
+  flattenStaticLeaves(layout.getShape(), shapes, allStatic);
+  flattenStaticLeaves(layout.getStride(), strides, allStatic);
+  if (!allStatic)
+    return true;
+  SmallVector<std::pair<int64_t, int64_t>> modes;
+  for (auto [shape, stride] : llvm::zip(shapes, strides)) {
+    if (shape <= 1)
+      continue;
+    if (stride <= 0)
+      return false;
+    modes.push_back({stride, shape});
+  }
+  llvm::sort(modes);
+  int64_t expectedStride = 1;
+  for (auto [stride, shape] : modes) {
+    if (stride != expectedStride)
+      return false;
+    expectedStride *= shape;
+  }
+  return true;
+}
+
+LogicalResult validateComposition(std::optional<Location> location, LayoutAttr outer,
+                                  LayoutAttr inner) {
+  if (failed(validateLayoutStructure(location, "CompositionOp outer layout", outer)) ||
+      failed(validateLayoutStructure(location, "CompositionOp inner layout", inner)))
+    return failure();
+  SmallVector<int64_t> outerShapes, outerStrides;
+  bool outerStatic = true;
+  flattenStaticLeaves(outer.getShape(), outerShapes, outerStatic);
+  flattenStaticLeaves(outer.getStride(), outerStrides, outerStatic);
+  if (outerStatic && outerShapes.size() == outerStrides.size()) {
+    SmallVector<int64_t> coalescedShapes;
+    SmallVector<int64_t> coalescedStrides;
+    for (auto [shape, stride] : llvm::zip(outerShapes, outerStrides)) {
+      if (!coalescedShapes.empty() &&
+          stride == coalescedStrides.back() * coalescedShapes.back()) {
+        coalescedShapes.back() *= shape;
+      } else {
+        coalescedShapes.push_back(shape);
+        coalescedStrides.push_back(stride);
+      }
+    }
+    outerShapes = std::move(coalescedShapes);
+  }
+  auto outerSize = staticProduct(outer.getShape());
+  SmallVector<int64_t> innerShapes, innerStrides;
+  bool allStatic = true;
+  flattenStaticLeaves(inner.getShape(), innerShapes, allStatic);
+  flattenStaticLeaves(inner.getStride(), innerStrides, allStatic);
+  if (!outerSize || !allStatic)
+    return success();
+  if (*outerSize <= 0)
+    return emitOptionalError(location,
+                             "CompositionOp: outer layout domain must have positive static size");
+  int64_t maxInnerCoordinate = 0;
+  for (auto [shape, stride] : llvm::zip(innerShapes, innerStrides)) {
+    if (shape < 0 || stride < 0)
+      return emitOptionalError(location,
+                               "CompositionOp: inner layout addresses coordinates outside the "
+                               "outer layout domain");
+    if (shape > 1 && stride > 0) {
+      int64_t extent = shape - 1;
+      if (extent > (*outerSize - 1 - maxInnerCoordinate) / stride)
+        return emitOptionalError(location,
+                                 "CompositionOp: inner layout addresses coordinates outside the "
+                                 "outer layout domain");
+      maxInnerCoordinate += extent * stride;
+    }
+    int64_t restShape = shape;
+    int64_t restStride = stride;
+    if (outerStatic) {
+      for (size_t i = 0; i + 1 < outerShapes.size(); ++i) {
+        int64_t modeShape = outerShapes[i];
+        if (modeShape <= 0 ||
+            (restStride >= modeShape && restStride % modeShape != 0))
+          return emitOptionalError(location,
+                                   "CompositionOp: inner stride is not admissible for the outer "
+                                   "layout mode structure");
+        int64_t nextShape = (modeShape + restStride - 1) / restStride;
+        int64_t nextStride = (restStride + modeShape - 1) / modeShape;
+        if (nextShape != 1 && restShape != 1) {
+          int64_t newShape = std::min(nextShape, restShape);
+          if (newShape <= 0 || restShape % newShape != 0)
+            return emitOptionalError(location,
+                                     "CompositionOp: inner shape is not admissible for the outer "
+                                     "layout mode structure");
+          restShape /= newShape;
+        }
+        restStride = nextStride;
+      }
+    }
+  }
+  return success();
+}
+
+LogicalResult validateTileComposition(std::optional<Location> location, LayoutAttr outer,
+                                      TileAttr inner) {
+  if (failed(validateLayoutStructure(location, "CompositionOp outer layout", outer)))
+    return failure();
+
+  auto outerShape = outer.getShape();
+  auto outerStride = outer.getStride();
+  if (inner.rank() > outerShape.rank())
+    return emitOptionalError(location,
+                             "CompositionOp: inner tile rank exceeds outer layout rank");
+
+  for (int32_t i = 0; i < inner.rank(); ++i) {
+    if (inner.isNoneMode(i))
+      continue;
+
+    auto subOuter = LayoutAttr::get(outer.getContext(), outerShape.at(i), outerStride.at(i));
+    Attribute tileMode = inner.at(i);
+    if (auto nestedTile = dyn_cast<TileAttr>(tileMode)) {
+      if (failed(validateTileComposition(location, subOuter, nestedTile)))
+        return failure();
+      continue;
+    }
+
+    LayoutAttr modeLayout;
+    if (auto layout = dyn_cast<LayoutAttr>(tileMode)) {
+      modeLayout = layout;
+    } else if (auto extent = dyn_cast<IntAttr>(tileMode)) {
+      modeLayout = LayoutAttr::get(outer.getContext(), IntTupleAttr::get(extent),
+                                   IntTupleAttr::getLeafStatic(outer.getContext(), 1));
+    } else {
+      return emitOptionalError(location, "CompositionOp: unsupported inner tile mode");
+    }
+
+    if (failed(validateComposition(location, subOuter, modeLayout)))
+      return failure();
+  }
+  return success();
+}
+
+LogicalResult validateLogicalDivide(std::optional<Location> location, LayoutAttr layout,
+                                    LayoutAttr divisor) {
+  if (failed(validateLayoutStructure(location, "LogicalDivideOp layout", layout)) ||
+      failed(validateLayoutStructure(location, "LogicalDivideOp divisor", divisor)))
+    return failure();
+  auto layoutSize = staticProduct(layout.getShape());
+  auto divisorSize = staticProduct(divisor.getShape());
+  if (layoutSize && divisorSize && (*divisorSize <= 0 || *layoutSize % *divisorSize != 0))
+    return emitOptionalError(location,
+                             "LogicalDivideOp: static divisor size must evenly divide layout size; "
+                             "got ",
+                             *divisorSize, " and ", *layoutSize);
+  return success();
+}
+
+LogicalResult validateLogicalDivide(std::optional<Location> location, LayoutAttr layout,
+                                    TileAttr divisor) {
+  if (failed(validateLayoutStructure(location, "LogicalDivideOp layout", layout)))
+    return failure();
+  auto layoutSize = staticProduct(layout.getShape());
+  auto divisorSize = staticProduct(divisor);
+  if (layoutSize && divisorSize && (*divisorSize <= 0 || *layoutSize % *divisorSize != 0))
+    return emitOptionalError(location,
+                             "LogicalDivideOp: static divisor size must evenly divide layout size; "
+                             "got ",
+                             *divisorSize, " and ", *layoutSize);
+  return success();
+}
 
 LayoutAttr getLinearLayoutAttr(Attribute layoutAttr) {
   if (auto layout = dyn_cast<LayoutAttr>(layoutAttr))
@@ -207,6 +469,11 @@ FLY_INFER_RETURN_TYPES(MakeLayoutOp) {
   if (!strideType)
     return emitOptionalError(location, "MakeLayoutOp: expected IntTupleType for stride, got ",
                              operands[1].getType());
+  if (!areCongruent(shapeType.getAttr(), strideType.getAttr()))
+    return emitOptionalError(location,
+                             "MakeLayoutOp: shape and stride must have congruent tuple structure; "
+                             "got ",
+                             shapeType.getAttr(), " and ", strideType.getAttr());
   auto layoutAttr = LayoutAttr::get(context, shapeType.getAttr(), strideType.getAttr());
   inferredReturnTypes.assign({LayoutType::get(context, layoutAttr)});
   return success();
@@ -1121,11 +1388,15 @@ FLY_INFER_RETURN_TYPES(CompositionOp) {
   LayoutBuilder<LayoutAttr> layoutBuilder(context);
   Type innerTy = operands[1].getType();
   LayoutAttr inferred;
-  if (auto tileTy = dyn_cast<TileType>(innerTy))
+  if (auto tileTy = dyn_cast<TileType>(innerTy)) {
+    if (failed(validateTileComposition(location, outerLayoutAttr, tileTy.getAttr())))
+      return failure();
     inferred = layoutComposition(layoutBuilder, outerLayoutAttr, tileTy.getAttr());
-  else if (auto innerLayoutTy = dyn_cast<LayoutType>(innerTy))
+  } else if (auto innerLayoutTy = dyn_cast<LayoutType>(innerTy)) {
+    if (failed(validateComposition(location, outerLayoutAttr, innerLayoutTy.getAttr())))
+      return failure();
     inferred = layoutComposition(layoutBuilder, outerLayoutAttr, innerLayoutTy.getAttr());
-  else
+  } else
     return emitOptionalError(
         location, "CompositionOp: expected TileType or LayoutType for inner, got ", innerTy);
 
@@ -1138,6 +1409,8 @@ FLY_INFER_RETURN_TYPES(ComplementOp) {
   auto layoutAttr = GetLayoutAttrFromLayoutLikeType(inputTy);
   if (!layoutAttr)
     return emitOptionalError(location, "ComplementOp: expected NarrowLayoutType, got ", inputTy);
+  if (failed(validateLayoutStructure(location, "ComplementOp layout", layoutAttr)))
+    return failure();
 
   std::optional<IntTupleAttr> codomainSizeAttr;
   if (operands.size() > 1 && operands[1]) {
@@ -1160,6 +1433,12 @@ FLY_INFER_RETURN_TYPES(RightInverseOp) {
   auto layoutAttr = GetLayoutAttrFromLayoutLikeType(inputTy);
   if (!layoutAttr)
     return emitOptionalError(location, "RightInverseOp: expected NarrowLayoutType, got ", inputTy);
+  if (failed(validateLayoutStructure(location, "RightInverseOp layout", layoutAttr)))
+    return failure();
+  if (!isStaticallyRightInvertible(layoutAttr))
+    return emitOptionalError(location,
+                             "RightInverseOp: static layout must describe an invertible "
+                             "contiguous domain");
   LayoutBuilder<LayoutAttr> layoutBuilder(context);
   LayoutAttr inferred = layoutRightInverse(layoutBuilder, layoutAttr);
   inferredReturnTypes.assign({RebuildLayoutLikeType(inputTy, inferred)});
@@ -1171,6 +1450,12 @@ FLY_INFER_RETURN_TYPES(LeftInverseOp) {
   auto layoutAttr = GetLayoutAttrFromLayoutLikeType(inputTy);
   if (!layoutAttr)
     return emitOptionalError(location, "LeftInverseOp: expected NarrowLayoutType, got ", inputTy);
+  if (failed(validateLayoutStructure(location, "LeftInverseOp layout", layoutAttr)))
+    return failure();
+  if (!isStaticallyRightInvertible(layoutAttr))
+    return emitOptionalError(location,
+                             "LeftInverseOp: static layout must describe an invertible "
+                             "contiguous domain");
   LayoutBuilder<LayoutAttr> layoutBuilder(context);
   LayoutAttr inferred = layoutLeftInverse(layoutBuilder, layoutAttr);
   inferredReturnTypes.assign({RebuildLayoutLikeType(inputTy, inferred)});
@@ -1188,8 +1473,12 @@ FLY_INFER_RETURN_TYPES(LogicalDivideOp) {
   LayoutAttr inferred;
   LayoutBuilder<LayoutAttr> layoutBuilder(context);
   if (auto divisorLayoutTy = dyn_cast<LayoutType>(divisorTy)) {
+    if (failed(validateLogicalDivide(location, layoutAttr, divisorLayoutTy.getAttr())))
+      return failure();
     inferred = layoutLogicalDivide(layoutBuilder, layoutAttr, divisorLayoutTy.getAttr());
   } else if (auto divisorTileTy = dyn_cast<TileType>(divisorTy)) {
+    if (failed(validateLogicalDivide(location, layoutAttr, divisorTileTy.getAttr())))
+      return failure();
     inferred = layoutLogicalDivide(layoutBuilder, layoutAttr, divisorTileTy.getAttr());
   } else {
     return emitOptionalError(
@@ -1197,6 +1486,56 @@ FLY_INFER_RETURN_TYPES(LogicalDivideOp) {
   }
 
   inferredReturnTypes.assign({RebuildLayoutLikeType(lhsTy, inferred)});
+  return success();
+}
+
+LogicalResult MakeLayoutOp::verify() {
+  auto shape = cast<IntTupleType>(getOperand(0).getType()).getAttr();
+  auto stride = cast<IntTupleType>(getOperand(1).getType()).getAttr();
+  if (!areCongruent(shape, stride))
+    return emitOpError("shape and stride must have congruent tuple structure; got ")
+           << shape << " and " << stride;
+  return success();
+}
+
+LogicalResult CompositionOp::verify() {
+  LayoutAttr outer = GetLayoutAttrFromLayoutLikeType(getOperand(0).getType());
+  if (auto inner = dyn_cast<LayoutType>(getOperand(1).getType()))
+    return validateComposition(getLoc(), outer, inner.getAttr());
+  if (auto inner = dyn_cast<TileType>(getOperand(1).getType()))
+    return validateTileComposition(getLoc(), outer, inner.getAttr());
+  return success();
+}
+
+LogicalResult RightInverseOp::verify() {
+  LayoutAttr layout = GetLayoutAttrFromLayoutLikeType(getOperand().getType());
+  if (failed(validateLayoutStructure(getLoc(), "RightInverseOp layout", layout)))
+    return failure();
+  if (!isStaticallyRightInvertible(layout))
+    return emitOpError("static layout must describe an invertible contiguous domain");
+  return success();
+}
+
+LogicalResult ComplementOp::verify() {
+  return validateLayoutStructure(getLoc(), "ComplementOp layout",
+                                 GetLayoutAttrFromLayoutLikeType(getOperand(0).getType()));
+}
+
+LogicalResult LeftInverseOp::verify() {
+  LayoutAttr layout = GetLayoutAttrFromLayoutLikeType(getOperand().getType());
+  if (failed(validateLayoutStructure(getLoc(), "LeftInverseOp layout", layout)))
+    return failure();
+  if (!isStaticallyRightInvertible(layout))
+    return emitOpError("static layout must describe an invertible contiguous domain");
+  return success();
+}
+
+LogicalResult LogicalDivideOp::verify() {
+  LayoutAttr layout = GetLayoutAttrFromLayoutLikeType(getOperand(0).getType());
+  if (auto divisor = dyn_cast<LayoutType>(getOperand(1).getType()))
+    return validateLogicalDivide(getLoc(), layout, divisor.getAttr());
+  if (auto divisor = dyn_cast<TileType>(getOperand(1).getType()))
+    return validateLogicalDivide(getLoc(), layout, divisor.getAttr());
   return success();
 }
 

@@ -1,0 +1,55 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/583",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/600",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Reproduced all three remaining counterexamples from review https://github.com/amdpilot-org/FlyDSL/pull/575 against candidate https://github.com/amdpilot-org/FlyDSL/pull/573 at f3176f6a51dcc480298ee7d8779319d736db865f, preserved the candidate's valid structural checks, and completed the slice. Static TileType logical_divide divisibility is now checked, complement rejects non-congruent layout structure before algebra helpers can assert, and left_inverse rejects statically non-invertible layouts. Dynamic profiles remain accepted when values are not statically knowable.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-7a3588bfe797/venv/bin/python /opt/amdpilot/rebuild-native.py /job (candidate f3176f6a51dcc480298ee7d8779319d736db865f)",
+      "exit_code": 0,
+      "what_was_measured": "Pinned-LLVM candidate native build and real FlyDSL vector-add GPU smoke before correction."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-7a3588bfe797/native-build/bin/fly-opt /job/evidence-j-7a3588bfe797/adversarial-tile-divide.mlir (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Failing-before: the candidate accepted a static TileType divisor of size 6 for a size-16 layout."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-7a3588bfe797/native-build/bin/fly-opt /job/evidence-j-7a3588bfe797/adversarial-complement.mlir (candidate)",
+      "exit_code": 134,
+      "what_was_measured": "Failing-before: complement aborted at intTupleFilterZero on non-congruent shape/stride tuple ranks."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-7a3588bfe797/native-build/bin/fly-opt /job/evidence-j-7a3588bfe797/adversarial-left-inverse.mlir (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Failing-before: left_inverse accepted the statically non-invertible layout and inferred (2,32):(0,1)."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-7a3588bfe797/venv/bin/python /opt/amdpilot/rebuild-native.py /job (corrected working tree)",
+      "exit_code": 0,
+      "what_was_measured": "Pinned-LLVM corrected native build, rebuilt-native import switch, and real FlyDSL vector-add GPU smoke."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-7a3588bfe797/native-build/bin/fly-opt tests/mlir/LayoutAlgebra/invalid_structural_inputs.mlir -verify-diagnostics",
+      "exit_code": 0,
+      "what_was_measured": "Passing-after regression: all candidate and review counterexamples emitted expected operation diagnostics; legal dynamic-layout controls remained accepted."
+    },
+    {
+      "command": "every RUN line in tests/mlir/LayoutAlgebra/*.mlir using rebuilt fly-opt and pinned LLVM FileCheck",
+      "exit_code": 0,
+      "what_was_measured": "All 11 LayoutAlgebra files passed against the corrected rebuilt compiler, including layout lowering coverage."
+    },
+    {
+      "command": "corrected rebuilt fly-opt on each of /job/evidence-j-7a3588bfe797/adversarial-{tile-divide,complement,left-inverse}.mlir",
+      "exit_code": 1,
+      "what_was_measured": "Each formerly accepted/crashing standalone input now exits with a targeted diagnostic; complement no longer aborts."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_evidence": "Both candidate and corrected pinned-LLVM rebuilds passed FlyDSL vector_add 100x1000 on exactly one AMD Instinct MI350X (gfx950), with Torch 2.9.1+rocm7.2.0.git7e1940d4 and HIP 7.2.26015-fc0010cf6a. This establishes rebuilt-library operation, not verifier completeness.",
+  "native_rebuilt": true,
+  "source_path": "/job/repo",
+  "native_path": "/tmp/amdpilot-repo-j-7a3588bfe797/native-build/python_packages/flydsl/_mlir",
+  "remaining_limitations": "Static verification sees type profiles only. Divisibility, congruence-adjacent value relationships, composition bounds, and invertibility that depend on dynamic SSA values remain runtime concerns unless runtime checks are added. Validation used the assigned gfx950 GPU only; verifier behavior itself is architecture-independent and was tested directly with rebuilt fly-opt. No LLVM change was required. Raw inputs and logs are retained under /job/evidence-j-7a3588bfe797, and native build metadata is retained at /job/native-build.json."
+}
