@@ -1,0 +1,502 @@
+==============================================
+FlyDSL Build
+  REPO_ROOT:  /job/repo
+  BUILD_DIR:  /tmp/amdpilot-repo-j-52acf7d48c3e/native-build
+  MLIR_PATH:  /opt/amdpilot/llvm-project/mlir_install
+  PARALLEL:   -j16
+  GENERATOR:  Ninja
+  HIP_PLATFORM: amd (default)
+==============================================
+Removing editable-install symlink: /job/repo/python/flydsl/_mlir
+Configuring CMake...
+-- The C compiler identification is GNU 13.3.0
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3")
+-- Found zstd: /usr/lib/x86_64-linux-gnu/libzstd.so
+-- Found LibXml2: /usr/lib/x86_64-linux-gnu/libxml2.so (found version "2.9.14")
+-- Found MLIR: /opt/amdpilot/llvm-project/mlir_install/lib/cmake/mlir
+-- CMAKE_BUILD_TYPE not set; defaulting to RelWithDebInfo
+-- Linker detection: GNU ld
+-- Performing Test SUPPORTS_LIBCXX_HARDENING_MODE
+-- Performing Test SUPPORTS_LIBCXX_HARDENING_MODE - Success
+-- Performing Test LLVM_USES_LIBSTDCXX
+-- Performing Test LLVM_USES_LIBSTDCXX - Success
+-- Performing Test LLVM_DEFAULT_TO_GLIBCXX_USE_CXX11_ABI
+-- Performing Test LLVM_DEFAULT_TO_GLIBCXX_USE_CXX11_ABI - Success
+-- Performing Test C_SUPPORTS_FPIC
+-- Performing Test C_SUPPORTS_FPIC - Success
+-- Performing Test CXX_SUPPORTS_FPIC
+-- Performing Test CXX_SUPPORTS_FPIC - Success
+-- Building with -fPIC
+-- Performing Test C_SUPPORTS_FNO_SEMANTIC_INTERPOSITION
+-- Performing Test C_SUPPORTS_FNO_SEMANTIC_INTERPOSITION - Success
+-- Performing Test CXX_SUPPORTS_FNO_SEMANTIC_INTERPOSITION
+-- Performing Test CXX_SUPPORTS_FNO_SEMANTIC_INTERPOSITION - Success
+-- Performing Test SUPPORTS_FVISIBILITY_INLINES_HIDDEN_FLAG
+-- Performing Test SUPPORTS_FVISIBILITY_INLINES_HIDDEN_FLAG - Success
+-- Performing Test CXX_SUPPORTS_SUGGEST_OVERRIDE_FLAG
+-- Performing Test CXX_SUPPORTS_SUGGEST_OVERRIDE_FLAG - Success
+-- Performing Test CXX_WSUGGEST_OVERRIDE_ALLOWS_ONLY_FINAL
+-- Performing Test CXX_WSUGGEST_OVERRIDE_ALLOWS_ONLY_FINAL - Success
+-- Performing Test C_WCOMMENT_ALLOWS_LINE_WRAP
+-- Performing Test C_WCOMMENT_ALLOWS_LINE_WRAP - Failed
+-- Performing Test C_SUPPORTS_CTAD_MAYBE_UNSUPPORTED_FLAG
+-- Performing Test C_SUPPORTS_CTAD_MAYBE_UNSUPPORTED_FLAG - Failed
+-- Performing Test CXX_SUPPORTS_CTAD_MAYBE_UNSUPPORTED_FLAG
+-- Performing Test CXX_SUPPORTS_CTAD_MAYBE_UNSUPPORTED_FLAG - Success
+-- Performing Test LINKER_SUPPORTS_COLOR_DIAGNOSTICS
+-- Performing Test LINKER_SUPPORTS_COLOR_DIAGNOSTICS - Failed
+Precompiled headers are disabled by default with GCC. Pass -DCMAKE_DISABLE_PRECOMPILE_HEADERS=OFF to override.
+-- Precompiled headers disabled.
+-- Looking for os_signpost_interval_begin
+-- Looking for os_signpost_interval_begin - not found
+-- Looking for flock
+-- Looking for flock - found
+-- Found Python3: /tmp/amdpilot-repo-j-52acf7d48c3e/venv/bin/python3 (found suitable version "3.12.3", minimum required is "3.10") found components: Interpreter Development.Module
+-- Found Python: /tmp/amdpilot-repo-j-52acf7d48c3e/venv/bin/python3.12 (found suitable version "3.12.3", minimum required is "3.10") found components: Interpreter Development.Module
+-- Found python include dirs: /usr/include/python3.12
+-- Found python libraries: 
+-- Python extension suffix for modules: 'cpython-312-x86_64-linux-gnu'
+-- Using explicit nanobind cmake directory: /opt/venv/lib/python3.12/site-packages/nanobind/cmake (-Dnanobind_DIR to change)
+-- Found nanobind v2.12.0
+-- Performing Test LLVM_LINKER_SUPPORTS_B_SYMBOLIC_FUNCTIONS
+-- Performing Test LLVM_LINKER_SUPPORTS_B_SYMBOLIC_FUNCTIONS - Success
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Configuring done (1.9s)
+-- Generating done (0.1s)
+-- Build files have been written to: /tmp/amdpilot-repo-j-52acf7d48c3e/native-build
+Building with -j16...
+[1/177] Building Passes.capi.cpp.inc...
+[2/177] Building Passes.capi.cpp.inc...
+[3/177] Building Passes.capi.h.inc...
+[4/177] Building Passes.h.inc...
+[5/177] Building Passes.capi.h.inc...
+[6/177] Building Passes.h.inc...
+[7/177] Building FlyAttrInterfaces.h.inc...
+[8/177] Building FlyAttrInterfaces.cpp.inc...
+[9/177] Building FlyDialect.h.inc...
+[10/177] Building FlyAttrConstraints.h.inc...
+[11/177] Building FlyDialect.cpp.inc...
+[12/177] Building FlyAttrConstraints.cpp.inc...
+[13/177] Building FlyAttrDefs.h.inc...
+[14/177] Building FlyEnums.cpp.inc...
+[15/177] Building FlyAttrDefs.cpp.inc...
+[16/177] Building FlyOpInterfaces.cpp.inc...
+[17/177] Building FlyEnums.h.inc...
+[18/177] Building FlyOpInterfaces.h.inc...
+[19/177] Building FlyTypeConstraints.cpp.inc...
+[20/177] Building FlyTypeConstraints.h.inc...
+[21/177] Building FlyTypeInterfaces.cpp.inc...
+[22/177] Building FlyTypeInterfaces.h.inc...
+[23/177] Building FlyTypeDefs.h.inc...
+[24/177] Building FlyTypeDefs.cpp.inc...
+[25/177] Building AttrDefs.cpp.inc...
+[26/177] Building AtomStateEnums.h.inc...
+[27/177] Building Atom.cpp.inc...
+[28/177] Building AtomStateEnums.cpp.inc...
+[29/177] Building Atom.h.inc...
+[30/177] Building AttrDefs.h.inc...
+[31/177] Building AttrEnums.cpp.inc...
+[32/177] Building AttrEnums.h.inc...
+[33/177] Building Dialect.cpp.inc...
+[34/177] Building IntTupleLowering.cpp.inc...
+[35/177] Building LayoutLowering.cpp.inc...
+[36/177] Building Dialect.h.inc...
+[37/177] Building Ops.cpp.inc...
+[38/177] Building MemrefLowering.cpp.inc...
+[39/177] Building Ops.h.inc...
+[40/177] Building FlyOps.cpp.inc...
+[41/177] Building FlyOps.h.inc...
+[42/177] Building dialects/_fly_ops_gen.py...
+[43/177] Building CXX object lib/Runtime/ROCm/CMakeFiles/FlyJitRuntime.dir/FlyRocmRuntimeWrappers.cpp.o
+[44/177] Building CXX object python/mlir_flydsl/CMakeFiles/nanobind-mlir.dir/opt/venv/lib/python3.12/site-packages/nanobind/src/nb_static_property.cpp.o
+[45/177] Building CXX object lib/CAPI/LlvmConfig/CMakeFiles/obj.MLIRCPILLVMOption.dir/llvm.cc.o
+[46/177] Building CXX object python/mlir_flydsl/CMakeFiles/nanobind-mlir.dir/opt/venv/lib/python3.12/site-packages/nanobind/src/implicit.cpp.o
+[47/177] Building CXX object python/mlir_flydsl/CMakeFiles/nanobind-mlir.dir/opt/venv/lib/python3.12/site-packages/nanobind/src/trampoline.cpp.o
+[48/177] Building CXX object python/mlir_flydsl/CMakeFiles/nanobind-mlir.dir/opt/venv/lib/python3.12/site-packages/nanobind/src/error.cpp.o
+[49/177] Building CXX object python/mlir_flydsl/CMakeFiles/nanobind-mlir.dir/opt/venv/lib/python3.12/site-packages/nanobind/src/nb_internals.cpp.o
+[50/177] Building CXX object python/mlir_flydsl/CMakeFiles/nanobind-mlir.dir/opt/venv/lib/python3.12/site-packages/nanobind/src/nb_ndarray.cpp.o
+[51/177] Building CXX object python/mlir_flydsl/CMakeFiles/nanobind-mlir.dir/opt/venv/lib/python3.12/site-packages/nanobind/src/common.cpp.o
+[52/177] Building CXX object python/mlir_flydsl/CMakeFiles/nanobind-mlir.dir/opt/venv/lib/python3.12/site-packages/nanobind/src/nb_enum.cpp.o
+[53/177] Building CXX object python/mlir_flydsl/CMakeFiles/nanobind-mlir.dir/opt/venv/lib/python3.12/site-packages/nanobind/src/nb_func.cpp.o
+[54/177] Building CXX object python/mlir_flydsl/CMakeFiles/nanobind-mlir.dir/opt/venv/lib/python3.12/site-packages/nanobind/src/nb_type.cpp.o
+[55/177] Building CXX object lib/Dialect/Fly/CMakeFiles/obj.MLIRFlyDialect.dir/Utils/IntUtils.cpp.o
+[56/177] Building CXX object lib/Dialect/Fly/CMakeFiles/obj.MLIRFlyDialect.dir/Utils/NormalForm.cpp.o
+[57/177] Building CXX object lib/Dialect/Fly/CMakeFiles/obj.MLIRFlyDialect.dir/Utils/PointerUtils.cpp.o
+[58/177] Building CXX object lib/Dialect/Fly/CMakeFiles/obj.MLIRFlyDialect.dir/IR/FlyAttrDefs.cpp.o
+[59/177] Building CXX object lib/Dialect/Fly/CMakeFiles/obj.MLIRFlyDialect.dir/Utils/IntTupleUtils.cpp.o
+[60/177] Building CXX object lib/Dialect/Fly/CMakeFiles/obj.MLIRFlyDialect.dir/IR/FlyTypeDefs.cpp.o
+[61/177] Building CXX object lib/Dialect/Fly/CMakeFiles/obj.MLIRFlyDialect.dir/Transforms/Canonicalize.cpp.o
+[62/177] Building CXX object lib/Dialect/Fly/CMakeFiles/obj.MLIRFlyDialect.dir/IR/FlyUniversalOps.cpp.o
+[63/177] Building CXX object lib/Dialect/Fly/CMakeFiles/obj.MLIRFlyDialect.dir/Transforms/ConvertAtomCallToSSAForm.cpp.o
+[64/177] Building CXX object lib/Dialect/Fly/CMakeFiles/obj.MLIRFlyDialect.dir/IR/FlyLLVMTranslation.cpp.o
+[65/177] Building CXX object lib/Dialect/FlyROCDL/CMakeFiles/obj.MLIRFlyROCDLDialect.dir/Ops.cpp.o
+[66/177] Building CXX object lib/Dialect/Fly/CMakeFiles/obj.MLIRFlyDialect.dir/Transforms/RewriteFuncSignature.cpp.o
+[67/177] Building CXX object lib/Dialect/FlyROCDL/CMakeFiles/obj.MLIRFlyROCDLDialect.dir/Dialect.cpp.o
+In file included from /opt/amdpilot/llvm-project/mlir_install/include/mlir/IR/AffineExpr.h:20,
+                 from /opt/amdpilot/llvm-project/mlir_install/include/mlir/IR/AffineMap.h:17,
+                 from /opt/amdpilot/llvm-project/mlir_install/include/mlir/IR/BuiltinAttributeInterfaces.h:12,
+                 from /opt/amdpilot/llvm-project/mlir_install/include/mlir/IR/BuiltinAttributes.h:12,
+                 from /job/repo/lib/Dialect/FlyROCDL/Dialect.cpp:4:
+In function ‘llvm::hash_code llvm::hashing::detail::combine_bytes(const char*, size_t)’,
+    inlined from ‘llvm::hash_code llvm::hash_combine(const Ts& ...) [with Ts = {}]’ at /opt/amdpilot/llvm-project/mlir_install/include/llvm/ADT/Hashing.h:312:40,
+    inlined from ‘static llvm::hash_code mlir::fly_rocdl::GetBufferRsrcOp::computePropertiesHash(const Properties&)’ at /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/include/flydsl/Dialect/FlyROCDL/IR/Ops.cpp.inc:73:28:
+/opt/amdpilot/llvm-project/mlir_install/include/llvm/ADT/Hashing.h:161:21: warning: ‘buf’ may be used uninitialized [-Wmaybe-uninitialized]
+  161 |   return xxh3_64bits(reinterpret_cast<const uint8_t *>(data), len) ^
+      |          ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /opt/amdpilot/llvm-project/mlir_install/include/llvm/ADT/Hashing.h:51:
+/opt/amdpilot/llvm-project/mlir_install/include/llvm/Support/xxhash.h: In static member function ‘static llvm::hash_code mlir::fly_rocdl::GetBufferRsrcOp::computePropertiesHash(const Properties&)’:
+/opt/amdpilot/llvm-project/mlir_install/include/llvm/Support/xxhash.h:46:19: note: by argument 1 of type ‘const uint8_t*’ {aka ‘const unsigned char*’} to ‘uint64_t llvm::xxh3_64bits(const uint8_t*, size_t)’ declared here
+   46 | LLVM_ABI uint64_t xxh3_64bits(const uint8_t *data, size_t len);
+      |                   ^~~~~~~~~~~
+/opt/amdpilot/llvm-project/mlir_install/include/llvm/ADT/Hashing.h:309:48: note: ‘buf’ declared here
+  309 |   std::array<char, std::max<size_t>(1, Total)> buf;
+      |                                                ^~~
+[68/177] Building CXX object lib/Dialect/Fly/CMakeFiles/obj.MLIRFlyDialect.dir/Transforms/IntSwizzleSimplify.cpp.o
+[69/177] Building CXX object lib/Dialect/Fly/CMakeFiles/obj.MLIRFlyDialect.dir/Transforms/PromoteRegMemToVectorSSA.cpp.o
+[70/177] Building CXX object lib/Dialect/FlyROCDL/CMakeFiles/obj.MLIRFlyROCDLDialect.dir/CDNA3/MmaAtom.cpp.o
+[71/177] Linking CXX shared library python_packages/flydsl/_mlir/_mlir_libs/libfly_jit_runtime.so
+[72/177] Linking CXX shared library python_packages/flydsl/_mlir/_mlir_libs/libnanobind-mlir.so
+[73/177] Building CXX object lib/Dialect/FlyROCDL/CMakeFiles/obj.MLIRFlyROCDLDialect.dir/GFX1250/MmaAtom.cpp.o
+[74/177] Building CXX object lib/Dialect/FlyROCDL/CMakeFiles/obj.MLIRFlyROCDLDialect.dir/CDNA3/CopyAtom.cpp.o
+/job/repo/lib/Dialect/FlyROCDL/CDNA3/CopyAtom.cpp: In member function ‘llvm::LogicalResult mlir::fly_rocdl::CopyOpCDNA3BufferCopyLDSType::emitAtomCall(mlir::OpBuilder&, mlir::Location, mlir::Type, mlir::Type, mlir::Type, mlir::Value, mlir::Value, mlir::Value) const’:
+/job/repo/lib/Dialect/FlyROCDL/CDNA3/CopyAtom.cpp:323:9: warning: variable ‘zero’ set but not used [-Wunused-but-set-variable]
+  323 |   Value zero = arith::ConstantIntOp::create(builder, loc, 0, 32);
+      |         ^~~~
+[75/177] Building CXX object lib/Dialect/FlyROCDL/CMakeFiles/obj.MLIRFlyROCDLDialect.dir/CDNA4/MmaAtom.cpp.o
+[76/177] Building CXX object lib/Dialect/FlyROCDL/CMakeFiles/obj.MLIRFlyROCDLDialect.dir/GFX1250/MmaAtomScale.cpp.o
+[77/177] Building CXX object lib/Dialect/FlyROCDL/CMakeFiles/obj.MLIRFlyROCDLDialect.dir/CDNA4/CopyAtom.cpp.o
+[78/177] Building CXX object lib/CAPI/Dialect/Fly/CMakeFiles/obj.MLIRCPIFly.dir/FlyDialect.cpp.o
+[79/177] Building CXX object lib/Dialect/FlyROCDL/CMakeFiles/obj.MLIRFlyROCDLDialect.dir/GFX120X/MmaAtom.cpp.o
+[80/177] Building CXX object python/mlir_flydsl/CMakeFiles/FlyPythonModules.extension.MLIRPythonSupport-mlir.so.dir/opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonExtension.MLIRPythonSupport/Globals.cpp.o
+[81/177] Building CXX object python/mlir_flydsl/CMakeFiles/FlyPythonModules.extension._mlirRegisterEverything.dso.dir/FlyRegisterEverything.cpp.o
+<command-line>: warning: "MLIR_BINDINGS_PYTHON_DOMAIN" redefined
+<command-line>: note: this is the location of the previous definition
+cc1plus: note: unrecognized command-line option ‘-Wno-zero-length-array’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-nested-anon-types’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-deprecated-literal-operator’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-covered-switch-default’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-c++98-compat-extra-semi’ may have been intended to silence earlier diagnostics
+[82/177] Building CXX object lib/Dialect/FlyROCDL/CMakeFiles/obj.MLIRFlyROCDLDialect.dir/GFX11/MmaAtom.cpp.o
+[83/177] Building CXX object python/mlir_flydsl/CMakeFiles/FlyPythonModules.extension._mlir.dso.dir/opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonExtension.Core/MainModule.cpp.o
+<command-line>: warning: "MLIR_BINDINGS_PYTHON_DOMAIN" redefined
+<command-line>: note: this is the location of the previous definition
+cc1plus: note: unrecognized command-line option ‘-Wno-zero-length-array’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-nested-anon-types’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-deprecated-literal-operator’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-covered-switch-default’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-c++98-compat-extra-semi’ may have been intended to silence earlier diagnostics
+[84/177] Building CXX object lib/Dialect/FlyROCDL/CMakeFiles/obj.MLIRFlyROCDLDialect.dir/GFX1250/CopyAtom.cpp.o
+[85/177] Linking CXX static library lib/libMLIRFlyROCDLDialect.a
+[86/177] Building CXX object lib/Conversion/FlyToROCDL/CMakeFiles/obj.MLIRFlyToROCDL.dir/FastMathOps.cpp.o
+[87/177] Building CXX object python/mlir_flydsl/CMakeFiles/FlyPythonModules.extension._mlir.dso.dir/opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonExtension.Core/Pass.cpp.o
+<command-line>: warning: "MLIR_BINDINGS_PYTHON_DOMAIN" redefined
+<command-line>: note: this is the location of the previous definition
+cc1plus: note: unrecognized command-line option ‘-Wno-zero-length-array’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-nested-anon-types’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-deprecated-literal-operator’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-covered-switch-default’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-c++98-compat-extra-semi’ may have been intended to silence earlier diagnostics
+[88/177] Building CXX object python/mlir_flydsl/CMakeFiles/FlyPythonModules.extension._mlirGPUPasses.dso.dir/opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonExtension.GPUDialectPasses/GPUPasses.cpp.o
+<command-line>: warning: "MLIR_BINDINGS_PYTHON_DOMAIN" redefined
+<command-line>: note: this is the location of the previous definition
+cc1plus: note: unrecognized command-line option ‘-Wno-zero-length-array’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-nested-anon-types’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-deprecated-literal-operator’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-covered-switch-default’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-c++98-compat-extra-semi’ may have been intended to silence earlier diagnostics
+[89/177] Building CXX object python/mlir_flydsl/CMakeFiles/FlyPythonModules.extension._mlir.dso.dir/opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonExtension.Core/IRInterfaces.cpp.o
+<command-line>: warning: "MLIR_BINDINGS_PYTHON_DOMAIN" redefined
+<command-line>: note: this is the location of the previous definition
+cc1plus: note: unrecognized command-line option ‘-Wno-zero-length-array’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-nested-anon-types’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-deprecated-literal-operator’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-covered-switch-default’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-c++98-compat-extra-semi’ may have been intended to silence earlier diagnostics
+[90/177] Building CXX object python/mlir_flydsl/CMakeFiles/FlyPythonModules.extension._mlirDialectsGPU.dso.dir/opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonExtension.Dialects.GPU.Nanobind/DialectGPU.cpp.o
+<command-line>: warning: "MLIR_BINDINGS_PYTHON_DOMAIN" redefined
+<command-line>: note: this is the location of the previous definition
+cc1plus: note: unrecognized command-line option ‘-Wno-zero-length-array’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-nested-anon-types’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-deprecated-literal-operator’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-covered-switch-default’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-c++98-compat-extra-semi’ may have been intended to silence earlier diagnostics
+[91/177] Building dialects/_fly_enum_gen.py...
+[92/177] Building dialects/_fly_rocdl_ops_gen.py...
+[93/177] Building dialects/_fly_rocdl_enum_gen.py...
+[94/177] Copying python source /job/repo/python/mlir_flydsl//_mlir_libs/_mlirRegisterEverything/py.typed -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/_mlir_libs/_mlirRegisterEverything/py.typed
+[95/177] Copying python source /job/repo/python/mlir_flydsl//dialects/fly.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/fly.py
+[96/177] Copying python source /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python/mlir_flydsl/dialects/_fly_enum_gen.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_fly_enum_gen.py
+[97/177] Copying python source /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python/mlir_flydsl/dialects/_fly_ops_gen.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_fly_ops_gen.py
+[98/177] Copying python source /job/repo/python/mlir_flydsl//dialects/fly_rocdl.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/fly_rocdl.py
+[99/177] Copying python source /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python/mlir_flydsl/dialects/_fly_rocdl_enum_gen.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_fly_rocdl_enum_gen.py
+[100/177] Copying python source /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python/mlir_flydsl/dialects/_fly_rocdl_ops_gen.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_fly_rocdl_ops_gen.py
+[101/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Core.Python/_mlir_libs/__init__.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/_mlir_libs/__init__.py
+[102/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Core.Python/_mlir_libs/_mlir/py.typed -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/_mlir_libs/_mlir/py.typed
+[103/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Core.Python/dialects/_ods_common.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_ods_common.py
+[104/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Core.Python/dialects/ext.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/ext.py
+[105/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Core.Python/ir.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/ir.py
+[106/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Core.Python/passmanager.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/passmanager.py
+[107/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Core.Python/rewrite.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/rewrite.py
+[108/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Core.Python.Extras/extras/meta.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/extras/meta.py
+[109/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Core.Python.Extras/extras/types.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/extras/types.py
+[110/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.builtin/dialects/builtin.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/builtin.py
+[111/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.builtin.ops_gen/dialects/_builtin_ops_gen.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_builtin_ops_gen.py
+[112/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.arith/dialects/arith.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/arith.py
+[113/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.arith.ops_gen/dialects/_arith_enum_gen.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_arith_enum_gen.py
+[114/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.arith.ops_gen/dialects/_arith_ops_gen.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_arith_ops_gen.py
+[115/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.math/dialects/math.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/math.py
+[116/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.math.ops_gen/dialects/_math_ops_gen.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_math_ops_gen.py
+[117/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.memref/dialects/memref.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/memref.py
+[118/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.memref.ops_gen/dialects/_memref_ops_gen.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_memref_ops_gen.py
+[119/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.gpu/dialects/gpu/__init__.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/gpu/__init__.py
+[120/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.gpu/dialects/gpu/passes/__init__.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/gpu/passes/__init__.py
+[121/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.gpu.ops_gen/dialects/_gpu_enum_gen.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_gpu_enum_gen.py
+[122/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.gpu.ops_gen/dialects/_gpu_ops_gen.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_gpu_ops_gen.py
+[123/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.func/dialects/func.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/func.py
+[124/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.func.ops_gen/dialects/_func_ops_gen.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_func_ops_gen.py
+[125/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.cf/dialects/cf.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/cf.py
+[126/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.cf.ops_gen/dialects/_cf_ops_gen.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_cf_ops_gen.py
+[127/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.scf/dialects/scf.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/scf.py
+[128/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.scf.ops_gen/dialects/_scf_ops_gen.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_scf_ops_gen.py
+[129/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.vector/dialects/vector.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/vector.py
+[130/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.vector.ops_gen/dialects/_vector_enum_gen.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_vector_enum_gen.py
+[131/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.vector.ops_gen/dialects/_vector_ops_gen.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_vector_ops_gen.py
+[132/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.llvm/dialects/llvm.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/llvm.py
+[133/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.llvm.ops_gen/dialects/_llvm_enum_gen.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_llvm_enum_gen.py
+[134/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.llvm.ops_gen/dialects/_llvm_ops_gen.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_llvm_ops_gen.py
+[135/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.ExecutionEngine/_mlir_libs/_mlirExecutionEngine.pyi -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/_mlir_libs/_mlirExecutionEngine.pyi
+[136/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.ExecutionEngine/execution_engine.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/execution_engine.py
+[137/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.ExecutionEngine/runtime/__init__.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/runtime/__init__.py
+[138/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.ExecutionEngine/runtime/np_to_memref.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/runtime/np_to_memref.py
+[139/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.rocdl/dialects/rocdl.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/rocdl.py
+[140/177] Copying python source /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonSources.Dialects.rocdl.ops_gen/dialects/_rocdl_ops_gen.py -> /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages/flydsl/_mlir/dialects/_rocdl_ops_gen.py
+[141/177] Building CXX object python/mlir_flydsl/CMakeFiles/FlyPythonModules.extension._mlir.dso.dir/opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonExtension.Core/Rewrite.cpp.o
+<command-line>: warning: "MLIR_BINDINGS_PYTHON_DOMAIN" redefined
+<command-line>: note: this is the location of the previous definition
+cc1plus: note: unrecognized command-line option ‘-Wno-zero-length-array’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-nested-anon-types’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-deprecated-literal-operator’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-covered-switch-default’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-c++98-compat-extra-semi’ may have been intended to silence earlier diagnostics
+[142/177] Building CXX object python/mlir_flydsl/CMakeFiles/FlyPythonModules.extension._mlirExecutionEngine.dso.dir/opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonExtension.ExecutionEngine/ExecutionEngineModule.cpp.o
+<command-line>: warning: "MLIR_BINDINGS_PYTHON_DOMAIN" redefined
+<command-line>: note: this is the location of the previous definition
+cc1plus: note: unrecognized command-line option ‘-Wno-zero-length-array’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-nested-anon-types’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-deprecated-literal-operator’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-covered-switch-default’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-c++98-compat-extra-semi’ may have been intended to silence earlier diagnostics
+[143/177] Linking CXX static library lib/libMLIRCPILLVMOption.a
+[144/177] Building CXX object python/mlir_flydsl/CMakeFiles/FlyPythonModules.extension._mlir.dso.dir/opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonExtension.Core/IRAffine.cpp.o
+<command-line>: warning: "MLIR_BINDINGS_PYTHON_DOMAIN" redefined
+<command-line>: note: this is the location of the previous definition
+cc1plus: note: unrecognized command-line option ‘-Wno-zero-length-array’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-nested-anon-types’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-deprecated-literal-operator’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-covered-switch-default’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-c++98-compat-extra-semi’ may have been intended to silence earlier diagnostics
+[145/177] Building CXX object python/mlir_flydsl/CMakeFiles/FlyPythonModules.extension.MLIRPythonSupport-mlir.so.dir/opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonExtension.MLIRPythonSupport/IRTypes.cpp.o
+[146/177] Building CXX object python/mlir_flydsl/CMakeFiles/FlyPythonModules.extension._mlirDialectsLLVM.dso.dir/opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonExtension.Dialects.LLVM.Nanobind/DialectLLVM.cpp.o
+<command-line>: warning: "MLIR_BINDINGS_PYTHON_DOMAIN" redefined
+<command-line>: note: this is the location of the previous definition
+cc1plus: note: unrecognized command-line option ‘-Wno-zero-length-array’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-nested-anon-types’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-deprecated-literal-operator’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-covered-switch-default’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-c++98-compat-extra-semi’ may have been intended to silence earlier diagnostics
+[147/177] Building CXX object python/mlir_flydsl/CMakeFiles/FlyPythonModules.extension._mlirDialectsFly.dso.dir/__/__/lib/Bindings/Python/TiledOpTraits.cpp.o
+<command-line>: warning: "MLIR_BINDINGS_PYTHON_DOMAIN" redefined
+<command-line>: note: this is the location of the previous definition
+In file included from /job/repo/lib/Bindings/Python/TiledOpTraits.h:7,
+                 from /job/repo/lib/Bindings/Python/TiledOpTraits.cpp:6:
+/job/repo/include/flydsl/Dialect/Fly/Utils/TiledOpUtils.h: In function ‘Layout mlir::fly::layoutTiledMmaThrValOperandView(LayoutBuilder<Layout>&, MmaAtomType, LayoutAttr, TileAttr, MmaOperand, Layout) [with Layout = LayoutAttr]’:
+/job/repo/include/flydsl/Dialect/Fly/Utils/TiledOpUtils.h:305:3: warning: ‘idx0’ may be used uninitialized [-Wmaybe-uninitialized]
+  305 |   for (int i : {idx0, idx1}) {
+      |   ^~~
+/job/repo/include/flydsl/Dialect/Fly/Utils/TiledOpUtils.h:273:7: note: ‘idx0’ was declared here
+  273 |   int idx0, idx1;
+      |       ^~~~
+/job/repo/include/flydsl/Dialect/Fly/Utils/TiledOpUtils.h:305:3: warning: ‘idx1’ may be used uninitialized [-Wmaybe-uninitialized]
+  305 |   for (int i : {idx0, idx1}) {
+      |   ^~~
+/job/repo/include/flydsl/Dialect/Fly/Utils/TiledOpUtils.h:273:13: note: ‘idx1’ was declared here
+  273 |   int idx0, idx1;
+      |             ^~~~
+/job/repo/lib/Bindings/Python/TiledOpTraits.cpp: In function ‘mlir::fly::LayoutAttr mlir::fly::tiledMmaGetTiledThrValLayout(MmaAtomType, LayoutAttr, TileAttr, MmaOperand)’:
+/job/repo/lib/Bindings/Python/TiledOpTraits.cpp:93:27: warning: ‘idx0’ may be used uninitialized [-Wmaybe-uninitialized]
+   93 |   for (int i : {idx0, idx1}) {
+      |                           ^
+/job/repo/lib/Bindings/Python/TiledOpTraits.cpp:75:7: note: ‘idx0’ was declared here
+   75 |   int idx0, idx1;
+      |       ^~~~
+/job/repo/lib/Bindings/Python/TiledOpTraits.cpp:93:27: warning: ‘idx1’ may be used uninitialized [-Wmaybe-uninitialized]
+   93 |   for (int i : {idx0, idx1}) {
+      |                           ^
+/job/repo/lib/Bindings/Python/TiledOpTraits.cpp:75:13: note: ‘idx1’ was declared here
+   75 |   int idx0, idx1;
+      |             ^~~~
+At global scope:
+cc1plus: note: unrecognized command-line option ‘-Wno-zero-length-array’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-nested-anon-types’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-deprecated-literal-operator’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-covered-switch-default’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-c++98-compat-extra-semi’ may have been intended to silence earlier diagnostics
+[148/177] Building CXX object lib/Dialect/Fly/CMakeFiles/obj.MLIRFlyDialect.dir/Transforms/LayoutLowering.cpp.o
+/job/repo/lib/Dialect/Fly/Transforms/LayoutLowering.cpp: In function ‘std::optional<long unsigned int> {anonymous}::narrowUpperBound(mlir::Value, unsigned int, llvm::SmallPtrSetImpl<mlir::Operation*>&)’:
+/job/repo/lib/Dialect/Fly/Transforms/LayoutLowering.cpp:2955:35: warning: ‘auto llvm::make_scope_exit(Callable&&) [with Callable = {anonymous}::narrowUpperBound(mlir::Value, unsigned int, llvm::SmallPtrSetImpl<mlir::Operation*>&)::<lambda()>]’ is deprecated: Prefer calling the constructor of llvm::scope_exit directly. [-Wdeprecated-declarations]
+ 2955 |   auto pop = llvm::make_scope_exit([&] { visited.erase(def); });
+      |              ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /job/repo/lib/Dialect/Fly/Transforms/LayoutLowering.cpp:23:
+/opt/amdpilot/llvm-project/mlir_install/include/llvm/ADT/ScopeExit.h:57:36: note: declared here
+   57 |                 "scope_exit") auto make_scope_exit(Callable &&F) {
+      |                                    ^~~~~~~~~~~~~~~
+In file included from /job/repo/lib/Dialect/Fly/Transforms/LayoutLowering.cpp:34:
+/job/repo/include/flydsl/Dialect/Fly/Utils/TiledOpUtils.h: In function ‘Layout mlir::fly::layoutTiledMmaThrValOperandView(LayoutBuilder<Layout>&, MmaAtomType, LayoutAttr, TileAttr, MmaOperand, Layout) [with Layout = LayoutValueAdaptor]’:
+/job/repo/include/flydsl/Dialect/Fly/Utils/TiledOpUtils.h:305:3: warning: ‘idx0’ may be used uninitialized [-Wmaybe-uninitialized]
+  305 |   for (int i : {idx0, idx1}) {
+      |   ^~~
+/job/repo/include/flydsl/Dialect/Fly/Utils/TiledOpUtils.h:273:7: note: ‘idx0’ was declared here
+  273 |   int idx0, idx1;
+      |       ^~~~
+/job/repo/include/flydsl/Dialect/Fly/Utils/TiledOpUtils.h:305:3: warning: ‘idx1’ may be used uninitialized [-Wmaybe-uninitialized]
+  305 |   for (int i : {idx0, idx1}) {
+      |   ^~~
+/job/repo/include/flydsl/Dialect/Fly/Utils/TiledOpUtils.h:273:13: note: ‘idx1’ was declared here
+  273 |   int idx0, idx1;
+      |             ^~~~
+/job/repo/lib/Dialect/Fly/Transforms/LayoutLowering.cpp: In member function ‘virtual llvm::LogicalResult {anonymous}::TiledMmaPartitionOpLowering::matchAndRewrite(mlir::fly::TiledMmaPartitionOp, mlir::PatternRewriter&) const’:
+/job/repo/lib/Dialect/Fly/Transforms/LayoutLowering.cpp:2035:51: warning: ‘thrIdx0’ may be used uninitialized [-Wmaybe-uninitialized]
+ 2035 |     IntTupleValueAdaptor thrDim0 = tupleBuilder.at(flatCoord, thrIdx0);
+      |                                    ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~
+/job/repo/lib/Dialect/Fly/Transforms/LayoutLowering.cpp:2016:9: note: ‘thrIdx0’ was declared here
+ 2016 |     int thrIdx0, thrIdx1;
+      |         ^~~~~~~
+/job/repo/lib/Dialect/Fly/Transforms/LayoutLowering.cpp:2036:51: warning: ‘thrIdx1’ may be used uninitialized [-Wmaybe-uninitialized]
+ 2036 |     IntTupleValueAdaptor thrDim1 = tupleBuilder.at(flatCoord, thrIdx1);
+      |                                    ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~
+/job/repo/lib/Dialect/Fly/Transforms/LayoutLowering.cpp:2016:18: note: ‘thrIdx1’ was declared here
+ 2016 |     int thrIdx0, thrIdx1;
+      |                  ^~~~~~~
+[149/177] Building CXX object lib/CAPI/Dialect/FlyROCDL/CMakeFiles/obj.MLIRCPIFlyROCDL.dir/FlyROCDLDialect.cpp.o
+[150/177] Building CXX object python/mlir_flydsl/CMakeFiles/FlyPythonModules.extension.MLIRPythonSupport-mlir.so.dir/opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonExtension.MLIRPythonSupport/IRAttributes.cpp.o
+In file included from /usr/include/python3.12/Python.h:35,
+                 from /opt/venv/lib/python3.12/site-packages/nanobind/include/nanobind/nb_python.h:21,
+                 from /opt/venv/lib/python3.12/site-packages/nanobind/include/nanobind/nanobind.h:32,
+                 from /opt/amdpilot/llvm-project/mlir_install/include/mlir/Bindings/Python/Nanobind.h:24,
+                 from /opt/amdpilot/llvm-project/mlir_install/include/mlir/Bindings/Python/NanobindUtils.h:14,
+                 from /opt/amdpilot/llvm-project/mlir_install/include/mlir/Bindings/Python/Globals.h:22,
+                 from /opt/amdpilot/llvm-project/mlir_install/include/mlir/Bindings/Python/IRCore.h:19,
+                 from /opt/amdpilot/llvm-project/mlir_install/include/mlir/Bindings/Python/IRAttributes.h:20,
+                 from /opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonExtension.MLIRPythonSupport/IRAttributes.cpp:22:
+/opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonExtension.MLIRPythonSupport/IRAttributes.cpp: In member function ‘nanobind::int_ mlir::python::mlir::PyDenseIntElementsAttribute::dunderGetItem(intptr_t) const’:
+/opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonExtension.MLIRPythonSupport/IRAttributes.cpp:1010:33: warning: suggest parentheses around ‘&&’ within ‘||’ [-Wparentheses]
+ 1010 |          mlirTypeIsAIndex(type) && "expected integer/index element type in "
+      |          ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1011 |                                    "dense int elements attribute");
+      |                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+At global scope:
+cc1plus: note: unrecognized command-line option ‘-Wno-zero-length-array’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-nested-anon-types’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-deprecated-literal-operator’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-covered-switch-default’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-c++98-compat-extra-semi’ may have been intended to silence earlier diagnostics
+[151/177] Building CXX object lib/Dialect/Fly/CMakeFiles/obj.MLIRFlyDialect.dir/IR/FlyDialect.cpp.o
+[152/177] Building CXX object tools/flydsl-lsp-server/CMakeFiles/flydsl-lsp-server.dir/flydsl-lsp-server.cpp.o
+[153/177] Building CXX object tools/fly-opt/CMakeFiles/fly-opt.dir/fly-opt.cpp.o
+[154/177] Building CXX object lib/Conversion/FlyToROCDL/CMakeFiles/obj.MLIRFlyToROCDL.dir/FlyToROCDL.cpp.o
+[155/177] Building CXX object python/mlir_flydsl/CMakeFiles/FlyPythonModules.extension._mlirDialectsFly.dso.dir/__/__/lib/Bindings/Python/FlyExtension.cpp.o
+<command-line>: warning: "MLIR_BINDINGS_PYTHON_DOMAIN" redefined
+<command-line>: note: this is the location of the previous definition
+cc1plus: note: unrecognized command-line option ‘-Wno-zero-length-array’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-nested-anon-types’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-deprecated-literal-operator’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-covered-switch-default’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-c++98-compat-extra-semi’ may have been intended to silence earlier diagnostics
+[156/177] Building CXX object lib/Dialect/Fly/CMakeFiles/obj.MLIRFlyDialect.dir/IR/FlyOps.cpp.o
+In file included from /opt/amdpilot/llvm-project/mlir_install/include/mlir/Support/TypeID.h:19,
+                 from /opt/amdpilot/llvm-project/mlir_install/include/mlir/IR/MLIRContext.h:13,
+                 from /opt/amdpilot/llvm-project/mlir_install/include/mlir/IR/AttributeSupport.h:16,
+                 from /opt/amdpilot/llvm-project/mlir_install/include/mlir/IR/Attributes.h:12,
+                 from /opt/amdpilot/llvm-project/mlir_install/include/mlir/Bytecode/BytecodeImplementation.h:17,
+                 from /opt/amdpilot/llvm-project/mlir_install/include/mlir/Bytecode/BytecodeOpInterface.h:17,
+                 from /opt/amdpilot/llvm-project/mlir_install/include/mlir/Dialect/LLVMIR/LLVMDialect.h:17,
+                 from /job/repo/lib/Dialect/Fly/IR/FlyOps.cpp:4:
+In function ‘llvm::hash_code llvm::hashing::detail::combine_bytes(const char*, size_t)’,
+    inlined from ‘llvm::hash_code llvm::hash_combine(const Ts& ...) [with Ts = {}]’ at /opt/amdpilot/llvm-project/mlir_install/include/llvm/ADT/Hashing.h:312:40,
+    inlined from ‘static llvm::hash_code mlir::fly::AddOffsetOp::computePropertiesHash(const Properties&)’ at /tmp/amdpilot-repo-j-52acf7d48c3e/native-build/include/flydsl/Dialect/Fly/IR/FlyOps.cpp.inc:567:28:
+/opt/amdpilot/llvm-project/mlir_install/include/llvm/ADT/Hashing.h:161:21: warning: ‘buf’ may be used uninitialized [-Wmaybe-uninitialized]
+  161 |   return xxh3_64bits(reinterpret_cast<const uint8_t *>(data), len) ^
+      |          ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /opt/amdpilot/llvm-project/mlir_install/include/llvm/ADT/Hashing.h:51:
+/opt/amdpilot/llvm-project/mlir_install/include/llvm/Support/xxhash.h: In static member function ‘static llvm::hash_code mlir::fly::AddOffsetOp::computePropertiesHash(const Properties&)’:
+/opt/amdpilot/llvm-project/mlir_install/include/llvm/Support/xxhash.h:46:19: note: by argument 1 of type ‘const uint8_t*’ {aka ‘const unsigned char*’} to ‘uint64_t llvm::xxh3_64bits(const uint8_t*, size_t)’ declared here
+   46 | LLVM_ABI uint64_t xxh3_64bits(const uint8_t *data, size_t len);
+      |                   ^~~~~~~~~~~
+/opt/amdpilot/llvm-project/mlir_install/include/llvm/ADT/Hashing.h:309:48: note: ‘buf’ declared here
+  309 |   std::array<char, std::max<size_t>(1, Total)> buf;
+      |                                                ^~~
+In file included from /job/repo/lib/Dialect/Fly/IR/FlyOps.cpp:13:
+/job/repo/include/flydsl/Dialect/Fly/Utils/TiledOpUtils.h: In function ‘Layout mlir::fly::layoutTiledMmaThrValOperandView(LayoutBuilder<Layout>&, MmaAtomType, LayoutAttr, TileAttr, MmaOperand, Layout) [with Layout = LayoutAttr]’:
+/job/repo/include/flydsl/Dialect/Fly/Utils/TiledOpUtils.h:305:3: warning: ‘idx0’ may be used uninitialized [-Wmaybe-uninitialized]
+  305 |   for (int i : {idx0, idx1}) {
+      |   ^~~
+/job/repo/include/flydsl/Dialect/Fly/Utils/TiledOpUtils.h:273:7: note: ‘idx0’ was declared here
+  273 |   int idx0, idx1;
+      |       ^~~~
+/job/repo/include/flydsl/Dialect/Fly/Utils/TiledOpUtils.h:305:3: warning: ‘idx1’ may be used uninitialized [-Wmaybe-uninitialized]
+  305 |   for (int i : {idx0, idx1}) {
+      |   ^~~
+/job/repo/include/flydsl/Dialect/Fly/Utils/TiledOpUtils.h:273:13: note: ‘idx1’ was declared here
+  273 |   int idx0, idx1;
+      |             ^~~~
+[157/177] Linking CXX static library lib/libMLIRFlyDialect.a
+[158/177] Linking CXX static library lib/libMLIRCPIFly.a
+[159/177] Linking CXX static library lib/libMLIRFlyToROCDL.a
+[160/177] Linking CXX static library lib/libMLIRCPIFlyROCDL.a
+[161/177] Building CXX object python/mlir_flydsl/CMakeFiles/FlyPythonModules.extension._mlirDialectsFlyROCDL.dso.dir/__/__/lib/Bindings/Python/FlyROCDLExtension.cpp.o
+<command-line>: warning: "MLIR_BINDINGS_PYTHON_DOMAIN" redefined
+<command-line>: note: this is the location of the previous definition
+cc1plus: note: unrecognized command-line option ‘-Wno-zero-length-array’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-nested-anon-types’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-deprecated-literal-operator’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-covered-switch-default’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-c++98-compat-extra-semi’ may have been intended to silence earlier diagnostics
+[162/177] Building CXX object python/mlir_flydsl/CMakeFiles/FlyPythonModules.extension.MLIRPythonSupport-mlir.so.dir/opt/amdpilot/llvm-project/mlir_install/src/python/MLIRPythonExtension.MLIRPythonSupport/IRCore.cpp.o
+[163/177] Linking CXX executable bin/flydsl-lsp-server
+[164/177] Linking CXX executable bin/fly-opt
+[165/177] Linking CXX shared library python_packages/flydsl/_mlir/_mlir_libs/libFlyPythonCAPI.so.24.0git
+[166/177] Creating library symlink python_packages/flydsl/_mlir/_mlir_libs/libFlyPythonCAPI.so
+[167/177] Linking CXX shared library python_packages/flydsl/_mlir/_mlir_libs/libMLIRPythonSupport-mlir.so
+[168/177] Linking CXX shared module python_packages/flydsl/_mlir/_mlir_libs/_mlirGPUPasses.cpython-312-x86_64-linux-gnu.so
+[169/177] Linking CXX shared module python_packages/flydsl/_mlir/_mlir_libs/_mlirDialectsGPU.cpython-312-x86_64-linux-gnu.so
+[170/177] Linking CXX shared module python_packages/flydsl/_mlir/_mlir_libs/_mlirRegisterEverything.cpython-312-x86_64-linux-gnu.so
+[171/177] Linking CXX shared module python_packages/flydsl/_mlir/_mlir_libs/_mlirExecutionEngine.cpython-312-x86_64-linux-gnu.so
+[172/177] Linking CXX shared module python_packages/flydsl/_mlir/_mlir_libs/_mlirDialectsLLVM.cpython-312-x86_64-linux-gnu.so
+[173/177] Linking CXX shared module python_packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFlyROCDL.cpython-312-x86_64-linux-gnu.so
+[174/177] Linking CXX shared module python_packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so
+[175/177] Linking CXX shared module python_packages/flydsl/_mlir/_mlir_libs/_mlirDialectsFly.cpython-312-x86_64-linux-gnu.so
+[176/177] Copying python/flydsl sources to build/python_packages/flydsl
+[177/177] Generating Python stub files for all extension modules
+
+==============================================
+Build complete!
+
+Usage (no install):
+  export PYTHONPATH=/tmp/amdpilot-repo-j-52acf7d48c3e/native-build/python_packages:${PYTHONPATH}
+
+Or install as editable package:
+  cd /job/repo && pip install -e .
+==============================================
