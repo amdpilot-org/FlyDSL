@@ -487,6 +487,88 @@ class Transformer(ast.NodeTransformer):
 
 
 @ASTRewriter.register
+class RejectEarlyReturnInDynamicControlFlow(Transformer):
+    """Reject Python ``return`` from regions lowered to structured control flow.
+
+    A runtime ``if``/``for``/``while`` is outlined into an ``scf`` region helper.
+    A Python return in that helper exits only the helper, not the surrounding
+    kernel or JIT function, so accepting it silently changes program semantics.
+    Compile-time control flow remains ordinary Python and may return normally.
+    """
+
+    def __init__(self, context, first_lineno):
+        super().__init__(context, first_lineno)
+        self._dynamic_regions = []
+
+    @staticmethod
+    def _call_name(node):
+        if not isinstance(node, ast.Call):
+            return None
+        return getattr(node.func, "id", None) or getattr(node.func, "attr", None)
+
+    @classmethod
+    def _is_dynamic_for(cls, node):
+        name = cls._call_name(node.iter)
+        if name == "range_constexpr":
+            return False
+        if name in ("range", "scf_range"):
+            return True
+        # Preserve the explicit SCF-loop convention used by the existing for
+        # rewriter (e.g. helpers named ``for_`` / ``scf.for_``).
+        return "for_" in ast.dump(node.iter) or "scf.for_" in ast.dump(node.iter)
+
+    @contextlib.contextmanager
+    def _dynamic_region(self, label):
+        self._dynamic_regions.append(label)
+        try:
+            yield
+        finally:
+            self._dynamic_regions.pop()
+
+    def visit_FunctionDef(self, node):
+        saved_regions = self._dynamic_regions
+        self._dynamic_regions = []
+        try:
+            return self.generic_visit(node)
+        finally:
+            self._dynamic_regions = saved_regions
+
+    visit_AsyncFunctionDef = visit_FunctionDef
+
+    def visit_Return(self, node):
+        if self._dynamic_regions:
+            line = self.first_lineno + node.lineno
+            region = self._dynamic_regions[0]
+            message = (
+                f"early return is not supported inside {region}; "
+                "structured DSL control flow "
+                "cannot exit the surrounding function. Move the return outside "
+                "the runtime control flow or make the controlling condition/loop "
+                "compile-time with const_expr()/range_constexpr()."
+            )
+            raise SyntaxError(message, (self.context.filename, line, node.col_offset + 1, None))
+        return self.generic_visit(node)
+
+    def visit_If(self, node):
+        if _is_constexpr(node.test):
+            return self.generic_visit(node)
+        with self._dynamic_region("dynamic if (scf.if)"):
+            return self.generic_visit(node)
+
+    def visit_While(self, node):
+        if _is_constexpr(node.test):
+            return self.generic_visit(node)
+        with self._dynamic_region("dynamic while (scf.while)"):
+            return self.generic_visit(node)
+
+    def visit_For(self, node):
+        if not self._is_dynamic_for(node):
+            return self.generic_visit(node)
+        with self._dynamic_region("dynamic for loop (scf.for)"):
+            return self.generic_visit(node)
+
+
+@ASTRewriter.register
 class RewriteBoolOps(Transformer):
     @staticmethod
     def dsl_and_(lhs, rhs):

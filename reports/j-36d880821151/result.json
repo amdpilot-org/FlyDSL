@@ -1,0 +1,31 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/687",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Reproduced that return inside runtime DSL control flow exits only an outlined Python region helper, so code after the apparent function return is still generated and executed. Added an AST diagnostic that rejects return under dynamic scf.if/scf.for/scf.while at the original source location, while preserving top-level returns, const_expr/range_constexpr-controlled returns, nested-function returns, and valid nested dynamic control flow without returns.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-36d880821151/venv/bin/python -m pytest -q tests/unit/test_early_return_control_flow.py (before fix)",
+      "exit_code": 1,
+      "what_was_measured": "Failing-before regression: three invalid dynamic if/for/while early-return cases were accepted instead of raising SyntaxError; raw output: /job/raw/j-36d880821151/failing-before-unit.txt"
+    },
+    {
+      "command": "ROCR_VISIBLE_DEVICES=0 HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-36d880821151/venv/bin/python /job/raw/j-36d880821151/reproduce_pre_fix_semantics.py",
+      "exit_code": 0,
+      "what_was_measured": "With only the new validation pass disabled, a runtime-true early return should preserve output 3 but generated code executed the following store and produced 9; raw output: /job/raw/j-36d880821151/failing-before-gpu-semantics.txt"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-36d880821151/venv/bin/python -m pytest -q tests/unit",
+      "exit_code": 0,
+      "what_was_measured": "1103 unit tests passed and 17 skipped, including source-located diagnostics for conditional and nested dynamic returns and preservation of compile-time/top-level/nested-function returns; raw output: /job/raw/j-36d880821151/all-unit.txt"
+    },
+    {
+      "command": "ROCR_VISIBLE_DEVICES=0 HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/tmp/amdpilot-repo-j-36d880821151/early-return-dumps-2 /tmp/amdpilot-repo-j-36d880821151/venv/bin/python -m pytest -q -s tests/system/test_early_return_control_flow_e2e.py",
+      "exit_code": 0,
+      "what_was_measured": "Two real-GPU numerical tests passed: compile-time return produced [23] while the non-return specialization produced [41], and nested dynamic if selectors 0/1/2 produced [3,7,11] against an independent Torch host reference. Origin MLIR contains two scf.if ops and final gfx950 ISA contains the output store/endpgm; raw output: /job/raw/j-36d880821151/gpu-ir-isa-evidence.txt; compiler artifacts: /tmp/amdpilot-repo-j-36d880821151/early-return-dumps-2"
+    }
+  ],
+  "gpu_execution": true,
+  "native_rebuilt": false,
+  "remaining_limitations": "Runtime-divergent early return is not implemented and is intentionally rejected. Returns are supported at function scope and beneath explicitly compile-time const_expr conditions or range_constexpr loops; a return nested anywhere under a runtime scf.if/scf.for/scf.while is rejected, even if an inner construct is compile-time. This is a Python front-end-only change, so no native C++ library rebuild was applicable."
+}
