@@ -18,6 +18,7 @@ import os
 
 import pytest
 
+from flydsl.testing import run_perftest
 from kernels.moe.topk_gating_softmax_kernel import (
     build_topk_gating_softmax_module,
 )
@@ -26,7 +27,6 @@ from tests.kernels.benchmark_common import (
     bench_gpu_us_torch,
     print_perf_table,
 )
-from tests.test_common import run_perftest
 
 pytestmark = [pytest.mark.l2_device, pytest.mark.rocm_lower]
 
