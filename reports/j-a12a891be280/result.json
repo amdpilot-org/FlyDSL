@@ -1,0 +1,57 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/862",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/598",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/512",
+  "candidate_commit": "3f0b181c6df97ac367652df3425091161dec9daf",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "recommendation": "request_changes",
+  "fully_resolves_original": false,
+  "summary": "The exact candidate is a technically valid partial optimization: it reuses retained source IR and eliminates one duplicate serialization while preserving the required parse copy, compilation identities, and GPU numerical results. The base focused regression fails and the candidate plus independent fallback/edge cases pass. It does not establish a measurable end-to-end cold-JIT improvement or fully resolve the broad original issue; single cold observations were noisily slower on the candidate. Request changes to the candidate's 'fixed' reporting, not removal of the narrow code optimization.",
+  "tests": [
+    {
+      "command": "PYTHONPATH=/job/repo/python /tmp/amdpilot-repo-j-a12a891be280/venv/bin/python -m pytest -q /job/review-evidence-j-a12a891be280/test_mlir_compiler.py (base)",
+      "exit_code": 1,
+      "what_was_measured": "Failing-before regression: base rejects source_ir and cannot reuse the retained serialization."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_CACHE_DIR=...review-base-rms-20260912 .../python -u measure_cold_jit.py rmsnorm",
+      "exit_code": 0,
+      "what_was_measured": "Base fresh-cache RMSNorm cold call 145.64 ms; compiler pipeline 82.62 ms; GPU output matched Torch with max absolute error 0.0009765625."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_CACHE_DIR=...review-base-gemm-20260912 .../python -u measure_cold_jit.py gemm",
+      "exit_code": 0,
+      "what_was_measured": "Base fresh-cache GEMM cold call 742.75 ms; compiler pipeline 233.48 ms; GPU output matched Torch within configured tolerance with max absolute error 0.4954681396484375."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python .../python -m pytest -q tests/unit/test_mlir_compiler.py tests/unit/test_jit_cache_key.py tests/unit/test_jit_cache_key_completeness.py /job/review-evidence-j-a12a891be280/test_adversarial_source_ir.py (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "22 tests passed, including candidate regression, cache identity/completeness, fallback serialization, and exact supplied-text semantics."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_CACHE_DIR=...review-candidate-rms-20260912 .../python -u reports/j-af0bbbf36b8f/measure_cold_jit.py rmsnorm",
+      "exit_code": 0,
+      "what_was_measured": "Candidate fresh-cache RMSNorm cold call 154.94 ms; compiler pipeline 84.61 ms; identical cache/source/compiled hashes to base and identical numerical error."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo FLYDSL_RUNTIME_CACHE_DIR=...review-candidate-gemm-20260912 .../python -u reports/j-af0bbbf36b8f/measure_cold_jit.py gemm",
+      "exit_code": 0,
+      "what_was_measured": "Candidate fresh-cache GEMM cold call 761.46 ms; compiler pipeline 225.84 ms; identical cache/source/compiled hashes to base and identical numerical error."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "One assigned AMD Instinct MI350X, gfx950:sramecc+:xnack-, executed base and candidate RMSNorm and GEMM against independent Torch references.",
+  "native_rebuilt": false,
+  "remaining_counterexamples": [
+    "The candidate does not demonstrate a cold end-to-end speedup: in this independent single-run comparison both candidate wall-clock observations were higher, within expected noise.",
+    "The broad original request to reduce FlyDSL compile time is not exhausted by removing one serialization; most measured compiler-pipeline time remains.",
+    "The exact issue-linked external RMSNorm script is incompatible with this checkout, so its original workload remains unverified.",
+    "The reported MI355 architecture was unavailable; validation used MI350X in the same gfx950 family."
+  ],
+  "remaining_limitations": [
+    "Single cold observations are preserved as raw evidence and are not statistical performance claims.",
+    "No native rebuild was performed because the candidate changes only Python and tests/reports; pinned native shared objects were confirmed under /opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs.",
+    "The recommendation reflects inaccurate full-fix reporting; the narrow source change itself passed review."
+  ]
+}

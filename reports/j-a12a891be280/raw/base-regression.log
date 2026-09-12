@@ -1,0 +1,47 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________________ test_mlir_compiler_reuses_retained_source_ir _________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fe0963fb440>
+
+    def test_mlir_compiler_reuses_retained_source_ir(monkeypatch):
+        """The JIT source snapshot should also feed the required parse copy."""
+    
+        monkeypatch.setattr(jit_function, "get_backend", lambda arch="": _FakeBackend())
+        monkeypatch.setattr(
+            jit_function,
+            "_pipeline_fragments_for_mode",
+            lambda backend, *, compile_hints: type(
+                "Config",
+                (),
+                {
+                    "fragments": ["test-pass"],
+                    "pre_binary": [],
+                    "binary_fragment": "",
+                    "llvm_opts": [],
+                    "external": False,
+                },
+            )(),
+        )
+        monkeypatch.setattr(jit_function, "_run_pipeline", lambda module, fragments, **kwargs: None)
+        monkeypatch.setattr(jit_function, "_llvm_options", lambda options: nullcontext(), raising=False)
+    
+        def parse(source):
+            assert source == "retained source"
+            return _PARSED_MODULE
+    
+        monkeypatch.setattr(jit_function.ir.Module, "parse", parse)
+    
+        def reject_second_serialization(**kwargs):
+            raise AssertionError("JIT module was unnecessarily serialized twice")
+    
+        _MODULE.operation.get_asm = reject_second_serialization
+    
+>       assert jit_function.MlirCompiler.compile(_MODULE, source_ir="retained source") is _PARSED_MODULE
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: MlirCompiler.compile() got an unexpected keyword argument 'source_ir'
+
+../review-evidence-j-a12a891be280/test_mlir_compiler.py:64: TypeError
+=========================== short test summary info ============================
+FAILED ../review-evidence-j-a12a891be280/test_mlir_compiler.py::test_mlir_compiler_reuses_retained_source_ir
+1 failed in 1.79s
