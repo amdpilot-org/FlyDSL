@@ -1,0 +1,44 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/603",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "environment_blocked",
+  "summary": "Added an executable AITER/FlyDSL HGEMM tensor-and-stream integration regression. The prepared downstream AITER checkout is present, but its top-level import fails before kernel launch because it requires triton>=3.6.0 while the pinned ROCm environment provides triton 3.5.1+rocm7.2.0.gita272dfa8. Consequently the regression could be syntax validated here but its downstream GPU output remains unverified in this image.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-3b1fa7e1c57c/venv/bin/python -m py_compile tests/integration/test_aiter_flydsl_hgemm.py",
+      "exit_code": 0,
+      "what_was_measured": "The executable integration regression compiles as Python."
+    },
+    {
+      "command": "XDG_CACHE_HOME=/job/cache/xdg TORCH_EXTENSIONS_DIR=/job/cache/torch FLYDSL_CACHE_DIR=/job/cache/flydsl /tmp/amdpilot-repo-j-3b1fa7e1c57c/venv/bin/python tests/integration/test_aiter_flydsl_hgemm.py",
+      "exit_code": 1,
+      "what_was_measured": "Actual prepared AITER import boundary. Import stopped before GPU launch with RuntimeError: aiter gluon kernels require triton>=3.6.0, found 3.5.1+rocm7.2.0.gita272dfa8. Raw output: /job/raw-output/integration-local.txt."
+    },
+    {
+      "command": "XDG_CACHE_HOME=/job/cache/xdg FLYDSL_CACHE_DIR=/job/cache/flydsl TORCH_EXTENSIONS_DIR=/job/cache/torch /tmp/amdpilot-repo-j-3b1fa7e1c57c/venv/bin/python -m pytest -q tests/kernels/test_vec_add.py -k test_vec_add",
+      "exit_code": 0,
+      "what_was_measured": "Three standalone FlyDSL GPU vector-add cases passed on gfx950. Raw output: /job/raw-output/flydsl-gpu-vec-add.txt."
+    },
+    {
+      "command": "XDG_CACHE_HOME=/job/cache/xdg FLYDSL_CACHE_DIR=/job/cache/flydsl TORCH_EXTENSIONS_DIR=/job/cache/torch /tmp/amdpilot-repo-j-3b1fa7e1c57c/venv/bin/python -m pytest -q -s tests/kernels/test_vec_add.py::test_benchmark_vector_add[4]",
+      "exit_code": 0,
+      "what_was_measured": "Standalone FlyDSL produced 1,048,576 float32 GPU outputs on gfx950 with maximum absolute error 0.00e+00 against Torch. This confirms GPU availability only; it is not downstream integration evidence. Raw output: /job/raw-output/flydsl-gpu-vec-add-numeric.txt."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "FlyDSL executed on the assigned AMD Instinct MI355X (gfx950) and matched Torch exactly for the standalone vector-add regression. The AITER/FlyDSL integration path did not reach GPU execution because AITER failed during import.",
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "The prepared interpreter has neither the sglang nor vllm package installed.",
+    "The available amd-aiter 0+gd9e5ef7ce08ee7045d583aed768cff41aa9210fe checkout at /opt/aiter cannot import with the pinned triton 3.5.1+rocm7.2.0.gita272dfa8; it requires triton>=3.6.0.",
+    "No Torch, ROCm, or Triton packages were replaced, so downstream HGEMM numerical output and stream ordering remain unverified locally.",
+    "The mirror credential lacks GitHub's workflow scope, so the regression could not be wired into .github/workflows/flydsl-sglang-integration.yaml; it remains an explicit executable for a compatible SGLang/AITER container."
+  ],
+  "paths": {
+    "flydsl_source": "/job/repo/python/flydsl",
+    "flydsl_native": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir",
+    "aiter_source": "/opt/aiter/aiter",
+    "raw_output_directory": "/job/raw-output",
+    "private_cache_directory": "/job/cache"
+  }
+}
