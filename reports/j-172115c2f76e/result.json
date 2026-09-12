@@ -1,0 +1,47 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/1087",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "reproduced",
+  "summary": "Independent exact-MLIR reproduction confirms embedded LLVM e2a39f504fee836e4def9581bed817ecc327b9dc drops sgpr_512 sub4/sub5 during greedy live-range splitting. Final ISA spills undefined s60/s61 and 16 buffer loads use descriptor bases derived from those lanes. This report does not claim a FlyDSL fix.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-172115c2f76e/venv/bin/python reports/j-172115c2f76e/reproduce.py /tmp/issue1087.mlir baseline.s --waves-per-eu 1",
+      "exit_code": 0,
+      "what_was_measured": "Exact MLIR SHA-256 5ca5000c...297ef emitted matching ISA SHA-256 1452f523...4cef with the missing s[60:61] copy."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-172115c2f76e/venv/bin/python reports/j-172115c2f76e/check_isa.py raw/baseline.s",
+      "exit_code": 1,
+      "what_was_measured": "Failing-before regression: missing s_mov_b64 s[60:61], s[80:81], all eight spill writes present, and exactly 16 affected descriptor loads."
+    },
+    {
+      "command": "embedded codegen with LLVM print-before=greedy",
+      "exit_code": 139,
+      "what_was_measured": "Complete pre-greedy MachineIR shows defined %72:sgpr_512 from kernarg offset 248 and direct sub4/sub5 uses; process segfaulted after the complete dump while unwinding the print option."
+    },
+    {
+      "command": "embedded codegen with LLVM print-after=greedy",
+      "exit_code": 139,
+      "what_was_measured": "Complete post-greedy MachineIR shows copy-in omitting sub4/sub5, whole-register spill/restore, then copy-out and consumption of sub4/sub5; process segfaulted after the complete dump while unwinding the print option."
+    },
+    {
+      "command": "embedded codegen controls with no waves-per-EU option and --amdgpu-waves-per-eu=2",
+      "exit_code": 0,
+      "what_was_measured": "Both controls emitted the same failing ISA SHA-256 1452f523...4cef."
+    },
+    {
+      "command": "/opt/rocm/llvm/bin/llvm-objdump -d --mcpu=gfx950 affected-control.hsaco clean-control.hsaco",
+      "exit_code": 0,
+      "what_was_measured": "Affected sibling contains undefined s60/s61 writes at 0x2510/0x2518; clean sibling's corresponding spill group uses defined s12-s27 values."
+    }
+  ],
+  "gpu_execution": false,
+  "gpu_execution_evidence": "Compile-only and static MachineIR/ISA analysis. The affected kernel was deliberately not executed because its descriptor base is undefined.",
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "No corrected LLVM candidate was available, so the required failing-before/passing-after regression is preserved but has no honest passing-after result.",
+    "The correction must be made and validated in the pinned LLVM AMDGPU greedy allocator/SplitKit dependency; no FlyDSL-side compiler fix was identified.",
+    "The complete MachineIR dumps were produced, but setting the temporary LLVM print option caused an exit-139 teardown after the dump, preventing an independent verifier-success claim.",
+    "No GPU numerical result was collected because executing this proven-unsafe object was prohibited and could access an unintended allocation."
+  ]
+}
