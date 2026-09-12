@@ -1,0 +1,36 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/831",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Added opt-in ROCm intra-kernel timestamp reads and caller-owned timestamp recording. A real MI350X vector-add kernel produced an exact independently computed Torch result, positive per-workgroup stage durations, and separate instrumented/uninstrumented ISA. HIP-event timing measured the instrumentation overhead.",
+  "tests": [
+    {
+      "command": "FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/artifacts/j-9e7c4fa9bf9a/dump-profiled /tmp/amdpilot-repo-j-9e7c4fa9bf9a/venv/bin/python -m pytest -q tests/unit/test_intra_kernel_profiling.py::test_profiled_vector_add_records_ordered_stage_times -s",
+      "exit_code": 0,
+      "what_was_measured": "Exact GPU vector-add agreement with independent a+b Torch reference; 32 workgroup stage intervals were positive (88/116/128 timer ticks min/median/max); dumped ISA contains two s_memrealtime instructions, two 64-bit timestamp stores, and the explicit barrier."
+    },
+    {
+      "command": "FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/artifacts/j-9e7c4fa9bf9a/dump-plain /tmp/amdpilot-repo-j-9e7c4fa9bf9a/venv/bin/python -m pytest -q tests/unit/test_intra_kernel_profiling.py::test_uninstrumented_specialization_preserves_vector_add -s",
+      "exit_code": 0,
+      "what_was_measured": "Exact uninstrumented GPU vector-add agreement and unchanged zero timestamp buffer; dumped ISA contains no s_memrealtime, timestamp dwordx2 store, or profiling barrier."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-9e7c4fa9bf9a/venv/bin/python -m pytest -q tests/unit/test_intra_kernel_profiling.py tests/unit/test_expr_optional_rocdl.py tests/unit/test_pointer_argument_vec_add.py -s",
+      "exit_code": 0,
+      "what_was_measured": "Focused regression suite: 4 passed and 2 backend-optional tests skipped. Median HIP-event kernel time over 25 batches of 100 launches was 37.080 us plain and 37.088 us profiled, a 0.009 us measured delta (1.000x at printed precision)."
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "what_was_measured": "Patch whitespace validation."
+    }
+  ],
+  "gpu_execution": true,
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "No native C++ or LLVM source changed, so the prepared native rebuild was not applicable; validation used the prepared interpreter and pinned LLVM through the checkout's Python sources.",
+    "The s_memrealtime common device time-domain contract permits same-GPU cross-XCD comparisons, but this test could not identify or pin individual workgroups to particular XCDs, so cross-XCD placement was not independently demonstrated.",
+    "Readings from different GPUs are not a synchronized shared epoch. The timer read is not a barrier, and conversion from raw ticks to time requires an independently established device timer frequency.",
+    "Direct upstream issue retrieval was blocked by the provided GitHub credential policy; the supplied upstream snapshot and accessible mirror issue were inspected without changing credentials."
+  ]
+}

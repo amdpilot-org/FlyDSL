@@ -57,12 +57,51 @@ __all__ = [
     "make_buffer_ptr",
     "make_buffer_tensor",
     "get_buffer_rsrc",
+    "global_timer",
+    "record_timestamp",
     # Operations
     "sched_mfma",
     "sched_vmem",
     "sched_dsrd",
     "sched_dswr",
 ]
+
+
+@dsl_loc_tracing
+def global_timer():
+    """Read the AMDGPU 64-bit global real-time counter.
+
+    This lowers to ``llvm.amdgcn.s.memrealtime`` / ``s_memrealtime``.  The
+    returned :class:`~flydsl.expr.Uint64` value is suitable for elapsed-time
+    measurements made by subtraction.  Timer ticks are device clock ticks;
+    consumers should report ticks unless they independently know the timer
+    frequency for the running device.
+
+    Unlike ``s_memtime``, ``s_memrealtime`` is the globally visible timer and
+    its values may be compared between workgroups and XCDs on one GPU.  A timer
+    read is not a memory or execution barrier: insert the synchronization that
+    defines the stage boundary before recording a timestamp.  Values from
+    different GPUs have no shared-epoch guarantee.  Readings from ordered
+    launches on the same device remain in the same time domain, but the timer
+    itself does not establish ordering between launches or streams.
+    """
+    from ..._mlir.dialects import llvm as _llvm
+    from ..numeric import Uint64
+
+    return Uint64(_llvm.call_intrinsic(Uint64.ir_type, "llvm.amdgcn.s.memrealtime", [], [], []))
+
+
+@dsl_loc_tracing
+def record_timestamp(buffer, index):
+    """Store :func:`global_timer` into ``buffer[index]`` and return the value.
+
+    ``buffer`` is a caller-owned ``fx.Pointer`` whose element type is 64-bit.
+    Keeping allocation, indexing, and thread selection explicit makes profiling
+    entirely opt-in and allows one record per workgroup, wave, or thread.
+    """
+    timestamp = global_timer()
+    (buffer + index).store(timestamp)
+    return timestamp
 
 # Keep references to ODS-generated builders so we can wrap them without losing access.
 _ods_wmma_scale_f32_16x16x128_f8f6f4 = globals().get("wmma_scale_f32_16x16x128_f8f6f4", None)
