@@ -47,6 +47,7 @@ from .kernel_function import (
     merge_compile_hints,
 )
 from .link_utils import _append_link_lib_options_to_attach_targets, _format_link_lib_options
+from .mlir_utils import quote_pass_option_value
 from .protocol import (
     JitArgument,
     c_abi_spec,
@@ -674,7 +675,7 @@ def _dump_isa(*, dump_dir: Path, ctx: ir.Context, asm: str, verify: bool, stage_
         di_pass = (
             "ensure-debug-info-scope-on-llvm-func{emission-kind=LineTablesOnly}," if env.debug.enable_debug_info else ""
         )
-        toolkit_path = get_rocm_toolkit_path()
+        toolkit_path = quote_pass_option_value(get_rocm_toolkit_path())
         pm = PassManager.parse(
             f'builtin.module({di_pass}gpu-module-to-binary{{format=isa opts="{"-g" if env.debug.enable_debug_info else ""}" section= toolkit={toolkit_path}}})',
             context=ctx,
