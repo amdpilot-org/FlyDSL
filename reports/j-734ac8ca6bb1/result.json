@@ -1,0 +1,61 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/1016",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/618",
+  "candidate_commit": "2582321e975d839edb5f0fd01450e78e72bec065",
+  "outcome": "candidate_verified",
+  "recommendation": "accept",
+  "fully_resolves_original": false,
+  "summary": "The exact candidate is valid scoped documentation and regression-test hardening for the BlockScan contribution already present on the prepared base. It corrects the shared-storage reuse example with an intervening fx.barrier(), adds independent multi-block/wave-boundary coverage, and explicitly avoids claiming completion of the broad building-block proposal. It changes no implementation or native code and therefore does not fully resolve upstream issue 1016.",
+  "tests": [
+    {
+      "command": "assert docs/extension/coop_scan.md exists on prepared base",
+      "exit_code": 1,
+      "what_was_measured": "Reproduced the base's missing public BlockScan documentation/on-ramp. Raw output: /job/review-evidence/base/original-failure.txt"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-734ac8ca6bb1/venv/bin/python -m pytest -q tests/extension/coop/test_block_scan.py (prepared base)",
+      "exit_code": 0,
+      "what_was_measured": "The pre-existing implementation already passed 62 focused GPU tests, distinguishing the candidate from an implementation fix. Raw output: /job/review-evidence/base/test-block-scan.txt"
+    },
+    {
+      "command": "static assertion over candidate docs/extension/coop_scan.md",
+      "exit_code": 0,
+      "what_was_measured": "Verified fx.barrier() occurs between consecutive inclusive and exclusive calls reusing storage and that the page disclaims completion of the whole library. Raw output: /job/review-evidence/candidate/import-and-doc-contract.txt"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-734ac8ca6bb1/venv/bin/python -m pytest -q tests/extension/coop/test_block_scan.py (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "All 64 candidate focused BlockScan GPU tests passed, including the added multi-block wave-boundary cases. Raw output: /job/review-evidence/candidate/test-block-scan.txt"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-734ac8ca6bb1/venv/bin/python /job/review-evidence/adversarial_block_scan.py",
+      "exit_code": 0,
+      "what_was_measured": "Independent int32 host-reference check for inclusive and exclusive scans sharing storage with a barrier across three blocks and wave64 boundaries. Raw output: /job/review-evidence/candidate/adversarial-block-scan.txt"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-734ac8ca6bb1/venv/bin/python -m pytest -q tests/extension/coop",
+      "exit_code": 0,
+      "what_was_measured": "All 326 cooperative extension tests passed on the candidate. Raw output: /job/review-evidence/candidate/test-coop.txt"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-734ac8ca6bb1/venv/bin/python examples/extension/coop/02-block_scan.py",
+      "exit_code": 0,
+      "what_was_measured": "Real GPU stream compaction passed against its independent host result. Raw output: /job/review-evidence/candidate/example.txt"
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "AMD Instinct MI355X, gfx950:sramecc+:xnack-, ROCm/HIP 7.2; source imports resolved to /job/repo/python. Evidence: /job/review-evidence/base/environment.txt",
+  "native_rebuilt": false,
+  "remaining_counterexamples": [
+    "The broad original proposal remains unresolved beyond the explicitly scoped block-wide prefix scan contribution.",
+    "Wave32 and non-gfx950 architectures were unavailable and remain unverified.",
+    "BlockScan remains limited to power-of-two thread counts, full-block participation, WARP_SCANS, and ReductionOp ADD/MUL/MIN/MAX.",
+    "Candidate PR 618 refers to historical mirror issue 604 rather than this review's assigned mirror issue 621."
+  ],
+  "remaining_limitations": [
+    "No native C++ source changed, so rebuilding native code was not applicable.",
+    "Only gfx950 wave64 hardware was available for execution.",
+    "Raw review evidence is retained outside the checkout at /job/review-evidence/."
+  ]
+}
