@@ -1,0 +1,46 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/548",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "candidate_commit": "a7780f0145bf120394fa656ad0df5226439a8f06",
+  "outcome": "candidate_verified",
+  "recommendation": "accept",
+  "fully_resolves_original": true,
+  "summary": "Independent review reproduced the absent first-class fx.global_load API on the prepared base, then verified the exact candidate commit. The candidate integrates with fx.Tensor/get_iter/recast_iter/add_offset, supports scalar and flat-vector values, typed element and raw byte offsets, explicit alignment, scalar and lane masks, and passthrough values. Candidate regression tests and independent GPU cases passed against separately indexed Torch references, while fresh LLVM IR and gfx950 ISA confirmed real global loads and masked-load lowering.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-21025b4ff7ba/venv/bin/python -m pytest tests/unit/test_llvm_wrapper.py -q (base acf7e67b7d22847e345938ca54fcc137bd7b2a1f)",
+      "exit_code": 0,
+      "what_was_measured": "27 base tests passed and an independent import probe reproduced that flydsl.expr had no global_load attribute. Raw output: /job/review-evidence-j-21025b4ff7ba/base-unit.log and base-reproduction.log"
+    },
+    {
+      "command": "FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-21025b4ff7ba/review-cache /tmp/amdpilot-repo-j-21025b4ff7ba/venv/bin/python -m pytest tests/unit/test_llvm_wrapper.py tests/kernels/test_global_load.py -q -s (candidate a7780f0145bf120394fa656ad0df5226439a8f06)",
+      "exit_code": 0,
+      "what_was_measured": "Candidate public export regression and real-GPU scalar element-offset, vector byte-offset, alignment, and scalar masking checks: 28 passed. Raw output: /job/review-evidence-j-21025b4ff7ba/candidate-tests.log"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-21025b4ff7ba/venv/bin/python -m pytest tests/unit/test_vector.py tests/unit/test_llvm_wrapper.py tests/kernels/test_global_load.py -q (candidate a7780f0145bf120394fa656ad0df5226439a8f06)",
+      "exit_code": 0,
+      "what_was_measured": "Focused vector/type/export and candidate GPU suite: 113 passed. Raw output: /job/review-evidence-j-21025b4ff7ba/focused-suite.log"
+    },
+    {
+      "command": "FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-21025b4ff7ba/review-adversarial-cache2 FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_DUMP_IR=1 FLYDSL_DEBUG_DUMP_ASM=1 FLYDSL_DUMP_DIR=/job/review-evidence-j-21025b4ff7ba/dumps-valid /tmp/amdpilot-repo-j-21025b4ff7ba/venv/bin/python -m pytest /job/review-evidence-j-21025b4ff7ba/test_global_load_adversarial.py -q -s (candidate a7780f0145bf120394fa656ad0df5226439a8f06)",
+      "exit_code": 0,
+      "what_was_measured": "Independent MI350X GPU comparison for nonzero byte-offset i8 scalar loads, typed f32 element loads, and a four-lane masked i32 load at the allocation boundary with per-lane passthrough. Torch references matched. Fresh LLVM IR contains load i8 align 1, load float align 4, and llvm.masked.load.v4i32.p1; gfx950 ISA contains global_load_ubyte and global_load_dword. Raw output and compiler dumps: /job/review-evidence-j-21025b4ff7ba/adversarial-valid.log and dumps-valid/"
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_evidence": "AMD Instinct MI350X, gfx950, unique ID 0x5e94f9cc641f4027; candidate and independent kernels executed successfully with synchronized Torch comparisons. Device inventory: /job/review-evidence-j-21025b4ff7ba/base-state.txt",
+  "native_rebuilt": false,
+  "remaining_counterexamples": [],
+  "remaining_limitations": [
+    "No native rebuild was required because the candidate changes only Python DSL code and calls existing LLVM dialect bindings. The active native extension resolves to the pinned /opt/venv FlyDSL installation and its hash matched the checkout-linked binary; paths are recorded in /job/review-evidence-j-21025b4ff7ba/native-imports.txt.",
+    "Execution was validated only on the assigned AMD Instinct MI350X (gfx950); other ROCm architectures were not available.",
+    "Cache-policy metadata remains absent, but the original issue described it as optional.",
+    "A vector-valued byte_offset caused a compiler-process segmentation fault in exploratory testing. The reviewed contract and issue examples use one computed scalar offset for a scalar or contiguous vector load, so this was not classified as a remaining original-issue counterexample; raw evidence is retained at /job/review-evidence-j-21025b4ff7ba/adversarial.log."
+  ],
+  "source_paths": {
+    "python": "/job/repo/python/flydsl/__init__.py",
+    "expr": "/job/repo/python/flydsl/expr/__init__.py",
+    "native": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so"
+  }
+}
