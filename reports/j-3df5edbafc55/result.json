@@ -1,0 +1,53 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/862",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/616",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/615",
+  "candidate_commit": "dc5fe72c768515f3987cbc8e879d4ae37eb36285",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_verified",
+  "recommendation": "accept",
+  "fully_resolves_original": false,
+  "summary": "PR 615 is a verified partial optimization. It removes one redundant source-IR serialization, preserves cache and generated-IR identity in maintained RMSNorm and GEMM GPU checks, and accurately narrows its claim. It does not establish a general cold end-to-end speedup or fully resolve the original broad compile-time request.",
+  "tests": [
+    {
+      "command": "PYTHONPATH=/job/repo/python /tmp/amdpilot-repo-j-3df5edbafc55/venv/bin/python -m pytest -q /job/review-evidence/meta/test_mlir_compiler.py (base)",
+      "exit_code": 1,
+      "what_was_measured": "Failing-before regression: base rejects source_ir with TypeError."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python /tmp/amdpilot-repo-j-3df5edbafc55/venv/bin/python -m pytest -q tests/unit/test_mlir_compiler.py tests/unit/test_jit_cache_key.py tests/unit/test_jit_cache_key_completeness.py (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Candidate regression and cache coverage; 20 tests passed."
+    },
+    {
+      "command": "Three distinct fresh-cache runs per revision of measure_cold_jit.py rmsnorm",
+      "exit_code": 0,
+      "what_was_measured": "MI350X RMSNorm 16x4096 against a Torch reference. Base median wall/compiler 146.78/82.98 ms; candidate 147.34/83.59 ms; max absolute error 0.0009765625; identities unchanged."
+    },
+    {
+      "command": "Three distinct fresh-cache runs per revision of measure_cold_jit.py gemm",
+      "exit_code": 0,
+      "what_was_measured": "MI350X GEMM 1024x1024x1024 against a Torch reference. Base median wall/compiler 720.08/233.18 ms; candidate 709.64/226.77 ms; max absolute error 0.4954681396484375 within maintained tolerance; identities unchanged."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python /tmp/amdpilot-repo-j-3df5edbafc55/venv/bin/python - (source_ir/debug-policy adversarial probe)",
+      "exit_code": 0,
+      "what_was_measured": "Supplying retained source bypasses get_asm(enable_debug_info=False) and parses the supplied always-debug snapshot; maintained GPU outputs and final IR remained identical."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "One assigned AMD Instinct MI350X (gfx950:sramecc+:xnack-) ran six fresh-cache executions per revision across maintained RMSNorm and GEMM, with independent Torch references and raw logs retained.",
+  "native_rebuilt": false,
+  "remaining_counterexamples": [
+    "No general cold end-to-end speedup was demonstrated: RMSNorm median wall and compiler observations were slightly higher, while GEMM was lower, across only three isolated runs per revision.",
+    "Most compiler-pipeline time remains after removing one serialization, so the broad request to reduce FlyDSL compile time is not exhausted.",
+    "The exact issue-linked RMSNorm workload remains unverified: branch xiaobing/bench at 61e048653db47113c736afeb336851f98cc7c5c4 imports removed flydsl.expr.vector APIs and fails during import.",
+    "MI355 was unavailable; testing used MI350X in the same gfx950 family.",
+    "The candidate changes the parsed input from configuration-controlled debug printing to an always-debug retained snapshot; tested outputs were identical, but its unit regression does not cover this policy distinction."
+  ],
+  "remaining_limitations": [
+    "The timing sample is deliberately small and does not support a statistically significant performance claim.",
+    "The reporter's exact external benchmark and MI355 hardware were unavailable.",
+    "No native rebuild was performed because the candidate changes only Python JIT orchestration and contains no native source changes."
+  ]
+}

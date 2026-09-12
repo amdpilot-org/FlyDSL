@@ -1,0 +1,22 @@
+{
+  "arch": "gfx950:sramecc+:xnack-",
+  "build_s": 0.017367718741297722,
+  "cache_dir": "/tmp/amdpilot-review-j-3df5edbafc55/candidate-rmsnorm-1/launch_rmsnorm_c17e76f7332007f1c9eb9171b2668d8a",
+  "cache_key_sha256": "fe0d3e6111eee6f42c7befdfe0878766ee3dc9d4d93ef3a108acefa2ee2b8d8f",
+  "cold_first_call_s": 0.14733880758285522,
+  "compiled_ir_bytes": 16462,
+  "compiled_ir_sha256": "604e63689d179d00f02aca72f8604f620755dcc2a689f0b70676735ef09ea2ce",
+  "compiler_pipeline_s": [
+    0.08389625139534473
+  ],
+  "device": "AMD Instinct MI350X",
+  "kernel": "rmsnorm",
+  "max_abs_error": 0.0009765625,
+  "removed_text_parse_reference_s": 0.002301831729710102,
+  "shape": [
+    16,
+    4096
+  ],
+  "source_ir_bytes": 33856,
+  "source_ir_sha256": "fc24258b42d2a08df48ad9c40cc35475bb3488500c9ba92e30dc7d4209296292"
+}
