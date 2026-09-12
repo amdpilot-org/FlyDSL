@@ -1,0 +1,56 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/726",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "candidate_commit": "fce1fafcee5a397b7e5ce3b7cf9061af19a40dcd",
+  "outcome": "candidate_verified",
+  "recommendation": "accept",
+  "fully_resolves_original": true,
+  "summary": "The exact candidate adds a working opt-in persistent worklist to the actual MoE GEMM1 path while preserving the default API, 2-D launch behavior, and numerical result. The missing opt-in fails on the recorded base and passes candidate plus independent gfx950 GPU tests.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-29436ad7cd7f/venv/bin/python -c <real compile_moe_gemm1 call with persistent=True>",
+      "exit_code": 1,
+      "what_was_measured": "Recorded-base failing-before: the real GEMM1 API rejects persistent=True with an unexpected-keyword TypeError."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-29436ad7cd7f/venv/bin/python -m pytest -q tests/kernels/test_moe_gemm_2stage.py::test_moe_gemm1_numeric --tb=short",
+      "exit_code": 0,
+      "what_was_measured": "Recorded-base default-path health: 12/12 numerical cases passed on gfx950."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-29436ad7cd7f/venv/bin/python -m pytest -q tests/kernels/test_moe_gemm_2stage.py::test_moe_gemm1_persistent_numeric --tb=short",
+      "exit_code": 0,
+      "what_was_measured": "Exact-candidate regression: 8/8 persistent masked-tail cases passed across all four supported input formats."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-29436ad7cd7f/venv/bin/python -m pytest -q tests/kernels/test_moe_gemm_2stage.py -k gemm1 --tb=short",
+      "exit_code": 0,
+      "what_was_measured": "Broad candidate GEMM1 suite: 205 passed and 96 skipped."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo /tmp/amdpilot-repo-j-29436ad7cd7f/venv/bin/python /job/review-evidence-j-29436ad7cd7f/independent_persistent_review.py",
+      "exit_code": 0,
+      "what_was_measured": "Independent Torch-reference and default-mode comparisons for underfilled and repeated worklists, masked tails, tile_n 64/128/256, multipliers 1/2/3, f16/bf16, and fp8/int8/int8smooth/int4; also invalid multiplier rejection and NaN completion guards."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 PYTHONPATH=/job/repo FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-29436ad7cd7f/cache/candidate-validation /tmp/amdpilot-repo-j-29436ad7cd7f/venv/bin/python reports/j-9870aaa06078/validate_persistent_gemm1.py",
+      "exit_code": 0,
+      "what_was_measured": "Exact candidate harness: eight numerical pairs and warmed GPU-event timing with 20 warmups and seven 100-launch batches."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-29436ad7cd7f/venv/bin/python -m py_compile kernels/moe/moe_gemm_2stage/gemm1.py tests/kernels/test_moe_gemm_2stage.py reports/j-9870aaa06078/validate_persistent_gemm1.py && git diff --check acf7e67b7d22847e345938ca54fcc137bd7b2a1f..fce1fafcee5a397b7e5ce3b7cf9061af19a40dcd",
+      "exit_code": 0,
+      "what_was_measured": "Candidate Python syntax and patch whitespace."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_evidence": "One assigned AMD Instinct MI350X, gfx950:sramecc+:xnack-, 256 compute units; real GEMM1 kernels compiled and executed with Torch-reference comparisons.",
+  "native_rebuilt": false,
+  "remaining_counterexamples": [],
+  "remaining_limitations": [
+    "Only gfx950 execution was available; gfx94-family execution remains unverified.",
+    "Synthetic timing was variable and usually slower for persistent mode; no performance speedup is established.",
+    "No native C++ source changed, so the pinned native rebuild was not applicable.",
+    "The upstream issue was fetched through the public API after the configured token was rejected by ROCm organization policy; the fetched text matched the supplied issue snapshot."
+  ]
+}
