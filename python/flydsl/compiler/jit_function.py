@@ -59,6 +59,9 @@ EXTRA_SOURCE_DIRS: List[str] = []
 
 CacheInfo = namedtuple("CacheInfo", ["hits", "misses", "currsize", "disk_size"])
 
+_AOT_CACHE_FORMAT = "flydsl.compiled-artifact"
+_AOT_CACHE_SCHEMA_VERSION = 1
+
 
 class FileLock:
     """fcntl-based file lock supporting shared and exclusive modes."""
@@ -961,9 +964,74 @@ class JitCacheManager:
         return self.cache_dir / f"{self._safe_key(cache_key)}.lock"
 
     @staticmethod
-    def _write_cache_file(cache_file: Path, value: Any) -> None:
+    def _invalid_artifact(cache_file: Path, detail: str) -> RuntimeError:
+        return RuntimeError(f"Invalid FlyDSL AOT cache artifact {cache_file}: {detail}")
+
+    @classmethod
+    def _read_cache_file(cls, cache_file: Path, expected_key: Optional[str] = None) -> CompiledArtifact:
+        try:
+            with open(cache_file, "rb") as f:
+                envelope = pickle.load(f)
+        except Exception as e:
+            raise cls._invalid_artifact(cache_file, f"could not deserialize pickle: {e}") from e
+
+        if not isinstance(envelope, dict):
+            raise cls._invalid_artifact(
+                cache_file,
+                f"expected a schema envelope dictionary, got {type(envelope).__name__}",
+            )
+        required = {"format", "schema_version", "cache_key", "artifact"}
+        missing = sorted(required - envelope.keys())
+        if missing:
+            raise cls._invalid_artifact(cache_file, f"missing metadata fields: {missing}")
+        if envelope["format"] != _AOT_CACHE_FORMAT:
+            raise cls._invalid_artifact(
+                cache_file,
+                f"unsupported format {envelope['format']!r}; expected {_AOT_CACHE_FORMAT!r}",
+            )
+        if type(envelope["schema_version"]) is not int:
+            raise cls._invalid_artifact(
+                cache_file,
+                "schema_version metadata must be an integer",
+            )
+        if envelope["schema_version"] != _AOT_CACHE_SCHEMA_VERSION:
+            raise cls._invalid_artifact(
+                cache_file,
+                f"unsupported schema version {envelope['schema_version']!r}; "
+                f"expected {_AOT_CACHE_SCHEMA_VERSION}",
+            )
+        stored_key = envelope["cache_key"]
+        if not isinstance(stored_key, str):
+            raise cls._invalid_artifact(cache_file, "cache_key metadata must be a string")
+        if expected_key is not None and stored_key != expected_key:
+            raise cls._invalid_artifact(
+                cache_file,
+                "cache_key metadata does not match the requested arguments",
+            )
+        if cache_file.stem != cls._safe_key(stored_key):
+            raise cls._invalid_artifact(cache_file, "filename does not match cache_key metadata")
+        artifact = envelope["artifact"]
+        if not isinstance(artifact, CompiledArtifact):
+            raise cls._invalid_artifact(
+                cache_file,
+                f"artifact payload must be CompiledArtifact, got {type(artifact).__name__}",
+            )
+        return artifact
+
+    @staticmethod
+    def _write_cache_file(cache_file: Path, cache_key: str, value: Any) -> None:
+        if not isinstance(value, CompiledArtifact):
+            raise TypeError(
+                f"AOT cache payload must be CompiledArtifact, got {type(value).__name__}"
+            )
+        envelope = {
+            "format": _AOT_CACHE_FORMAT,
+            "schema_version": _AOT_CACHE_SCHEMA_VERSION,
+            "cache_key": cache_key,
+            "artifact": value,
+        }
         with atomic_write(cache_file, mode="wb") as output:
-            pickle.dump(value, output)
+            pickle.dump(envelope, output)
 
     def get(self, cache_key: str) -> Optional[Any]:
         if cache_key in self.memory_cache:
@@ -978,19 +1046,19 @@ class JitCacheManager:
                     if not cache_file.exists():
                         self._misses += 1
                         return None
-                    with open(cache_file, "rb") as f:
-                        value = pickle.load(f)
+                    value = self._read_cache_file(cache_file, cache_key)
                 self.memory_cache[cache_key] = value
                 self._hits += 1
                 log().debug(f"Cache hit from disk: {cache_file.name}")
                 return value
+            except RuntimeError:
+                raise
             except Exception as e:
-                log().warning(f"Failed to load cache {cache_file}: {e}")
+                raise self._invalid_artifact(cache_file, str(e)) from e
         self._misses += 1
         return None
 
     def set(self, cache_key: str, value: Any) -> None:
-        self.memory_cache[cache_key] = value
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         cache_file = self._cache_file(cache_key)
         lock_path = self._lock_file(cache_key)
@@ -999,7 +1067,8 @@ class JitCacheManager:
                 if cache_file.exists():
                     log().debug(f"Cache already exists, skipping write: {cache_file.name}")
                     return
-                self._write_cache_file(cache_file, value)
+                self._write_cache_file(cache_file, cache_key, value)
+            self.memory_cache[cache_key] = value
             log().debug(f"Cache saved: {cache_file.name}")
         except Exception as e:
             log().warning(f"Failed to save cache {cache_file}: {e}")
@@ -1019,23 +1088,15 @@ class JitCacheManager:
         with FileLock(lock_path, exclusive=True, timeout=600):
             # Re-check disk under exclusive lock.
             if cache_file.exists():
-                try:
-                    with open(cache_file, "rb") as f:
-                        value = pickle.load(f)
-                    self.memory_cache[cache_key] = value
-                    self._hits += 1
-                    yield (value, None)
-                    return
-                except Exception:
-                    # Corrupt cache — remove so writer can overwrite.
-                    try:
-                        cache_file.unlink()
-                    except OSError:
-                        pass
+                value = self._read_cache_file(cache_file, cache_key)
+                self.memory_cache[cache_key] = value
+                self._hits += 1
+                yield (value, None)
+                return
 
             # Cache miss — provide a writer that writes under the already-held lock.
             def _writer(value):
-                self._write_cache_file(cache_file, value)
+                self._write_cache_file(cache_file, cache_key, value)
                 self.memory_cache[cache_key] = value
 
             yield (None, _writer)
@@ -1048,11 +1109,10 @@ class JitCacheManager:
             lock_path = cache_file.with_suffix(".lock")
             try:
                 with FileLock(lock_path, exclusive=False, timeout=30):
-                    with open(cache_file, "rb") as f:
-                        pickle.load(f)
+                    self._read_cache_file(cache_file)
                 count += 1
-            except Exception:
-                pass
+            except RuntimeError:
+                raise
         log().debug(f"Found {count} cached entries in {self.cache_dir}")
         return count
 

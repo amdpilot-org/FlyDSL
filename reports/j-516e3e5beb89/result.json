@@ -1,0 +1,44 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/621",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Imported the schema-based AOT cache validation from candidate PR 509, then completed the contract identified by review PR 547: schema_version now requires the exact int type, so True is rejected, and JitCacheManager.set() mutates its memory cache only after a successful validated disk write. The candidate regressions and new failing-before/passing-after boundary regressions pass.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-516e3e5beb89/venv/bin/python -m pytest -q tests/unit/test_aot_cache_schema.py tests/unit/test_jit_cache_key.py",
+      "exit_code": 0,
+      "what_was_measured": "11 tests passed: schema round trip, corrupt/incompatible artifact rejection without compile fallback, strict boolean schema-version rejection, failed-set memory isolation, and cache-key behavior. Raw output: /job/evidence-j-516e3e5beb89/final/focused.txt"
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-516e3e5beb89/venv/bin/python -m pytest -q tests/unit/test_jit_cache_key_completeness.py tests/unit/test_compile_hints.py tests/unit/test_aot_cache_schema.py",
+      "exit_code": 0,
+      "what_was_measured": "37 passed and 2 architecture-dependent tests skipped across related key completeness, compile-hint, and AOT schema behavior. Raw output: /job/evidence-j-516e3e5beb89/final/related.txt"
+    },
+    {
+      "command": "FLYDSL_RUNTIME_ENABLE_CACHE=1 FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-516e3e5beb89/gpu-cache-j-516e3e5beb89 /tmp/amdpilot-repo-j-516e3e5beb89/venv/bin/python examples/01-vectorAdd.py",
+      "exit_code": 0,
+      "what_was_measured": "Generated and executed a gfx950 AOT artifact on AMD Instinct MI355X; PASS compares GPU output with the independent PyTorch A + B reference using torch.allclose. Raw output: /job/evidence-j-516e3e5beb89/final/gpu-export.txt"
+    },
+    {
+      "command": "FLYDSL_RUNTIME_RUN_ONLY=1 FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-516e3e5beb89/gpu-cache-j-516e3e5beb89 /tmp/amdpilot-repo-j-516e3e5beb89/venv/bin/python examples/01-vectorAdd.py",
+      "exit_code": 0,
+      "what_was_measured": "A distinct process loaded and executed the cached artifact without compilation; PASS compares GPU output with PyTorch A + B. The 31,838-byte artifact's 14,687-byte compiled MLIR contains gpu.binary, rocdl.target, amdgpu, and gfx950. Raw outputs: /job/evidence-j-516e3e5beb89/final/gpu-run-only.txt and artifact-inspection.txt"
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "AMD Instinct MI355X with ROCm 7.2.26015-fc0010cf6a executed both export and fresh-process run-only paths successfully against a PyTorch numerical reference; environment evidence is /job/evidence-j-516e3e5beb89/final/gpu-environment.txt."
+  },
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "The change is Python-only; no native C++ library rebuild was applicable.",
+    "Only the available gfx950 architecture was exercised.",
+    "Legacy raw-pickle caches predate the schema and are intentionally rejected and must be regenerated.",
+    "The envelope validates compatibility and payload metadata after deserialization; pickle artifacts are not safe to accept from untrusted sources."
+  ],
+  "source_paths": {
+    "checkout": "/job/repo",
+    "python": "/tmp/amdpilot-repo-j-516e3e5beb89/venv/bin/python",
+    "native": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir"
+  }
+}
