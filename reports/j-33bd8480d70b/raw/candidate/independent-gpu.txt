@@ -1,0 +1,8 @@
+git_head=0ee04fd2a644b75ce07df281c8c37fba3e80680f
+flydsl_file= /job/repo/python/flydsl/__init__.py
+native_namespace= ['/job/repo/python/flydsl/_mlir']
+device= AMD Instinct MI355X
+capability= (9, 5)
+avg_us= 7.093333535724216
+max_abs_error= 0.0
+checkAllclose= 0

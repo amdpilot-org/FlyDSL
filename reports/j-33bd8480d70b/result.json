@@ -1,0 +1,52 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/304",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/672",
+  "candidate_commit": "0ee04fd2a644b75ce07df281c8c37fba3e80680f",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "recommendation": "request_changes",
+  "fully_resolves_original": false,
+  "summary": "The candidate correctly adds flydsl.testing, preserves all 13 legacy helper objects, migrates repository callers, and passes its regression plus an independent gfx950 GPU numerical benchmark. It does not fully satisfy the direct installed-import contract because flydsl.testing eagerly imports pandas while the FlyDSL wheel declares no runtime dependencies; the issue's exact two-name import fails when pandas is not separately installed.",
+  "tests": [
+    {
+      "command": "PYTHONPATH=$PWD/python:$PWD /tmp/amdpilot-repo-j-33bd8480d70b/venv/bin/python -c 'from flydsl.testing import checkAllclose, run_perftest' (recorded base)",
+      "exit_code": 1,
+      "what_was_measured": "Reproduced the original missing-public-module failure: ModuleNotFoundError for flydsl.testing."
+    },
+    {
+      "command": "PYTHONPATH=$PWD/python:$PWD /tmp/amdpilot-repo-j-33bd8480d70b/venv/bin/python -m pytest tests/unit/test_testing.py tests/unit/test_compile_hints.py tests/kernels/test_vec_add.py -q (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Candidate regression and compiled FlyDSL vector-add coverage: 28 passed, 2 architecture/feature skips."
+    },
+    {
+      "command": "PYTHONPATH=$PWD/python:$PWD FLYDSL_PERFTEST_USE_EVENTS=1 /tmp/amdpilot-repo-j-33bd8480d70b/venv/bin/python <independent GPU reference script> (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Nine measured GPU additions through run_perftest on AMD Instinct MI355X/gfx950; exact NumPy CPU reference match, max_abs_error=0.0, 7.093333535724216 us average."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python /tmp/amdpilot-repo-j-33bd8480d70b/venv/bin/python <fresh-process pandas-blocked primary import> (candidate)",
+      "exit_code": 1,
+      "what_was_measured": "Independent installed-API adversarial case: the exact requested import fails at eager import pandas with ModuleNotFoundError."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo/python:/job/repo /tmp/amdpilot-repo-j-33bd8480d70b/venv/bin/python <public/legacy identity and signature script> (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "All 13 public helpers are callable and object-identical through tests.test_common; callable signatures were recorded."
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "Candidate regression ran three compiled vector-add tests and the independent HIP-event test ran on AMD Instinct MI355X, capability (9, 5), with exact CPU-reference equality."
+  },
+  "native_rebuilt": false,
+  "native_rebuild_reason": "Not applicable: the candidate changes only Python, documentation, tests, and reports; no C++, MLIR, LLVM, header, or native build source changed.",
+  "remaining_counterexamples": [
+    "In an environment with FlyDSL available but pandas absent, `from flydsl.testing import checkAllclose, run_perftest` fails before either requested helper can be used, because pandas is imported eagerly and is not declared in FlyDSL wheel metadata."
+  ],
+  "remaining_limitations": [
+    "Only one ROCm gfx950 GPU (AMD Instinct MI355X) was available; CUDA/NVIDIA behavior was not tested.",
+    "HIP graph mode and the torch-profiler timing path were not independently exercised; the HIP-event timing path was exercised.",
+    "The upstream issue API could not be queried with the prepared fine-grained token because the ROCm organization rejected its lifetime; review used the supplied issue snapshot and locally retained mirror issue data.",
+    "The prepared checkout exactly matched the recorded base commit; no base discrepancy was observed."
+  ]
+}
