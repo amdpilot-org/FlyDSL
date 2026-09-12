@@ -3,8 +3,6 @@
 
 """FlyDSL sliding-window paged attention decode kernel."""
 
-import functools
-
 import flydsl.compiler as flyc
 import flydsl.expr as fx
 from flydsl.expr import arith, const_expr, gpu, range_constexpr, rocdl
@@ -636,7 +634,7 @@ def _make_pa_phase_helpers(
     )
 
 
-@functools.lru_cache(maxsize=256)
+@flyc.dependency_lru_cache(maxsize=256)
 def compile_pa_decode_sw_reduce(
     *,
     max_context_partition_num: int,
@@ -1021,7 +1019,7 @@ def compile_pa_decode_sw_reduce(
 # Uses block_tables for physical block lookup instead of kv_page_indices.
 # Output: exp_sums, max_logits, temporary_output -> reduced by a separate kernel.
 # =====================================================================
-@functools.lru_cache(maxsize=256)
+@flyc.dependency_lru_cache(maxsize=256)
 def compile_pa_decode_sw(
     sliding_window: int,  # required > 0 -- baked as compile-time constant
     max_context_partition_num: int,
