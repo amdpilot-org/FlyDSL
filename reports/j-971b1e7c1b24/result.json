@@ -1,0 +1,27 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/767",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "not_reproduced",
+  "summary": "The prepared main revision already supports MXFP6 E2M3 as the A operand of the gfx950 preshuffle GEMM. The unmodified checkout passed the reported W4A6 path. This change strengthens its targeted correctness coverage by independently decoding the exact packed MXFP6 A bytes, packed MXFP4 B bytes, and E8M0 scales before an fp32 torch.matmul reference; it does not change the kernel or existing MXFP4 behavior.",
+  "tests": [
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 /tmp/amdpilot-repo-j-971b1e7c1b24/venv/bin/python -m pytest -q -s 'tests/kernels/test_preshuffle_gemm.py::test_mfma_a6w4_preshuffle[32-8192-8192-32-128-256-bf16]'",
+      "exit_code": 0,
+      "what_was_measured": "Unmodified-checkout reproduction on gfx950: the MXFP6-A/MXFP4-B kernel compiled and matched the then-current dequantization-plus-matmul reference; 147.29 TFLOP/s was printed. Raw output: reports/j-971b1e7c1b24/raw/a6w4-before.txt"
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 /tmp/amdpilot-repo-j-971b1e7c1b24/venv/bin/python -m pytest -q -s 'tests/kernels/test_preshuffle_gemm.py::test_mfma_a6w4_preshuffle[32-8192-8192-32-128-256-bf16]' 'tests/kernels/test_preshuffle_gemm.py::test_mfma_a6w4_preshuffle[64-8192-8192-64-128-128-fp16]' 'tests/kernels/test_preshuffle_gemm.py::test_mfma_w4_flyc_preshuffle[64-8192-8192-64-128-128-fp4-fp4-bf16]'",
+      "exit_code": 0,
+      "what_was_measured": "The independent packed-byte oracle passed W4A6 for bf16 with tile_k=256 and fp16 with tile_k=128; the existing MXFP4-A/MXFP4-B bf16 case also passed. Raw output: reports/j-971b1e7c1b24/raw/focused-after.txt"
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-971b1e7c1b24/venv/bin/python -m pytest -q -s 'tests/kernels/test_preshuffle_gemm.py::test_mfma_a6w4_preshuffle[32-8192-8192-32-128-256-bf16]'",
+      "exit_code": 0,
+      "what_was_measured": "Cache-disabled gfx950 compilation and numerical execution passed. Final ISA contains 16 v_mfma_scale_f32_16x16x128_f8f6f4 instructions and targets gfx950. Raw output: reports/j-971b1e7c1b24/raw/a6w4-isa-run.txt; ISA evidence: reports/j-971b1e7c1b24/raw/isa-evidence.txt; full compiler dumps: /tmp/amdpilot-repo-j-971b1e7c1b24/mxfp6-isa-final/kernel_gemm_0"
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "All correctness runs executed on the assigned AMD Instinct MI355X (gfx950), and the cache-disabled final ISA declares amdgcn-amd-amdhsa-unknown-gfx950.",
+  "native_rebuilt": false,
+  "remaining_limitations": "No implementation defect was reproducible at the recorded base, so there is no failing-before/passing-after kernel fix. No native rebuild was needed because only Python test coverage changed. Validation was focused on gfx950 W4A6 bf16/fp16 and one MXFP4 preservation case rather than the full large-shape matrix. The prepared checkout is shallow/grafted, so the historical upstream commit named by the issue was not locally available for comparison."
+}

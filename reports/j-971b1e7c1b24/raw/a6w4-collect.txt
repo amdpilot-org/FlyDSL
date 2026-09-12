@@ -1,0 +1,10 @@
+      <Function test_mfma_a6w4_preshuffle[64-8192-8192-64-128-128-bf16]>
+      <Function test_mfma_a6w4_preshuffle[64-8192-8192-64-128-128-fp16]>
+      <Function test_mfma_a6w4_preshuffle[32-8192-8192-32-128-256-bf16]>
+      <Function test_mfma_a6w4_preshuffle[32-8192-8192-32-128-256-fp16]>
+      <Function test_mfma_a6w4_preshuffle[128-8192-8192-64-128-256-bf16]>
+      <Function test_mfma_a6w4_preshuffle[128-8192-8192-64-128-256-fp16]>
+      <Function test_mfma_a6w4_preshuffle[1024-8192-8192-64-256-256-bf16]>
+      <Function test_mfma_a6w4_preshuffle[1024-8192-8192-64-256-256-fp16]>
+      <Function test_mfma_a6w4_preshuffle[256-4096-14336-128-256-256-bf16]>
+      <Function test_mfma_a6w4_preshuffle[256-4096-14336-128-256-256-fp16]>

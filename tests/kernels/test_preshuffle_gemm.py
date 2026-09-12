@@ -45,6 +45,44 @@ def _ptr(t):
     return flyc.from_c_void_p(fx.Uint8, t.contiguous().data_ptr())
 
 
+def _decode_e8m0_reference(x):
+    """Test-local E8M0 decoder, independent of the quantization helpers."""
+    return torch.pow(2.0, x.view(torch.uint8).to(torch.int16).to(torch.float32) - 127.0)
+
+
+def _decode_mxfp4_reference(x):
+    """Decode packed E2M1 bytes with bit arithmetic for the GEMM oracle."""
+    x = x.view(torch.uint8)
+    codes = torch.stack((x & 0x0F, x >> 4), dim=-1).flatten(-2)
+    sign = torch.where((codes & 0x8) != 0, -1.0, 1.0)
+    exponent = (codes >> 1) & 0x3
+    mantissa = codes & 0x1
+    subnormal = mantissa.to(torch.float32) * 0.5
+    normal = torch.pow(2.0, exponent.to(torch.float32) - 1.0) * (1.0 + mantissa.to(torch.float32) * 0.5)
+    return sign * torch.where(exponent == 0, subnormal, normal)
+
+
+def _decode_mxfp6_a_reference(x):
+    """Decode the kernel's 24-code-byte + 8-padding-byte MXFP6 A layout."""
+    groups = x.view(x.shape[0], -1, 32)[..., :24].reshape(x.shape[0], -1, 3)
+    b0, b1, b2 = groups.unbind(dim=-1)
+    codes = torch.stack(
+        (
+            b0 & 0x3F,
+            ((b0 >> 6) | ((b1 & 0x0F) << 2)) & 0x3F,
+            ((b1 >> 4) | ((b2 & 0x03) << 4)) & 0x3F,
+            (b2 >> 2) & 0x3F,
+        ),
+        dim=-1,
+    ).flatten(-2)
+    sign = torch.where((codes & 0x20) != 0, -1.0, 1.0)
+    exponent = (codes >> 3) & 0x3
+    mantissa = codes & 0x7
+    subnormal = mantissa.to(torch.float32) / 8.0
+    normal = torch.pow(2.0, exponent.to(torch.float32) - 1.0) * (1.0 + mantissa.to(torch.float32) / 8.0)
+    return sign * torch.where(exponent == 0, subnormal, normal)
+
+
 def _mxfp4_launcher(
     N,
     K,
@@ -535,7 +573,7 @@ def test_mfma_a6w4_preshuffle(
     b_fp32_padded[:N] = b_fp32
 
     # A: MXFP6 E2M3, FP8-padded (1 byte/code).
-    a_pad, scale_a_orig, a_unpacked = gemm_common_utils.per_1x32_f6_quant(a_fp32_padded)
+    a_pad, scale_a_orig, _ = gemm_common_utils.per_1x32_f6_quant(a_fp32_padded)
     a_codes = a_pad[:M]
     scale_a = gemm_common_utils.shuffle_scale_w4(scale_a_orig, 1, False)
 
@@ -545,13 +583,13 @@ def test_mfma_a6w4_preshuffle(
     b_shuffled = gemm_common_utils.shuffle_weight_w4(b_q, 16, False, False)
     scale_b_shuffled = gemm_common_utils.shuffle_scale_w4(scale_b, 1, False)
 
-    # Reference: dequant(A) @ dequant(B).T in fp32.
-    a_deq = gemm_common_utils.fp6_e2m3_to_f32(a_unpacked) * gemm_common_utils.e8m0_to_f32(
+    # Independent reference: decode the exact packed kernel operands locally, then matmul.
+    # Do not reuse the quantization helpers' decoders: this also covers the FP6 padding and
+    # bit packing consumed by the A path.
+    a_deq = _decode_mxfp6_a_reference(a_codes) * _decode_e8m0_reference(
         scale_a_orig[:M].repeat_interleave(32, dim=1)
     )
-    b_deq = gemm_common_utils.mxfp4_to_f32(b_q) * gemm_common_utils.e8m0_to_f32(
-        scale_b[:N].repeat_interleave(32, dim=1)
-    )
+    b_deq = _decode_mxfp4_reference(b_q) * _decode_e8m0_reference(scale_b[:N].repeat_interleave(32, dim=1))
     c_ref = torch.mm(a_deq, b_deq.T).to(torch.float32)
 
     torch_out_dtype = torch.bfloat16 if out_dtype == "bf16" else torch.float16
