@@ -1,0 +1,3 @@
+source /job/repo/python/flydsl/__init__.py
+ir /job/repo/python/flydsl/_mlir/ir.py
+passmanager /job/repo/python/flydsl/_mlir/passmanager.py
