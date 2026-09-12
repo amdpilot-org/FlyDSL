@@ -1,0 +1,27 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/861",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "reproduced",
+  "summary": "On one MI350X/gfx950, three representative BF16 convolutions were 1.37x to 1.71x slower than preallocated Torch BF16 GEMMs with the same implicit-GEMM dimensions. The current 32x32 heuristic tile was fastest across the complete shipped 32/64/128 ladder for all three shapes, so no unjustified production tuning change was made.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-5916dc8d5733/venv/bin/python reports/j-5916dc8d5733/bench_conv_gap.py --output reports/j-5916dc8d5733/raw_measurements.json --warmup 10 --repetitions 100",
+      "exit_code": 0,
+      "what_was_measured": "GPU-event timings for three current FlyDSL public convolution calls, all three shipped tile-ladder choices, equivalent preallocated Torch BF16 GEMMs, and independent Torch convolution accuracy. Raw 100-sample distributions are retained."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-5916dc8d5733/venv/bin/python -m pytest -q tests/kernels/test_conv3d_implicit.py -k 'tile_configs'",
+      "exit_code": 0,
+      "what_was_measured": "Focused GPU correctness coverage for all eight explicit tile configurations (8 passed)."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "raw_measurements.json records AMD Instinct MI350X, gfx950, GPU index 0, unique ID 0x6e4208b780600d88, GPU-event samples, and successful independent numerical comparisons.",
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "Only three small repository-test-derived shapes were measured, not a full model trace.",
+    "Torch GEMM is a compute-density reference and has a different memory-access pattern from implicit convolution.",
+    "Public-call timing includes allocation and dispatch, so the observed gap is not attributed solely to MFMA execution.",
+    "No compiler defect or justified improvement within the current tile ladder was demonstrated; broader kernel design work remains unverified."
+  ]
+}
