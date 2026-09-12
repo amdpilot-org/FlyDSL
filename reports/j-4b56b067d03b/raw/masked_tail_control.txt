@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "active_max_abs_error": 0.0,
+      "padded_size": 256,
+      "size": 1,
+      "tail_elements": 255,
+      "tail_sentinel_unchanged": true
+    },
+    {
+      "active_max_abs_error": 0.0,
+      "padded_size": 256,
+      "size": 255,
+      "tail_elements": 1,
+      "tail_sentinel_unchanged": true
+    },
+    {
+      "active_max_abs_error": 0.0,
+      "padded_size": 512,
+      "size": 257,
+      "tail_elements": 255,
+      "tail_sentinel_unchanged": true
+    },
+    {
+      "active_max_abs_error": 0.0,
+      "padded_size": 4352,
+      "size": 4099,
+      "tail_elements": 253,
+      "tail_sentinel_unchanged": true
+    }
+  ],
+  "control": "deterministic raw-pointer vector add with masked tails",
+  "device": "AMD Instinct MI355X",
+  "device_count": 1,
+  "gcn_arch_name": "gfx950:sramecc+:xnack-",
+  "hip_version": "7.2.26015-fc0010cf6a",
+  "result": "passed",
+  "torch_version": "2.9.1+rocm7.2.0.git7e1940d4"
+}
