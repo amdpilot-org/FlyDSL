@@ -59,6 +59,29 @@ label: // ds_read_b128
     assert report["kernels"] == {"odd": {}}
 
 
+def test_multiline_block_comments_do_not_inflate_instruction_counts():
+    report = analyze_isa(
+        """
+/* These instruction examples are documentation, not ISA:
+v_mfma_f32_16x16x16_f16 a[0:3], v0, v1, a[0:3]
+buffer_store_dword v0, v1, s[0:3], 0 offen
+*/
+s_nop 0 /* trailing comment */
+/* leading comment */ s_endpgm
+"""
+    )
+    assert report["instruction_count"] == 2
+    assert report["opcodes"] == {"s_endpgm": 1, "s_nop": 1}
+    assert report["families"]["mfma_wmma"] == 0
+    assert report["families"]["vmem_store"] == 0
+
+
+def test_label_and_instruction_may_share_a_line():
+    report = analyze_isa("entry: s_nop 0\n.Ldone: s_endpgm\n1: s_branch 1b\n")
+    assert report["instruction_count"] == 3
+    assert report["opcodes"] == {"s_branch": 1, "s_endpgm": 1, "s_nop": 1}
+
+
 def test_cli_emits_machine_readable_json(tmp_path, capsys):
     isa = tmp_path / "kernel.s"
     isa.write_text(SAMPLE)
