@@ -1,0 +1,3 @@
+module /job/repo/python/flydsl/tools/isa_analyzer.py
+multiline_block_comment {'instruction_count': 1, 'families': {'mfma_wmma': 0, 'vmem_load': 0, 'vmem_store': 0, 'lds_read': 0, 'lds_write': 0, 'waitcnt': 0, 'barrier': 0}, 'opcodes': {'s_nop': 1}, 'kernels': {}}
+label_and_instruction_same_line {'instruction_count': 1, 'families': {'mfma_wmma': 0, 'vmem_load': 0, 'vmem_store': 0, 'lds_read': 0, 'lds_write': 0, 'waitcnt': 0, 'barrier': 0}, 'opcodes': {'s_nop': 1}, 'kernels': {}}

@@ -1,0 +1,46 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/515",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Preserved PR 679's valid ISA analyzer and parser fixes, reproduced PR 683's exact YAML metadata counterexample on candidate b0d6d33d6256a013e0a5ba4a4f0a5308998ee954, and excluded .amdgpu_metadata YAML payloads from instruction and family counts. The retained gfx950 sample now reports 28 instructions instead of 35.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-aff9f621cb3e/venv/bin/python python/flydsl/tools/isa_analyzer.py --pretty reports/j-a68b43674cdb/raw/gfx950-final-isa.s (candidate b0d6d33d6256a013e0a5ba4a4f0a5308998ee954)",
+      "exit_code": 0,
+      "what_was_measured": "Failing-before reproduction: 35 instructions, including seven YAML scalar values misclassified as opcodes, versus 28 actual instructions."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-aff9f621cb3e/venv/bin/python python/flydsl/tools/isa_analyzer.py --pretty reports/j-a68b43674cdb/raw/gfx950-final-isa.s",
+      "exit_code": 0,
+      "what_was_measured": "Passing-after real compiler ISA analysis: exactly 28 instructions and no YAML values in the opcode table."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-aff9f621cb3e/venv/bin/python -m pytest -q tests/unit/test_isa_analyzer.py tests/unit/test_compile_hints.py tests/unit/test_external_llvm_codegen.py",
+      "exit_code": 0,
+      "what_was_measured": "32 tests passed and 2 environment-dependent tests skipped; covers YAML metadata, prior comment/label fixes, compiler hints, and external LLVM codegen compatibility."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 /tmp/amdpilot-repo-j-aff9f621cb3e/venv/bin/python -m pytest -q tests/extension/coop/test_warp_rocdl.py::test_every_form_agrees_with_the_portable_one[reduce-w16] tests/extension/coop/test_warp_rocdl.py::test_a_full_wave_fold_rakes_and_lifts_the_total_into_an_sgpr --basetemp=/tmp/amdpilot-repo-j-aff9f621cb3e/pytest-correction",
+      "exit_code": 0,
+      "what_was_measured": "Two gfx950 tests passed, including optimized GPU output agreement with the portable GPU reference and final-ISA generation/shape assertions."
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "what_was_measured": "No whitespace errors."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "Two tests passed on the assigned AMD Instinct MI355X (gfx950); one compares optimized execution with a portable GPU reference and the other asserts compiler-emitted final ISA properties.",
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "Physical VGPR/SGPR pinning or named register-region reservation remains unimplemented.",
+    "Exact hand-scheduled region preservation and MFMA co-execute-window assertions remain unimplemented.",
+    "The requested first-class AMD instruction helpers remain unimplemented.",
+    "The requested exact low-level buffer load/store API remains unimplemented.",
+    "The requested compiler-option sweep example remains unimplemented.",
+    "Static ISA analysis does not prove scheduling guarantees, physical register placement, cycle timing, dependency correctness, occupancy, or handwritten-kernel performance parity.",
+    "Only gfx950 hardware was available; other CDNA and RDNA architectures were not tested.",
+    "No native rebuild was performed because this correction changes only Python, tests, documentation, and reports."
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/515",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Reproduced and corrected PR 671's multiline block-comment false positives and same-line label/instruction false negative while preserving its valid final-ISA analyzer.",
+  "tests": [
+    {
+      "command": "exact candidate 716219a9 adversarial analyze_isa script with /tmp/flydsl-candidate-716219a9/python first on sys.path",
+      "exit_code": 0,
+      "what_was_measured": "Failing-before: multiline comment text counted as three instructions with false MFMA/store counts; entry: s_nop 0 counted as zero. The resolved candidate module path was recorded."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-ccecf7dfd700/venv/bin/python -m pytest -q tests/unit/test_isa_analyzer.py tests/unit/test_compile_hints.py tests/unit/test_external_llvm_codegen.py",
+      "exit_code": 0,
+      "what_was_measured": "31 passed, 2 skipped; analyzer regressions plus existing compile-hint and external LLVM codegen compatibility coverage."
+    },
+    {
+      "command": "post-fix adversarial analyze_isa script",
+      "exit_code": 0,
+      "what_was_measured": "Passing-after: each counterexample counted exactly one s_nop and no false MFMA/store family instructions."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 ... pytest -q two warp_rocdl tests",
+      "exit_code": 0,
+      "what_was_measured": "2 passed on one MI350X/gfx950, including numerical agreement with the independent portable GPU implementation and final-ISA checks."
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "what_was_measured": "Patch whitespace validity. Ruff was not installed in the pinned interpreter and was not added."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_evidence": "reports/j-ccecf7dfd700/raw/gpu-pytest.log: two selected tests passed on the assigned gfx950 GPU.",
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "Physical VGPR/SGPR pinning and named register-region reservation remain unimplemented.",
+    "Exact hand-scheduled region preservation and MFMA co-execute-window assertions remain unimplemented.",
+    "The requested first-class AMD instruction helpers remain unimplemented.",
+    "The requested exact low-level buffer load/store API remains unimplemented.",
+    "The requested compiler-option sweep example remains unimplemented.",
+    "Only MI350X/gfx950 was available; no other CDNA or RDNA architecture was validated.",
+    "Static ISA parsing cannot establish scheduling guarantees or handwritten-kernel performance parity.",
+    "No native rebuild was applicable because only Python, tests, documentation, and reports changed."
+  ]
+}
