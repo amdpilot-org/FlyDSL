@@ -1,0 +1,37 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/1054",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "The prepared base reproduced two objects for one gfx1201 kernel, with the bare target first and the hinted target second. Exact candidate 6661f060ec2dc0656cf4e67023a826d0827eb7f9 emitted one correctly hinted object for default and boundary hint combinations, passed focused tests, and executed correctly on the assigned gfx950 GPU. Recommendation: approve for the reported defect.",
+  "tests": [
+    {
+      "command": "ARCH=gfx1201 COMPILE_ONLY=1 FLYDSL_RUNTIME_ENABLE_CACHE=0 REVIEW_FAST=1 REVIEW_UNSAFE=1 REVIEW_IR=/job/review-evidence-j-10d946008a37/base-gfx1201-both.mlir /tmp/amdpilot-repo-j-10d946008a37/venv/bin/python /job/review-evidence-j-10d946008a37/review_duplicate_targets.py (base)",
+      "exit_code": 1,
+      "what_was_measured": "Strict regression reproduced two GPU objects with no explicit handler: a bare object first and a fast/no_wave64/unsafe_math object second."
+    },
+    {
+      "command": "ARCH=gfx1201 COMPILE_ONLY=1 FLYDSL_RUNTIME_ENABLE_CACHE=0 REVIEW_FAST={0,1} REVIEW_UNSAFE={0,1} /tmp/amdpilot-repo-j-10d946008a37/venv/bin/python /job/review-evidence-j-10d946008a37/review_duplicate_targets.py (exact candidate, four independent combinations)",
+      "exit_code": 0,
+      "what_was_measured": "Each default, fast-only, unsafe-only, and combined case emitted exactly one ROCDL object, with every requested non-default flag on that sole object."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-10d946008a37/venv/bin/python -m pytest -q tests/unit/test_compile_hints.py::TestCompileHintsPropagation::test_fp_math_reaches_the_only_serialized_gpu_object",
+      "exit_code": 0,
+      "what_was_measured": "Candidate regression passed with exactly one hinted serialized object."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-10d946008a37/venv/bin/python -m pytest -q tests/unit/test_compile_hints.py tests/unit/test_external_llvm_codegen.py tests/unit/test_compile_backends.py tests/unit/test_pointer_argument_vec_add.py",
+      "exit_code": 0,
+      "what_was_measured": "30 focused tests passed and 2 pre-existing marked tests skipped, including external codegen and real pointer vector-add coverage."
+    },
+    {
+      "command": "ARCH=gfx950 FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_DUMP_IR=1 REVIEW_IR=/job/review-evidence-j-10d946008a37/candidate-gfx950-runtime.mlir /tmp/amdpilot-repo-j-10d946008a37/venv/bin/python /job/review-evidence-j-10d946008a37/review_gpu_vector_add.py",
+      "exit_code": 0,
+      "what_was_measured": "4,103-element FP32 vector add ran on MI350X/gfx950 with rtol=0, atol=0 and max absolute error 0.0; final IR had one fast/unsafe_math object and emitted ISA targeted gfx950 with loads, FP32 add, store, and end-program."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "Independent GPU test ran on AMD Instinct MI350X (gfx950:sramecc+:xnack-) with exact equality against a CPU PyTorch reference. Raw output is /job/review-evidence-j-10d946008a37/candidate-gfx950-runtime.txt and compiler artifacts are under /job/review-evidence-j-10d946008a37/gfx950-dump/.",
+  "native_rebuilt": false,
+  "remaining_limitations": "The candidate changes Python only, so no native rebuild was needed. The original gfx1201 case was compile-only because the assigned GPU is gfx950; actual gfx1201 execution remains unverified. Default-valued ROCDL options are canonicalized out of printed target attributes, while non-default flags and the single-object count are directly observed."
+}
