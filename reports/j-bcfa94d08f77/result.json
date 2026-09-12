@@ -1,0 +1,46 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/739",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "reproduced",
+  "summary": "The base assertion was reproduced. Exact candidate 95b40aed1aecde89990ac450567e6c320f3e9eea fixes the three reported flat tilers but only a subset of the accepted tiler domain: zipped_divide still aborts for the nested-tiler boundary ((8, 4), None, 40), although logical_divide accepts it.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-bcfa94d08f77/venv/bin/python /job/review-evidence/repro_issue.py (base)",
+      "exit_code": 134,
+      "what_was_measured": "Actual base compiler behavior for the three issue tilers; reproduced the native intTupleZip2By assertion on (32, None, None)."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-bcfa94d08f77/venv/bin/python /opt/amdpilot/rebuild-native.py /job (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Pinned-LLVM native candidate build and real vector-add GPU smoke; native-build.json records MI350X gfx950 execution."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-bcfa94d08f77/venv/bin/python /job/review-evidence/repro_issue.py (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Rebuilt candidate compiler output for all three exact issue tilers; all produced the expected flat zipped layouts without aborting."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-bcfa94d08f77/venv/bin/python -m pytest -q tests/unit/test_layout_algebra.py",
+      "exit_code": 0,
+      "what_was_measured": "Focused candidate regression suite: 34 passed, 1 skipped, including exhaustive independent enumeration of 256,000 offsets for each reported tiler."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-bcfa94d08f77/venv/bin/python /job/review-evidence/adversarial_cases.py",
+      "exit_code": 0,
+      "what_was_measured": "Shorter mixed tilers, all-None multi-mode tiler, unit tiles, and full-extent tile boundaries; sole (None,) was rejected by the pre-native Python constructor."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-bcfa94d08f77/venv/bin/python /job/review-evidence/nested_case.py logical; /tmp/amdpilot-repo-j-bcfa94d08f77/venv/bin/python /job/review-evidence/nested_case.py zipped",
+      "exit_code": 134,
+      "what_was_measured": "Nested tiler ((8, 4), None, 40): logical_divide exited 0, while candidate zipped_divide aborted at its new tupleRank >= tileRank assertion."
+    }
+  ],
+  "gpu_execution": true,
+  "native_rebuilt": true,
+  "remaining_limitations": [
+    "Candidate fixes the three flat examples but not nested tilers containing None; changes are requested.",
+    "Reporter MI308X was unavailable; testing used assigned MI350X gfx950.",
+    "PyCuTe was not installed, so no live CuTe comparison was run.",
+    "A sole (None,) tiler fails in the existing Python make_tile binding before native zipped_divide."
+  ]
+}
