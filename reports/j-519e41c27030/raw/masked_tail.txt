@@ -1,0 +1,10 @@
+{
+  "capacity": 1280,
+  "exact_mismatch_count": 0,
+  "length": 1003,
+  "max_abs_error": 0.0,
+  "passed": true,
+  "sentinel": -9876.5,
+  "tail_changed_count": 0,
+  "tail_elements": 277
+}

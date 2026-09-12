@@ -1,0 +1,93 @@
+{
+  "job_id": "j-519e41c27030",
+  "qualification_scope": "AMDPilot artifact-delivery workflow for the FlyDSL pointer-argument vector-add only; this is not a claim about all repository behavior or an upstream issue fix",
+  "source_revision": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "prepared_checkout": "/job/repo",
+  "python": "/tmp/amdpilot-repo-j-519e41c27030/venv/bin/python",
+  "gpu": {
+    "visible_device_count": 1,
+    "current_device": 0,
+    "name": "AMD Instinct MI355X",
+    "architecture": "gfx950:sramecc+:xnack-",
+    "total_memory_mb": 294896,
+    "uuid": "63316135-3937-3538-3265-666535316165",
+    "pci_bus_id": 101
+  },
+  "software": {
+    "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+    "torch_hip": "7.2.26015-fc0010cf6a",
+    "source_import": "/job/repo/python/flydsl/expr/__init__.py",
+    "native_import_root": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir",
+    "native_extension": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so"
+  },
+  "commands": [
+    {
+      "name": "environment_identity",
+      "command": "/tmp/amdpilot-repo-j-519e41c27030/venv/bin/python reports/j-519e41c27030/environment_probe.py",
+      "exit_code": 0,
+      "raw_output": "raw/environment.txt"
+    },
+    {
+      "name": "pointer_argument_unit_test",
+      "command": "/tmp/amdpilot-repo-j-519e41c27030/venv/bin/python -m pytest -q tests/unit/test_pointer_argument_vec_add.py::test_pointer_argument_vector_add -s",
+      "exit_code": 0,
+      "raw_output": "raw/unit_test.txt"
+    },
+    {
+      "name": "independent_masked_tail",
+      "command": "/tmp/amdpilot-repo-j-519e41c27030/venv/bin/python reports/j-519e41c27030/masked_tail_probe.py",
+      "exit_code": 0,
+      "raw_output": "raw/masked_tail.txt"
+    },
+    {
+      "name": "result_json_validation",
+      "command": "/tmp/amdpilot-repo-j-519e41c27030/venv/bin/python -m json.tool reports/j-519e41c27030/result.json",
+      "exit_code": 0,
+      "raw_output": "raw/result_json_validation.exitcode"
+    }
+  ],
+  "numerical_measurements": {
+    "repository_unit_test": {
+      "length": 4099,
+      "asserted_max_abs_error_less_than": 1e-05,
+      "pytest_result": "1 passed"
+    },
+    "independent_masked_tail": {
+      "seed": 51941,
+      "length": 1003,
+      "capacity": 1280,
+      "tail_elements": 277,
+      "output_sentinel": -9876.5,
+      "max_abs_error_vs_torch_add": 0.0,
+      "exact_mismatch_count": 0,
+      "tail_changed_count": 0,
+      "passed": true
+    }
+  },
+  "reproducible_probes": [
+    "environment_probe.py",
+    "masked_tail_probe.py",
+    "raw/environment.txt",
+    "raw/import_paths.txt",
+    "raw/unit_test.txt",
+    "raw/masked_tail.txt"
+  ],
+  "preserved_probe_failures": [
+    {
+      "raw_output": "raw/environment_attempt1.txt",
+      "exit_code": 1,
+      "reason": "The first metadata-only probe assumed flydsl.__file__ was non-null; flydsl can be represented as a namespace package before submodule resolution. No GPU test was run by this attempt."
+    },
+    {
+      "raw_output": "raw/import_paths_attempt1.txt",
+      "exit_code": 1,
+      "reason": "The first metadata-only import-path probe did not handle a missing optional module spec. No GPU test was run by this attempt."
+    }
+  ],
+  "limitations": [
+    "This qualifies only the requested task workflow and pointer-argument vector-add behavior on the recorded single AMD Instinct MI355X GPU.",
+    "The repository unit test reports its numerical criterion as an assertion (max absolute error below 1e-5) rather than printing the measured value.",
+    "No native sources were changed, so the pinned native compiler was not rebuilt and the environment was not reinstalled.",
+    "No broader FlyDSL test suite or multi-GPU behavior was exercised."
+  ]
+}
