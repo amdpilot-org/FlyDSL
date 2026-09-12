@@ -1,0 +1,29 @@
+cache_root: /tmp/amdpilot-repo-j-af0bbbf36b8f/cache/issue862-rms
+backends: flydsl-rmsnorm
+shapes: 16x1024
+dtype=bf16 warmup=2 iters=3 repeats=1
+
+=== flydsl-rmsnorm shape=16x1024 repeat=0 ===
+Traceback (most recent call last):
+  File "/tmp/benchmark_rmsnorm_flydsl_vs_triton.py", line 616, in <module>
+    main()
+  File "/tmp/benchmark_rmsnorm_flydsl_vs_triton.py", line 610, in main
+    _worker_main(args)
+  File "/tmp/benchmark_rmsnorm_flydsl_vs_triton.py", line 355, in _worker_main
+    result = _bench_flydsl(args)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/benchmark_rmsnorm_flydsl_vs_triton.py", line 217, in _bench_flydsl
+    from kernels.rmsnorm_kernel import build_rmsnorm_module
+  File "/tmp/flybench/kernels/rmsnorm_kernel.py", line 19, in <module>
+    from flydsl.expr.vector import ReductionOp, full
+ModuleNotFoundError: No module named 'flydsl.expr.vector'
+Traceback (most recent call last):
+  File "/tmp/benchmark_rmsnorm_flydsl_vs_triton.py", line 616, in <module>
+    main()
+  File "/tmp/benchmark_rmsnorm_flydsl_vs_triton.py", line 612, in main
+    _parent_main(args)
+  File "/tmp/benchmark_rmsnorm_flydsl_vs_triton.py", line 539, in _parent_main
+    _run_worker(
+  File "/tmp/benchmark_rmsnorm_flydsl_vs_triton.py", line 429, in _run_worker
+    raise RuntimeError(
+RuntimeError: worker failed for flydsl-rmsnorm 16x1024 repeat 0
