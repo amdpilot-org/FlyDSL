@@ -1,0 +1,2 @@
+{'with_barrier': False, 'failures': 0, 'first_failure': None}
+{'with_barrier': True, 'failures': 0, 'first_failure': None}
