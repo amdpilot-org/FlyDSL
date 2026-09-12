@@ -1,0 +1,87 @@
+COMMAND: /tmp/amdpilot-repo-j-dc614abb0e10/venv/bin/python -m pytest -vv -s tests/unit/test_pointer_argument_vec_add.py::test_pointer_argument_vector_add
+EXIT CODE: 0
+OUTPUT:
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0 -- /tmp/amdpilot-repo-j-dc614abb0e10/venv/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collecting ... collected 1 item
+
+tests/unit/test_pointer_argument_vec_add.py::test_pointer_argument_vector_add PASSED
+
+============================== 1 passed in 0.99s ===============================
+
+COMMAND: /tmp/amdpilot-repo-j-dc614abb0e10/venv/bin/python reports/j-dc614abb0e10/masked_tail_probe.py
+EXIT CODE: 0
+OUTPUT:
+{
+  "block_dim": 256,
+  "case": "independent_masked_tail_pointer_vector_add",
+  "flydsl_expr_import": "/job/repo/python/flydsl/expr/__init__.py",
+  "flydsl_source_import": "/job/repo/python/flydsl/__init__.py",
+  "gpu_arch": "gfx950:sramecc+:xnack-",
+  "gpu_name": "AMD Instinct MI355X",
+  "grid_x": 4,
+  "guard_elements_each_side": 37,
+  "length": 1009,
+  "max_abs_error": 0.0,
+  "mean_abs_error": 0.0,
+  "mismatch_count_at_rtol_1e-6_atol_1e-6": 0,
+  "power_of_two": false,
+  "prefix_sentinel_untouched": true,
+  "sentinel_value": -123456.75,
+  "suffix_sentinel_untouched": true,
+  "tail_lanes": 15,
+  "torch_hip_version": "7.2.26015-fc0010cf6a",
+  "torch_import": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+  "torch_reference": "torch.add(a, b)",
+  "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+  "visible_device_count": 1
+}
+
+COMMAND: rocm-smi --showproductname --showuniqueid --showserial --showdriverversion
+EXIT CODE: 0
+OUTPUT:
+WARNING: AMD GPU device(s) is/are in a low-power state. Check power control/runtime_status
+
+============================ ROCm System Management Interface ============================
+============================== Version of System Component ===============================
+Driver version: 6.18.6
+==========================================================================================
+======================================= Unique ID ========================================
+GPU[0]          : Unique ID: 0x89e8c5cd3767811a
+==========================================================================================
+===================================== Serial Number ======================================
+GPU[0]          : Serial Number: 692517002127
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]          : Card Series:         AMD Instinct MI355X
+GPU[0]          : Card Model:          0x75a3
+GPU[0]          : Card Vendor:         Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]          : Card SKU:            N/A
+GPU[0]          : Subsystem ID:         0x75a3
+GPU[0]          : Device Rev:           0x00
+GPU[0]          : Node ID:              2
+GPU[0]          : GUID:                 42583
+GPU[0]          : GFX Version:          gfx950
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+
+COMMAND: import-path probe with prepared Python, followed by readlink -f for native extension
+EXIT CODE: 0
+OUTPUT:
+flydsl_file= /job/repo/python/flydsl/__init__.py
+expr_file= /job/repo/python/flydsl/expr/__init__.py
+native_module_reported= /job/repo/python/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so
+native_module_resolved= /opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs/_mlir.cpython-312-x86_64-linux-gnu.so
+torch_file= /opt/venv/lib/python3.12/site-packages/torch/__init__.py
+torch_version= 2.9.1+rocm7.2.0.git7e1940d4
+hip_version= 7.2.26015-fc0010cf6a
+cuda_available= True
+device_count= 1
+current_device= 0
+device_name= AMD Instinct MI355X
+device_properties= _CudaDeviceProperties(name='AMD Instinct MI355X', major=9, minor=5, gcnArchName='gfx950:sramecc+:xnack-', total_memory=294896MB, multi_processor_count=256, uuid=38396538-6335-6364-3337-363738313161, pci_bus_id=5, pci_device_id=0, pci_domain_id=0, L2_cache_size=4MB)
