@@ -14,13 +14,25 @@ import torch
 from .._mlir import ir
 from .._mlir._mlir_libs._mlirDialectsFly import DLTensorAdaptor, MemRefType
 from .._mlir.extras import types as T
-from ..expr.numeric import Numeric
+from ..expr.numeric import (
+    BFloat16,
+    Boolean,
+    Float16,
+    Float32,
+    Float64,
+    Int8,
+    Int16,
+    Int32,
+    Int64,
+    Numeric,
+    Uint8,
+    Uint16,
+    Uint32,
+    Uint64,
+)
 from ..expr.typing import (
     AddressSpace,
-    Boolean,
     Constexpr,
-    Float32,
-    Int32,
     Pointer,
     PointerType,
     Stream,
@@ -466,6 +478,30 @@ class DLTensorJitArg(MemRefJitArg):
         # The dtype as an ir Type, built in the active (compile) context.
         return self.dladaptor.dtype
 
+    @property
+    def logical_element_type(self):
+        code, bits, lanes = self.dtype
+        if lanes != 1:
+            raise TypeError(f"unsupported DLPack dtype with {lanes} lanes")
+        dtype = {
+            (0, 8): Int8,
+            (0, 16): Int16,
+            (0, 32): Int32,
+            (0, 64): Int64,
+            (1, 8): Uint8,
+            (1, 16): Uint16,
+            (1, 32): Uint32,
+            (1, 64): Uint64,
+            (2, 16): Float16,
+            (2, 32): Float32,
+            (2, 64): Float64,
+            (4, 16): BFloat16,
+            (6, 1): Boolean,
+        }.get((code, bits))
+        if dtype is None:
+            dtype = Numeric.from_ir_type(self.element_type)
+        return dtype
+
     def __c_abi_spec__(self):
         with_stream = self.with_stream_dlpack
 
@@ -522,6 +558,24 @@ _TORCH_DTYPE_TO_MLIR_BUILDER = {
     torch.int32: lambda: ir.IntegerType.get_signless(32),
     torch.int64: lambda: ir.IntegerType.get_signless(64),
 }
+
+_TORCH_DTYPE_TO_DSL_TYPE = {
+    torch.float16: Float16,
+    torch.bfloat16: BFloat16,
+    torch.float32: Float32,
+    torch.float64: Float64,
+    torch.bool: Boolean,
+    torch.uint8: Uint8,
+    torch.int8: Int8,
+    torch.int16: Int16,
+    torch.int32: Int32,
+    torch.int64: Int64,
+}
+for _name, _dtype in (("uint16", Uint16), ("uint32", Uint32), ("uint64", Uint64)):
+    if (_torch_dtype := getattr(torch, _name, None)) is not None:
+        _TORCH_DTYPE_TO_MLIR_BUILDER[_torch_dtype] = lambda bits=_dtype.width: ir.IntegerType.get_signless(bits)
+        _TORCH_DTYPE_TO_DSL_TYPE[_torch_dtype] = _dtype
+del _name, _dtype, _torch_dtype
 for _torch_name, _mlir_ctor in (
     ("float8_e5m2", ir.Float8E5M2Type),
     ("float8_e4m3fn", ir.Float8E4M3FNType),
@@ -565,6 +619,10 @@ class TorchTensorJitArg(MemRefJitArg):
     def element_type(self):
         return torch_dtype_to_mlir_type(self.dtype)
 
+    @property
+    def logical_element_type(self):
+        return _TORCH_DTYPE_TO_DSL_TYPE.get(self.dtype) or Numeric.from_ir_type(self.element_type)
+
     def __c_abi_spec__(self):
         def ptr_fill(a, s):
             t = a.torch_tensor if hasattr(a, "torch_tensor") else a
@@ -604,6 +662,10 @@ class PointerJitArg:
         if alignment is None:
             alignment = self._trivial_alignment_bytes(element_type)
         self.alignment = alignment
+
+    @property
+    def logical_element_type(self):
+        return self.element_type
 
     @staticmethod
     def _trivial_alignment_bytes(element_type) -> int:

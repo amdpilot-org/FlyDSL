@@ -945,9 +945,20 @@ class ComposedLayout(BuiltinDslType):
 
 @ir.register_value_caster(PointerType.static_typeid, replace=True)
 class Pointer(BuiltinDslType):
+    @classmethod
+    def __construct_from_ir_values__(cls, values, exemplar=None):
+        result = cls(values[0])
+        if exemplar is not None:
+            logical_type = getattr(exemplar, "logical_element_type", None)
+            if logical_type is None and isinstance(exemplar, Pointer):
+                logical_type = exemplar.element_type
+            if logical_type is not None:
+                result._logical_element_type = logical_type
+        return result
+
     @property
     def element_type(self):
-        return Numeric.from_ir_type(self.type.element_type)
+        return getattr(self, "_logical_element_type", None) or Numeric.from_ir_type(self.type.element_type)
 
     @property
     def dtype(self):
@@ -985,7 +996,7 @@ class Pointer(BuiltinDslType):
 
     @dsl_loc_tracing
     def __getitem__(self, offset):
-        return (self + offset).load()
+        return ptr_load(self + offset, result_type=self.element_type)
 
     @dsl_loc_tracing
     def __setitem__(self, offset, value):
@@ -1011,11 +1022,22 @@ class Pointer(BuiltinDslType):
 @ir.register_value_caster(MemRefType.static_typeid, replace=True)
 @ir.register_value_caster(CoordTensorType.static_typeid, replace=True)
 class Tensor(BuiltinDslType):
+    @classmethod
+    def __construct_from_ir_values__(cls, values, exemplar=None):
+        result = cls(values[0])
+        if exemplar is not None:
+            logical_type = getattr(exemplar, "logical_element_type", None)
+            if logical_type is None and isinstance(exemplar, Tensor):
+                logical_type = exemplar.element_type
+            if logical_type is not None:
+                result._logical_element_type = logical_type
+        return result
+
     @property
     def element_type(self):
         if isinstance(self.type, CoordTensorType):
             raise TypeError("CoordTensor doesn't have an element type")
-        return Numeric.from_ir_type(self.type.element_type)
+        return getattr(self, "_logical_element_type", None) or Numeric.from_ir_type(self.type.element_type)
 
     @property
     def dtype(self):
@@ -1065,7 +1087,7 @@ class Tensor(BuiltinDslType):
         if has_none(coord):
             return slice(self, coord)
         else:
-            return memref_load(self, coord)
+            return self.element_type(as_ir_value(memref_load(self, coord)))
 
     @dsl_loc_tracing
     def __setitem__(self, coord, value):
