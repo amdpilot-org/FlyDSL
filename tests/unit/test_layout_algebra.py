@@ -9,6 +9,7 @@ Layout algebra tests using the Fly dialect API with static types.
 Each test corresponds to a specific cell in the reference layout-algebra notebook.
 """
 
+import inspect
 import sys
 
 import pytest
@@ -66,6 +67,26 @@ def test_basic_size(frontend_only_jit):
     @flyc.jit
     def build():
         _assert_size(fx.make_layout((3, 9), (1, 3)), 27)
+
+    build()
+
+
+def test_pointer_tensor_layout_docstrings_and_example(frontend_only_jit):
+    """Public memory/layout APIs document traced use and the example is valid."""
+
+    for symbol in (fx.Layout, fx.Pointer, fx.Tensor, fx.make_layout, fx.make_view):
+        doc = inspect.getdoc(symbol)
+        assert doc and "Example:" in doc
+
+    @flyc.jit
+    def build():
+        layout = fx.make_layout((4, 8), (1, 4))
+        assert layout.shape.to_py_value() == (4, 8)
+        assert layout.stride.to_py_value() == (1, 4)
+        with pytest.raises(ValueError, match="profile mismatch"):
+            layout((1, 2))
+        assert fx.get_scalar(layout(1, 2)) == 9
+        assert layout.get_hier_coord(9).to_py_value() == (1, 2)
 
     build()
 
