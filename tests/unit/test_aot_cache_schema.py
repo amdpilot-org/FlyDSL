@@ -40,6 +40,15 @@ def test_aot_cache_schema_round_trip(tmp_path):
         (
             {
                 "format": "flydsl.compiled-artifact",
+                "schema_version": True,
+                "cache_key": "argument-schema",
+                "artifact": _artifact(),
+            },
+            "schema_version metadata must be an integer",
+        ),
+        (
+            {
+                "format": "flydsl.compiled-artifact",
                 "schema_version": 999,
                 "cache_key": "argument-schema",
                 "artifact": None,
@@ -79,3 +88,12 @@ def test_corrupt_aot_artifact_fails_without_compile_fallback(tmp_path):
     with pytest.raises(RuntimeError, match="could not deserialize pickle"):
         with manager.compile_lock("argument-schema"):
             pytest.fail("invalid cache was treated as a compile miss")
+
+
+def test_failed_set_does_not_contaminate_memory_cache(tmp_path):
+    manager = JitCacheManager(tmp_path)
+
+    manager.set("argument-schema", {"not": "a compiled artifact"})
+
+    assert "argument-schema" not in manager.memory_cache
+    assert manager.get("argument-schema") is None

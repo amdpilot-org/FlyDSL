@@ -989,6 +989,11 @@ class JitCacheManager:
                 cache_file,
                 f"unsupported format {envelope['format']!r}; expected {_AOT_CACHE_FORMAT!r}",
             )
+        if type(envelope["schema_version"]) is not int:
+            raise cls._invalid_artifact(
+                cache_file,
+                "schema_version metadata must be an integer",
+            )
         if envelope["schema_version"] != _AOT_CACHE_SCHEMA_VERSION:
             raise cls._invalid_artifact(
                 cache_file,
@@ -1054,7 +1059,6 @@ class JitCacheManager:
         return None
 
     def set(self, cache_key: str, value: Any) -> None:
-        self.memory_cache[cache_key] = value
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         cache_file = self._cache_file(cache_key)
         lock_path = self._lock_file(cache_key)
@@ -1064,6 +1068,7 @@ class JitCacheManager:
                     log().debug(f"Cache already exists, skipping write: {cache_file.name}")
                     return
                 self._write_cache_file(cache_file, cache_key, value)
+            self.memory_cache[cache_key] = value
             log().debug(f"Cache saved: {cache_file.name}")
         except Exception as e:
             log().warning(f"Failed to save cache {cache_file}: {e}")
