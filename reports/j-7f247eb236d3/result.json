@@ -1,0 +1,42 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/1054",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Reproduced two ROCDL objects for one gfx1201 kernel, removed the bare construction-time target so rocdl-attach-target is the sole target source, and added a regression proving the sole serialized object carries fast/unsafe compile hints.",
+  "tests": [
+    {
+      "command": "ARCH=gfx1201 COMPILE_ONLY=1 FLYDSL_RUNTIME_ENABLE_CACHE=0 python reports/j-7f247eb236d3/reproduce_duplicate_targets.py (before fix)",
+      "exit_code": 0,
+      "what_was_measured": "One kernel produced two GPU objects; object 0 was bare and object 1 carried fast, unsafe_math, and no_wave64."
+    },
+    {
+      "command": "python -m pytest -q tests/unit/test_compile_hints.py::TestCompileHintsPropagation::test_fp_math_reaches_the_only_serialized_gpu_object (before fix)",
+      "exit_code": 1,
+      "what_was_measured": "The preserved regression failed because the selected binary contained two ROCDL objects."
+    },
+    {
+      "command": "ARCH=gfx1201 COMPILE_ONLY=1 FLYDSL_RUNTIME_ENABLE_CACHE=0 python reports/j-7f247eb236d3/reproduce_duplicate_targets.py (after fix)",
+      "exit_code": 0,
+      "what_was_measured": "One kernel produced exactly one GPU object carrying fast, unsafe_math, and no_wave64."
+    },
+    {
+      "command": "python -m pytest -q tests/unit/test_compile_hints.py::TestCompileHintsPropagation::test_fp_math_reaches_the_only_serialized_gpu_object (after fix)",
+      "exit_code": 0,
+      "what_was_measured": "The regression passed with exactly one hinted ROCDL object."
+    },
+    {
+      "command": "ARCH=gfx950 FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_DUMP_IR=1 python reports/j-7f247eb236d3/validate_gfx950.py",
+      "exit_code": 0,
+      "what_was_measured": "Executed on MI350X/gfx950 with zero error against a CPU PyTorch reference; one hinted GPU object was present and emitted gfx950 ISA contained loads, FP32 add, store, and end-program instructions."
+    },
+    {
+      "command": "python -m pytest -q tests/unit/test_compile_hints.py tests/unit/test_external_llvm_codegen.py tests/unit/test_compile_backends.py tests/unit/test_pointer_argument_vec_add.py",
+      "exit_code": 0,
+      "what_was_measured": "30 focused tests passed and 2 pre-existing tests were skipped, covering compile hints, external codegen, backend registration, and real pointer vector-add execution."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "reports/j-7f247eb236d3/validate_gfx950.py ran on AMD Instinct MI350X gfx950:sramecc+:xnack- with max_abs_error=0 against a CPU-side PyTorch reference; raw output and ISA are under /job/job-artifacts/j-7f247eb236d3/.",
+  "native_rebuilt": false,
+  "remaining_limitations": "The original gfx1201 case was validated compile-only because the assigned GPU is gfx950. Default-valued ROCDL options are canonicalized out of printed target attributes; fast, unsafe_math, and no_wave64 are directly visible on the sole gfx1201 object, while the pipeline source supplies O=2, abi=600, correct-sqrt=true, daz=false, and finite-only=false. No native C++ code changed."
+}

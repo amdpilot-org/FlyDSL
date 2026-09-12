@@ -12,6 +12,7 @@ Validates:
 
 import gc
 import math
+import re
 import weakref
 
 import pytest
@@ -200,6 +201,20 @@ class TestCompileHintsPropagation:
 
         assert captured["hints"].get("fast_fp_math") is True
         assert captured["hints"].get("unsafe_fp_math") is True
+
+    def test_fp_math_reaches_the_only_serialized_gpu_object(self, monkeypatch):
+        """The object selected by default must carry the requested FP options."""
+        monkeypatch.setenv("COMPILE_ONLY", "1")
+        monkeypatch.setenv("FLYDSL_RUNTIME_ENABLE_CACHE", "0")
+        _reset_jit_caches(_noop_launch)
+
+        flyc.compile[{"fast_fp_math": True, "unsafe_fp_math": True}](_noop_launch)()
+        ir_text = _noop_launch._last_compiled[1]._ir_text
+        targets = re.findall(r"#gpu\.object<(#rocdl\.target<[^>]*>)", ir_text)
+
+        assert len(targets) == 1
+        assert "fast" in targets[0]
+        assert "unsafe_math" in targets[0]
 
     def test_llvm_options_in_compile_hints(self):
         """Verify llvm_options key is accepted and doesn't crash."""

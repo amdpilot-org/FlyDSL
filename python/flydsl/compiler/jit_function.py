@@ -1493,7 +1493,11 @@ class JitFunction:
 
                     with ir.InsertionPoint(module.body), loc:
                         backend = get_backend()
-                        gpu_module = create_gpu_module("kernels", targets=backend.gpu_module_targets())
+                        # The backend attach-target pass owns target construction because
+                        # it also carries compile hints and linker options.  Attaching a
+                        # bare target here would make gpu-module-to-binary serialize a
+                        # second object and the default selector would choose that one.
+                        gpu_module = create_gpu_module("kernels")
 
                         func_op = func.FuncOp(self.func.__name__, (ir_types, []))
                         func_op.attributes["llvm.emit_c_interface"] = ir.UnitAttr.get()
@@ -1541,12 +1545,7 @@ class JitFunction:
                         self._extern_linkage_keys.add(cache_key)
                         # Switch to explicit Python-side module loading so
                         # post_load_processors can receive hipModule_t handles.
-                        # Also clear targets set at construction: the backend attach-target
-                        # pass is the sole source when link_libs is used; duplicating
-                        # targets can make the runtime pick an object without extern libs.
                         gpu_module.offloadingHandler = ir.Attribute.parse("#fly.explicit_module")
-                        if "targets" in gpu_module.operation.attributes:
-                            del gpu_module.operation.attributes["targets"]
 
                     compiled_module = MlirCompiler.compile(
                         module,
