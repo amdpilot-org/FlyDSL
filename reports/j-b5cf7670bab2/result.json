@@ -1,0 +1,69 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/653",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/590",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/571",
+  "candidate_commit": "c10ac5fdbcec87f83041a33bd75ee31fff9b63ff",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "recommendation": "request_changes",
+  "fully_resolves_original": false,
+  "summary": "The exact candidate is a partial fix. It makes newline-terminated device printf output visible after torch.cuda.synchronize() in a clean process with piped or regular-file stdout, and its regression passes on the assigned MI350X. However, its import-time setvbuf(stdout, ...) is performed after stdout may already have been used. An independent GPU counterexample wrote one C-stdio record before importing FlyDSL; the candidate flushed that record, but all four later device printf lines remained buffered after synchronization and appeared only at process teardown. This violates the original broad piped/redirected-output contract and is especially relevant to long-lived notebook kernels.",
+  "tests": [
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j-b5cf7670bab2-base-cache /tmp/amdpilot-repo-j-b5cf7670bab2/venv/bin/python /job/review-evidence/j-b5cf7670bab2/pipe_contract.py (base acf7e67)",
+      "exit_code": 0,
+      "what_was_measured": "Original failure reproduced: after synchronize the child was alive and READY, with 0/4 lines readable; all four lines appeared after exit."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j-b5cf7670bab2-candidate-cache /tmp/amdpilot-repo-j-b5cf7670bab2/venv/bin/python -m pytest -q tests/system/test_device_printf_pipe.py -s (candidate c10ac5f)",
+      "exit_code": 0,
+      "what_was_measured": "All four candidate cases passed: one/three launches, with and without the explicit flush helper, while the child remained alive."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j-b5cf7670bab2-independent-cache /tmp/amdpilot-repo-j-b5cf7670bab2/venv/bin/python /job/review-evidence/j-b5cf7670bab2/pipe_contract.py (candidate c10ac5f)",
+      "exit_code": 0,
+      "what_was_measured": "Independent unchanged hello(); torch.cuda.synchronize() pipe case exposed exactly four thread lines before process teardown in a clean process."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j-b5cf7670bab2-adversarial-cache-4 /tmp/amdpilot-repo-j-b5cf7670bab2/venv/bin/python /job/review-evidence/j-b5cf7670bab2/adversarial_stdio.py (candidate c10ac5f)",
+      "exit_code": 4,
+      "what_was_measured": "Regular-file stdout passed, but after libc printf wrote to stdout before FlyDSL import, only PREIMPORT was visible after GPU synchronization; the four device lines appeared only after child exit. The harness intentionally exited 4 for this remaining contract failure."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/tmp/flydsl-j-b5cf7670bab2-dump-2 /tmp/amdpilot-repo-j-b5cf7670bab2/venv/bin/python -m pytest -q tests/system/test_device_printf_pipe.py::test_device_printf_visible_in_pipe_after_synchronize[1-False] -s",
+      "exit_code": 0,
+      "what_was_measured": "Fresh compilation and execution passed. LLVM IR called __ockl_printf_begin, __ockl_printf_append_string_n, and __ockl_printf_append_args; final ISA targeted amdgcn-amd-amdhsa-unknown-gfx950."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-b5cf7670bab2/venv/bin/python -m pytest -q tests/unit/test_device_runtime.py tests/unit/test_rocir_print.py",
+      "exit_code": 0,
+      "what_was_measured": "All 15 focused runtime and printf-lowering unit tests passed."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j-b5cf7670bab2-vec-cache /tmp/amdpilot-repo-j-b5cf7670bab2/venv/bin/python -m pytest -q tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] -s",
+      "exit_code": 0,
+      "what_was_measured": "Real GPU vector addition matched the independent PyTorch a+b reference with maximum error 0.00e+00 over 1,048,576 float32 elements."
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "One assigned AMD Instinct MI350X, gfx950/capability 9.5, ran the original reproducer, candidate regression, adversarial cases, fresh printf compilation, and numerical vector-add check."
+  },
+  "native_rebuilt": false,
+  "remaining_counterexamples": [
+    "With piped stdout, call libc printf before importing FlyDSL, then import FlyDSL and run the unchanged device hello(); torch.cuda.synchronize() sequence. At READY while the child is alive, only the pre-import bytes are readable; all four device lines remain buffered until teardown."
+  ],
+  "remaining_limitations": [
+    "The candidate was tested only on the prepared Linux/glibc 2.39 ROCm 7.2 environment with one MI350X/gfx950 GPU; no actual Jupyter frontend was available.",
+    "The candidate changes only Python files. No C++/LLVM source changed, so the prescribed native rebuild was not applicable.",
+    "Source imports resolved to /job/repo/python/flydsl. The native package remained the pinned wheel at /opt/venv/lib/python3.12/site-packages/flydsl/_mlir.",
+    "The candidate changes process-wide libc stdout buffering for every C/C++ writer after FlyDSL import.",
+    "C setvbuf is only safely specified before other operations on a stream; the observed pre-import-write failure demonstrates that the import-time approach cannot cover already-active stdout streams reliably."
+  ],
+  "evidence_paths": {
+    "preserved_raw": "/job/review-evidence/j-b5cf7670bab2",
+    "source": "/job/repo/python/flydsl",
+    "native": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir",
+    "compiler_dump": "/tmp/flydsl-j-b5cf7670bab2-dump-2/hello_kernel_0"
+  }
+}
