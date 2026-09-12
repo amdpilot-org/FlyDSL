@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "operation": "FlyDSL vector_add 100x1000 (predicated border blocks)",
+  "gpu": "AMD Instinct MI350X",
+  "arch": "gfx950",
+  "device_count": 1,
+  "wall_s": 2.462609068490565,
+  "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+  "hip": "7.2.26015-fc0010cf6a"
+}
