@@ -455,6 +455,12 @@ The Fly dialect provides a `printf` op for kernel debugging:
 fx.printf("tid={} bid={} val={}", tid, bid, value)
 ```
 
+FlyDSL configures the process' C `stdout` stream as unbuffered, so device output
+becomes visible in notebooks and piped logs when the relevant GPU work completes
+(for example, after `torch.cuda.synchronize()`). The explicit
+`flydsl.runtime.flush_device_printf()` helper remains available to flush all host
+C stdio streams; it does not synchronize GPU work itself.
+
 Supports:
 - `ir.Value` — dynamic values
 - `int`, `float`, `bool` — auto-converted to constants

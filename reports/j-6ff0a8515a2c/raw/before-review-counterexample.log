@@ -1,0 +1,4 @@
+READY_ALIVE=True
+STDOUT_AT_READY='PREIMPORT\n'
+STDOUT_AFTER_EXIT='PREIMPORT\nhello from thread 0\nhello from thread 1\nhello from thread 2\nhello from thread 3\n'
+STDERR='READY\n'

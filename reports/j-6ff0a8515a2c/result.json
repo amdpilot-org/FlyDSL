@@ -1,0 +1,48 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/653",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/689",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/571",
+  "review_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/610",
+  "candidate_commit": "c10ac5fdbcec87f83041a33bd75ee31fff9b63ff",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "The independent review counterexample was reproduced at the exact candidate commit: after a libc printf before importing FlyDSL, READY arrived while the child was alive with only PREIMPORT readable, and all four synchronized device lines remained buffered until exit. The candidate's valid import-time stdout configuration and explicit flush helper were preserved, but stdout is now made unbuffered rather than line buffered. On the prepared glibc environment this remains effective after the pre-import C stdio write. A timing-independent GPU regression covers the counterexample and verifies all four thread IDs before teardown.",
+  "tests": [
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j-6ff0a8515a2c-before-cache /tmp/amdpilot-repo-j-6ff0a8515a2c/venv/bin/python /job/adversarial_stdio.py (candidate c10ac5f)",
+      "exit_code": 0,
+      "what_was_measured": "Failing-before timing evidence: at READY while the child was alive, stdout was exactly PREIMPORT; all four device lines became readable only after child exit. Raw output: reports/j-6ff0a8515a2c/raw/before-review-counterexample.log."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j-6ff0a8515a2c-after-cache /tmp/amdpilot-repo-j-6ff0a8515a2c/venv/bin/python /job/adversarial_stdio.py",
+      "exit_code": 0,
+      "what_was_measured": "Passing-after timing evidence: PREIMPORT and exactly four device thread lines were readable at READY while the child remained alive, with no additional stdout at teardown."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j-6ff0a8515a2c-regression-cache /tmp/amdpilot-repo-j-6ff0a8515a2c/venv/bin/python -m pytest -q tests/system/test_device_printf_pipe.py -s",
+      "exit_code": 0,
+      "what_was_measured": "All five GPU pipe cases passed, including the exact pre-import libc-write counterexample, one and three launches, and explicit-flush compatibility. Each checks visibility while the child is alive and exact thread IDs."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-6ff0a8515a2c/venv/bin/python -m pytest -q tests/unit/test_device_runtime.py tests/unit/test_rocir_print.py",
+      "exit_code": 0,
+      "what_was_measured": "All 15 focused runtime and printf-lowering unit tests passed."
+    },
+    {
+      "command": "HIP_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-j-6ff0a8515a2c-vector-cache /tmp/amdpilot-repo-j-6ff0a8515a2c/venv/bin/python -m pytest -q tests/kernels/test_vec_add.py::test_benchmark_vector_add[4] -s",
+      "exit_code": 0,
+      "what_was_measured": "A real gfx950 vector addition matched the independent PyTorch a+b reference with maximum error 0.00e+00 over 1,048,576 float32 elements."
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "One assigned AMD Instinct MI355X with gfx950 capability ran the failing-before candidate reproduction, passing-after counterexample, five-case pipe regression, and independent numerical vector-add check."
+  },
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "Validation was limited to Linux/glibc 2.39, ROCm 7.2, and one MI355X/gfx950; an actual Jupyter frontend and other libc/GPU architectures were unavailable.",
+    "Changing C stdout buffering is process-wide and affects other C/C++ stdout writers after FlyDSL import.",
+    "No C++ or LLVM source changed, so the prescribed native rebuild was not applicable. Python sources loaded from /job/repo/python/flydsl and native bindings remained supplied by /opt/venv/lib/python3.12/site-packages/flydsl/_mlir.",
+    "The prepared Python environment did not include ruff, so formatting was checked with git diff --check and explicit line-length inspection rather than the ruff command."
+  ]
+}
