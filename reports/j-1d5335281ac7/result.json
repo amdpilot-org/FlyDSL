@@ -1,0 +1,53 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/400",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/582",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/554",
+  "candidate_commit": "383ee41aaa252f8f081d0b6a860f2c8f051f1cb0",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_rejected",
+  "recommendation": "request_changes",
+  "fully_resolves_original": false,
+  "summary": "The candidate is test-only hardening, not a fix to FlyDSL or LLVM lowering. Its corrected single-scf.if reproducer is useful coverage, but it passes identically on the prepared base and exact candidate: 32 vector phis, 160 MFMAs, 33 unique MFMA destination groups, 138 VGPRs, zero spills, and exact gfx950 numerical output. The generated gfx950 LLVM IR and ISA are byte-identical before and after. It therefore supplies no failing-before/passing-after evidence and does not verify the original production failure involving six branch instances, 71 destination groups, and 170 spills. The production MLA test is present but cannot be collected in this image because aiter requires Triton >=3.6.0 while the prepared environment has 3.5.1+rocm7.2.0.gita272dfa8. Request changes so the PR is described and scoped as regression/test coverage only, or is paired with evidence and an implementation that addresses the original multi-instance contract.",
+  "tests": [
+    {
+      "command": "PYTHONPATH=/job/repo:/job/repo/python JOB_WORKDIR=/job/review-evidence FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/review-evidence/base/gfx950 /tmp/amdpilot-repo-j-1d5335281ac7/venv/bin/python /job/review-evidence/meta/candidate_test.py",
+      "exit_code": 0,
+      "what_was_measured": "On the untouched prepared base, gfx950 execution exactly matched the analytical reference; LLVM IR had 32 phi <4 x float>; ISA had 160 MFMAs, 33 unique MFMA destination groups, 138 VGPRs, and vgpr_spill_count 0. This proves the added test is not failing-before."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo:/job/repo/python JOB_WORKDIR=/job/review-evidence ARCH=gfx942 COMPILE_ONLY=1 FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/review-evidence/base/gfx942 /tmp/amdpilot-repo-j-1d5335281ac7/venv/bin/python /job/review-evidence/meta/candidate_test.py",
+      "exit_code": 0,
+      "what_was_measured": "On the untouched prepared base, gfx942 cross-codegen had 32 phi <4 x float>, 160 MFMAs, 33 unique MFMA destination groups, 138 VGPRs, and zero spills. No gfx942 execution was possible."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo:/job/repo/python JOB_WORKDIR=/job/review-evidence FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/review-evidence/candidate/gfx950 /tmp/amdpilot-repo-j-1d5335281ac7/venv/bin/python -m pytest -q -s tests/kernels/test_ssa_phi_divergence.py",
+      "exit_code": 0,
+      "what_was_measured": "At exact candidate commit 383ee41aaa252f8f081d0b6a860f2c8f051f1cb0, gfx950 numerical execution and compiler metrics were identical to base. SHA-256 of base/candidate LLVM IR matched, and SHA-256 of base/candidate final ISA matched."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo:/job/repo/python JOB_WORKDIR=/job/review-evidence ARCH=gfx942 COMPILE_ONLY=1 FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/review-evidence/candidate/gfx942 /tmp/amdpilot-repo-j-1d5335281ac7/venv/bin/python tests/kernels/test_ssa_phi_divergence.py",
+      "exit_code": 0,
+      "what_was_measured": "At the exact candidate commit, gfx942 cross-codegen again had 32 vector phis, 160 MFMAs, 33 unique destinations, 138 VGPRs, and zero spills."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo:/job/repo/python /tmp/amdpilot-repo-j-1d5335281ac7/venv/bin/python -m pytest --collect-only -q tests/kernels/test_mla_decode.py",
+      "exit_code": 2,
+      "what_was_measured": "The production MLA regression could not be collected: importing aiter raised RuntimeError because its gluon kernels require triton>=3.6.0 but the prepared environment provides 3.5.1+rocm7.2.0.gita272dfa8."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "The candidate's single-if kernel executed on the assigned AMD Instinct MI355X, gfx950:sramecc+:xnack-, and exactly matched the independent analytical Torch tensor. The original gfx942 production case was not executed.",
+  "native_rebuilt": false,
+  "remaining_counterexamples": [
+    "The reported production pattern has six branch instances; the candidate exercises one scf.IfOp and does not recreate the surrounding production register pressure.",
+    "The candidate passes unchanged on the base commit, so there is no failing-before/passing-after regression demonstrating a candidate fix.",
+    "No FlyDSL lowering or LLVM implementation changes are present; memref_alloca(Register) still promotes to vector SSA and the original mutable-register request is not implemented.",
+    "The actual production MLA test is blocked by the prepared aiter/Triton version mismatch, so its register/spill behavior and numerical output remain unverified.",
+    "gfx942 evidence is cross-compiled LLVM IR/ISA only; the assigned GPU is gfx950."
+  ],
+  "remaining_limitations": "Only gfx950 execution was available. gfx942 was cross-compiled. The historical compiler/toolchain that produced 71 destination groups and 170 spills was not reconstructed. The current production MLA test could not be collected because of the aiter/Triton incompatibility. Raw logs, IR, ISA, source snapshots, import paths, and hashes are retained under /job/review-evidence outside the checkout.",
+  "native_paths": {
+    "python_source": "/job/repo/python/flydsl",
+    "native_wheel": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir/_mlir_libs"
+  }
+}
