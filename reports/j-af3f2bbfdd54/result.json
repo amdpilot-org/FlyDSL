@@ -1,0 +1,55 @@
+{
+  "job_id": "j-af3f2bbfdd54",
+  "status": "passed",
+  "scope": "bounded platform qualification; no upstream FlyDSL fix",
+  "source_revision": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "source_checkout": "/job/repo",
+  "source_paths": {
+    "test": "/job/repo/tests/unit/test_pointer_argument_vec_add.py",
+    "flydsl": "/job/repo/python/flydsl/__init__.py",
+    "compiler": "/job/repo/python/flydsl/compiler/__init__.py",
+    "expr": "/job/repo/python/flydsl/expr/__init__.py"
+  },
+  "native_path": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir",
+  "python": "/tmp/amdpilot-repo-j-af3f2bbfdd54/venv/bin/python",
+  "device": {
+    "count": 1,
+    "index": 0,
+    "name": "AMD Instinct MI355X",
+    "architecture": "gfx950:sramecc+:xnack-",
+    "torch": "2.9.1+rocm7.2.0.git7e1940d4",
+    "hip": "7.2.26015-fc0010cf6a"
+  },
+  "measurements": [
+    {
+      "name": "prepared FlyDSL pointer argument vector add",
+      "command": "/tmp/amdpilot-repo-j-af3f2bbfdd54/venv/bin/python -m pytest -q -s tests/unit/test_pointer_argument_vec_add.py",
+      "exit_code": 0,
+      "elapsed_seconds": 2.8335,
+      "result": "1 passed in 0.90s",
+      "raw_output": "raw/pointer_argument_vec_add.txt"
+    },
+    {
+      "name": "independent deterministic Torch/ROCm affine vector control",
+      "command": "/tmp/amdpilot-repo-j-af3f2bbfdd54/venv/bin/python - <<'PY' (script preserved in raw/control_command.py)",
+      "exit_code": 0,
+      "elapsed_seconds": 1.0372,
+      "elements": 16387,
+      "dtype": "torch.float32",
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "allclose_rtol_1e-6_atol_1e-6": true,
+      "gpu_sum": 32917.2578125,
+      "cpu_reference_sum": 32917.2578125,
+      "raw_output": "raw/numerical_control.txt"
+    }
+  ],
+  "platform_context": "https://github.com/amdpilot-org/amdpilotv2/pull/438",
+  "limitations": [
+    "Only the requested focused test and one small independent numerical control were run.",
+    "No source or native compiler changes were made, so no native rebuild was required.",
+    "This report does not validate arbitrary FlyDSL functionality or other devices.",
+    "The external receipt-loss simulation occurs after this work; this report does not claim platform recovery success."
+  ],
+  "recorded_at_utc": "2026-09-12T07:46:44Z"
+}

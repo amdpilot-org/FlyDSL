@@ -1,0 +1,28 @@
+COMMAND
+/tmp/amdpilot-repo-j-af3f2bbfdd54/venv/bin/python - <<'PY'
+[Python script queried torch, FlyDSL imports, and device properties and printed JSON.]
+PY
+
+EXIT CODE
+0
+
+OUTPUT
+{
+  "python": "/tmp/amdpilot-repo-j-af3f2bbfdd54/venv/bin/python",
+  "torch_version": "2.9.1+rocm7.2.0.git7e1940d4",
+  "torch_file": "/opt/venv/lib/python3.12/site-packages/torch/__init__.py",
+  "hip_version": "7.2.26015-fc0010cf6a",
+  "cuda_available": true,
+  "device_count": 1,
+  "current_device": 0,
+  "device_name": "AMD Instinct MI355X",
+  "device_properties": "_CudaDeviceProperties(name='AMD Instinct MI355X', major=9, minor=5, gcnArchName='gfx950:sramecc+:xnack-', total_memory=294896MB, multi_processor_count=256, uuid=38396538-6335-6364-3337-363738313161, pci_bus_id=5, pci_device_id=0, pci_domain_id=0, L2_cache_size=4MB)",
+  "flydsl_file": "/job/repo/python/flydsl/__init__.py",
+  "compiler_file": "/job/repo/python/flydsl/compiler/__init__.py",
+  "expr_file": "/job/repo/python/flydsl/expr/__init__.py"
+}
+
+NATIVE PATH CHECK
+Command: readlink -f /opt/venv/lib/python3.12/site-packages/flydsl/_mlir
+Exit code: 0
+Output: /opt/venv/lib/python3.12/site-packages/flydsl/_mlir

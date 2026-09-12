@@ -1,0 +1,27 @@
+COMMAND
+/tmp/amdpilot-repo-j-af3f2bbfdd54/venv/bin/python - <<'PY'
+[Exact script: reports/j-af3f2bbfdd54/raw/control_command.py]
+PY
+
+WORKING DIRECTORY
+/job/repo
+
+EXIT CODE
+0
+
+MEASURED PROCESS WALL TIME
+1.037169045 seconds
+
+OUTPUT
+{
+  "control": "independent deterministic torch ROCm affine vector operation",
+  "device": "cuda:0",
+  "device_name": "AMD Instinct MI355X",
+  "elements": 16387,
+  "dtype": "torch.float32",
+  "max_abs_error": 0.0,
+  "mean_abs_error": 0.0,
+  "allclose_rtol_1e-6_atol_1e-6": true,
+  "gpu_sum": 32917.2578125,
+  "cpu_reference_sum": 32917.2578125
+}
