@@ -12,7 +12,6 @@ attention, one query tile, and ``num_splits = num_cu``. It produces
   [7] q_head_range = (qhead_end << 16) | (qhead_start & 0xFFFF)
 """
 
-import functools
 import math
 
 import torch
@@ -592,7 +591,7 @@ def _make_pa_phase_helpers(
     )
 
 
-@functools.lru_cache(maxsize=256)
+@flyc.dependency_lru_cache(maxsize=256)
 def compile_pa_metadata_v1(
     *,
     num_cu: int,
@@ -932,7 +931,7 @@ def get_pa_metadata_v1(
     )
 
 
-@functools.lru_cache(maxsize=256)
+@flyc.dependency_lru_cache(maxsize=256)
 def compile_pa_decode_metadata(
     softmax_scale=None,
     trans_v=False,
@@ -1403,7 +1402,7 @@ def compile_pa_decode_metadata(
 
 
 # One thread per output element serially combines splits with online softmax.
-@functools.lru_cache(maxsize=64)
+@flyc.dependency_lru_cache(maxsize=64)
 def compile_pa_metadata_reduce(
     *,
     query_length: int,
