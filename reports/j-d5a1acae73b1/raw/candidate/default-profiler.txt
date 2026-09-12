@@ -1,0 +1,8 @@
+Script started on 2026-09-12 17:47:06+00:00 [COMMAND="env PYTHONPATH=/job/repo/python HIP_VISIBLE_DEVICES=0 /tmp/amdpilot-repo-j-d5a1acae73b1/venv/bin/python /job/review-evidence-j-d5a1acae73b1/candidate/default_profiler.py" <not executed on terminal>]
+testing_source=/job/repo/python/flydsl/testing.py
+native_extension=/job/repo/python/flydsl/_mlir/_mlir_libs/_mlirDialectsFly.cpython-312-x86_64-linux-gnu.so
+[W912 17:47:08.885499479 collection.cpp:1133] Warning: ROCTracer produced duplicate flow start: 1 (function operator())
+max_abs_error=0.0 latency_us=1.8992500000000092
+default_profiler_timing=PASS
+
+Script done on 2026-09-12 17:47:09+00:00 [COMMAND_EXIT_CODE="0"]

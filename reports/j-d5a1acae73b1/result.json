@@ -1,0 +1,52 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/304",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/682",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/681",
+  "candidate_commit": "9cc44db2720757d5354395c9779f17e667ac6e13",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_verified",
+  "recommendation": "accept",
+  "fully_resolves_original": true,
+  "summary": "The exact candidate moves the shared correctness and performance helpers into the importable flydsl.testing package API, retains tests.test_common as an identity-preserving compatibility re-export, migrates repository consumers, and fixes the prior eager undeclared pandas dependency. The original base failure was reproduced, and the candidate passed its focused regression plus independent pandas-absent, compatibility, default-profiler, and real-GPU numerical checks.",
+  "tests": [
+    {
+      "command": "env PYTHONPATH=/job/repo/python HIP_VISIBLE_DEVICES=0 /tmp/amdpilot-repo-j-d5a1acae73b1/venv/bin/python -c 'import flydsl; from flydsl.testing import checkAllclose, run_perftest' (on base acf7e67b7d22847e345938ca54fcc137bd7b2a1f)",
+      "exit_code": 1,
+      "what_was_measured": "Failing-before reproduction of the original requested public import; flydsl loaded from the prepared source tree and failed because flydsl.testing did not exist."
+    },
+    {
+      "command": "env PYTHONPATH=/job/repo/python:/job/repo HIP_VISIBLE_DEVICES=0 /tmp/amdpilot-repo-j-d5a1acae73b1/venv/bin/python -m pytest tests/unit/test_testing.py tests/unit/test_compile_hints.py tests/kernels/test_vec_add.py -q",
+      "exit_code": 0,
+      "what_was_measured": "Candidate regression, legacy compatibility, helper behavior, compile-hint compatibility, and FlyDSL vector-add GPU execution: 29 passed and 2 existing architecture/feature cases skipped."
+    },
+    {
+      "command": "env PYTHONPATH=/job/repo/python HIP_VISIBLE_DEVICES=0 FLYDSL_PERFTEST_USE_EVENTS=1 /tmp/amdpilot-repo-j-d5a1acae73b1/venv/bin/python reports/j-d5a1acae73b1/raw/candidate/adversarial.py",
+      "exit_code": 0,
+      "what_was_measured": "Independent subprocess blocked every pandas import, imported and used checkAllclose, and used run_perftest on an MI355X. GPU addition matched an independently constructed NumPy reference with max_abs_error=0.0; pandas remained unloaded."
+    },
+    {
+      "command": "env PYTHONPATH=/job/repo/python HIP_VISIBLE_DEVICES=0 /tmp/amdpilot-repo-j-d5a1acae73b1/venv/bin/python reports/j-d5a1acae73b1/raw/candidate/default_profiler.py",
+      "exit_code": 0,
+      "what_was_measured": "Independent default torch.profiler/pandas timing path on an MI355X, including exact NumPy-reference agreement and positive measured latency."
+    },
+    {
+      "command": "git diff --check acf7e67b7d22847e345938ca54fcc137bd7b2a1f..9cc44db2720757d5354395c9779f17e667ac6e13",
+      "exit_code": 0,
+      "what_was_measured": "Whitespace/error check for the exact candidate diff."
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "One AMD Instinct MI355X (reported capability 9.5/gfx950) executed both the candidate vector-add regressions and independent run_perftest checks. The independent NumPy references had max_abs_error=0.0 for both event and profiler timing paths."
+  },
+  "native_rebuilt": false,
+  "native_rebuild_evidence": "No C++, MLIR, LLVM, CMake, or native binding source changed between the recorded base and exact candidate, so rebuilding native code was not applicable. Candidate Python came from /job/repo/python/flydsl/testing.py; the native extension resolved through /job/repo/python/flydsl/_mlir to the pinned /opt/venv/lib/python3.12/site-packages/flydsl/_mlir tree, including _mlirDialectsFly.cpython-312-x86_64-linux-gnu.so.",
+  "remaining_counterexamples": [],
+  "remaining_limitations": [
+    "Only the assigned AMD Instinct MI355X/gfx950 architecture was available; CUDA/NVIDIA behavior and other AMD architectures were not exercised.",
+    "HIP graph mode was not independently exercised.",
+    "Two compile-hint cases were skipped by their existing architecture/feature guards.",
+    "The upstream ROCm/FlyDSL issue could not be queried live because the organization rejected the installed fine-grained token; review used the supplied original issue snapshot and accessible mirror records.",
+    "No release wheel was rebuilt because the candidate contains no native changes; package discovery was inspected and source-tree imports were verified against the exact candidate."
+  ]
+}
