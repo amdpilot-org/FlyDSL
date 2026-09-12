@@ -1,0 +1,43 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/686",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/584",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/557",
+  "candidate_commit": "b96c5b615d9ca62ef023836af4f858bd3f0c5b7e",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_verified",
+  "recommendation": "accept",
+  "fully_resolves_original": true,
+  "summary": "Independent review confirmed the original AST-rewriter overhead on the prepared base and verified that candidate b96c5b615d9ca62ef023836af4f858bd3f0c5b7e removes unnecessary control-flow transformer traversals while preserving the supported control-flow transformations. In this environment, a fresh-process 1,000-statement straight-line rewrite retained identical behavior and reduced the median measured transform time from 38.606 ms to 18.487 ms; Transformer.visit calls fell from 40,031 to 1. The candidate is a justified Python-only optimization and is not merely test hardening.",
+  "tests": [
+    {
+      "command": "for i in $(seq 1 15); do /tmp/amdpilot-repo-j-1e92e9fa35ec/venv/bin/python /job/review_ast_probe.py; done",
+      "exit_code": 0,
+      "what_was_measured": "Independent fresh-interpreter AST rewrite probe on both revisions. Base median 38.605626 ms with exactly 40,031 Transformer.visit calls per sample; candidate median 18.487033 ms with exactly 1 call per sample. Both returned the same numerical result, 1002. Raw outputs: /job/base-ast-probe.jsonl and /job/candidate-ast-probe.jsonl."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-1e92e9fa35ec/venv/bin/python -m pytest -q tests/unit/test_ast_rewriter_pass_selection.py tests/unit/test_if_dispatch_paths.py tests/unit/test_for_dispatch_paths.py tests/unit/test_while_dispatch_paths.py tests/unit/test_ifexp_dispatch.py tests/unit/test_dynamic_controlflow_list_carry.py tests/unit/test_ast_wrap_locations.py tests/system/test_dynamic_controlflow_list_carry_e2e.py tests/system/test_inline_compare_scf_if.py tests/system/test_closure_freevars_mismatch.py",
+      "exit_code": 0,
+      "what_was_measured": "Candidate regression plus focused supported-control-flow coverage: 94 passed. Raw output: /job/review-evidence/focused-tests.txt."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-1e92e9fa35ec/venv/bin/python -m pytest -q tests/unit",
+      "exit_code": 0,
+      "what_was_measured": "Full candidate unit suite: 1,101 passed and 17 skipped. Raw output: /job/review-evidence/unit-tests.txt."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-1e92e9fa35ec/venv/bin/python /job/ast_semantic_fingerprint.py (separately at base and candidate, then diff)",
+      "exit_code": 0,
+      "what_was_measured": "Independent adversarial comparison showed byte-for-byte identical marshalled transformed code hashes for straight-line, Boolean plus chained comparison plus if-expression, if statement, for/range, yield, while, nested function, and match-guard sources. Raw outputs: /job/review-evidence/base-fingerprints.txt and /job/review-evidence/candidate-fingerprints.txt."
+    },
+    {
+      "command": "FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/review-evidence/ir FLYDSL_RUNTIME_ENABLE_CACHE=0 XDG_CACHE_HOME=/job/review-evidence/cache /tmp/amdpilot-repo-j-1e92e9fa35ec/venv/bin/python examples/01-vectorAdd.py",
+      "exit_code": 0,
+      "what_was_measured": "Candidate real-GPU numerical execution printed PASS against the example's torch.allclose(A + B, C) reference and emitted the complete compiler pipeline, LLVM IR, and gfx950 ISA. Raw output: /job/review-evidence/gpu-vector-add.txt; compiler artifacts: /job/review-evidence/ir/vector_add_kernel_0/."
+    }
+  ],
+  "gpu_execution": true,
+  "gpu_execution_evidence": "The candidate executed examples/01-vectorAdd.py on the assigned AMD GPU and printed PASS. The emitted final ISA starts with .amdgcn_target amdgcn-amd-amdhsa-unknown-gfx950 and defines vector_add_kernel_0.",
+  "native_rebuilt": false,
+  "remaining_counterexamples": [],
+  "remaining_limitations": "The optimization is entirely in python/flydsl/compiler/ast_rewriter.py, so no C++ native rebuild was applicable; Python imports resolved to /job/repo/python/flydsl/compiler/ast_rewriter.py and native bindings remained the image-prepared pinned build. GPU and ISA validation covered the available gfx950 architecture only, not every supported AMD architecture. The source issue states only a general optimization request and no target workload or acceptance threshold, so the cold synthetic benchmark isolates frontend AST rewrite cost rather than claiming an end-to-end compilation speedup for all kernels."
+}
