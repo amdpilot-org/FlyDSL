@@ -62,6 +62,17 @@ def test_path_toolkit_precedes_default(tmp_path, monkeypatch):
     assert get_rocm_toolkit_path() == str(root)
 
 
+def test_arbitrary_path_symlink_discovers_resolved_toolkit(tmp_path, monkeypatch):
+    _clear_roots(monkeypatch)
+    root = _toolkit(tmp_path / "resolved-toolkit")
+    private_bin = tmp_path / "private-bin"
+    private_bin.mkdir()
+    (private_bin / "ld.lld").symlink_to(root / "llvm" / "bin" / "ld.lld")
+    monkeypatch.setenv("PATH", str(private_bin))
+
+    assert get_rocm_toolkit_path() == str(root)
+
+
 def test_toolkit_with_space_is_quoted_in_binary_pipeline(tmp_path, monkeypatch):
     root = _toolkit(tmp_path / "toolkit with space")
     monkeypatch.setenv("FLYDSL_ROCM_TOOLKIT_PATH", str(root))
@@ -69,16 +80,30 @@ def test_toolkit_with_space_is_quoted_in_binary_pipeline(tmp_path, monkeypatch):
     backend = RocmBackend(RocmBackend.make_target("gfx950"))
     binary = backend.pipeline_fragments(compile_hints={})[-1]
 
-    assert f'toolkit="{root}"' in binary
+    assert f"toolkit='{root}'" in binary
     with ir.Context() as ctx:
         PassManager.parse(f"builtin.module({binary})", context=ctx)
 
 
-@pytest.mark.parametrize("value", [r'/tmp/toolkit with space', '/tmp/toolkit"quoted', r"/tmp/toolkit\\root"])
-def test_pass_option_value_escapes_mlir_string_syntax(value):
+@pytest.mark.parametrize(
+    ("value", "quoted"),
+    [
+        (r"/tmp/toolkit with space", "'/tmp/toolkit with space'"),
+        ('/tmp/toolkit"quoted', "'/tmp/toolkit\"quoted'"),
+        (r"/tmp/toolkit\root", r"'/tmp/toolkit\root'"),
+        ("/tmp/toolkit'quoted", '"/tmp/toolkit\'quoted"'),
+    ],
+)
+def test_pass_option_value_preserves_filesystem_characters(value, quoted):
     option = quote_pass_option_value(value)
+    assert option == quoted
 
     with ir.Context() as ctx:
         PassManager.parse(
             f'builtin.module(gpu-module-to-binary{{format=fatbin opts="" toolkit={option}}})', context=ctx
         )
+
+
+def test_pass_option_value_rejects_both_quote_types():
+    with pytest.raises(ValueError, match="both quote types"):
+        quote_pass_option_value("/tmp/both'and\"quotes")

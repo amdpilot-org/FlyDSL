@@ -32,6 +32,26 @@ def _validate_rocm_toolkit(root: Path, source: str) -> str:
     return str(root)
 
 
+def _toolkit_from_path_linker(linker: str) -> Optional[str]:
+    """Infer a toolkit root from either a PATH link or its resolved target."""
+    linker_path = Path(linker).absolute()
+    candidates = []
+    if linker_path.parent.name == "bin" and linker_path.parent.parent.name == "llvm":
+        candidates.append(linker_path.parents[2])
+
+    # Distribution packages commonly expose ld.lld through an arbitrary PATH
+    # symlink while the target lives below <toolkit>/lib/llvm/bin. Walk the
+    # resolved target's ancestors and accept only a root that fully validates.
+    resolved = linker_path.resolve()
+    candidates.extend(resolved.parents)
+    for root in dict.fromkeys(candidates):
+        try:
+            return _validate_rocm_toolkit(root, "PATH")
+        except RocmToolchainError:
+            continue
+    return None
+
+
 def get_rocm_toolkit_path() -> str:
     """Return a validated ROCm root for ``gpu-module-to-binary``.
 
@@ -47,14 +67,9 @@ def get_rocm_toolkit_path() -> str:
 
     linker = shutil.which("ld.lld")
     if linker:
-        linker_path = Path(linker).absolute()
-        # MLIR requires <toolkit>/llvm/bin/ld.lld. Keep the lexical PATH
-        # location so private toolkit symlinks select their own root.
-        if linker_path.parent.name == "bin" and linker_path.parent.parent.name == "llvm":
-            try:
-                return _validate_rocm_toolkit(linker_path.parents[2], "PATH")
-            except RocmToolchainError:
-                pass
+        toolkit = _toolkit_from_path_linker(linker)
+        if toolkit:
+            return toolkit
 
     opt_rocm = Path("/opt/rocm")
     if opt_rocm.exists():
@@ -62,7 +77,7 @@ def get_rocm_toolkit_path() -> str:
 
     searched = (
         "FLYDSL_ROCM_TOOLKIT_PATH, ROCM_PATH, ROCM_ROOT, ROCM_HOME, "
-        "an MLIR-layout ld.lld on PATH, and /opt/rocm"
+        "a linker associated with a usable ROCm toolkit on PATH, and /opt/rocm"
     )
     raise RocmToolchainError(f"Unable to find a usable ROCm toolkit; searched {searched}")
 
