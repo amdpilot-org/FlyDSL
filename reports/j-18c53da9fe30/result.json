@@ -1,0 +1,26 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/453",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Reproduced stale same-process PA compile-factory reuse with disk caching disabled, then added a dependency-aware LRU cache that invalidates when globals referenced by a factory or its nested kernel bodies change. Applied it to the current tile, sliding-window, metadata, and reduction PA compile factories. The regression verifies that rebinding a nested helper returns a newly traced wrapper rather than the old cached wrapper.",
+  "tests": [
+    {
+      "command": "PYTHONPATH=/job/repo FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/job/private-cache /tmp/amdpilot-repo-j-18c53da9fe30/venv/bin/python /job/repro_issue453.py",
+      "exit_code": 0,
+      "what_was_measured": "Before the fix, a gfx950 BF16 PA decode matched an independent PyTorch attention reference with max_diff=0.00048828125, then a same-process nested-helper replacement was not observed until compile_pa_decode_tile.cache_clear(); after the fix, the sentinel was observed on the first same-process rerun, proving retracing. Raw logs: /job/raw/reproduce-before-nested-helper.log and /job/raw/reproduce-after.log. Reproducer source: /job/repro_issue453.py."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/job/private-cache /tmp/amdpilot-repo-j-18c53da9fe30/venv/bin/python /job/repro_issue453.py --fresh-sentinel",
+      "exit_code": 0,
+      "what_was_measured": "A fresh process observed the replacement helper sentinel on its first compile, matching the fixed same-process behavior. Raw logs: /job/raw/reproduce-fresh-before.log and /job/raw/reproduce-fresh-after.log."
+    },
+    {
+      "command": "PYTHONPATH=/job/repo FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/job/private-cache /tmp/amdpilot-repo-j-18c53da9fe30/venv/bin/python -m pytest tests/unit/test_dependency_cache.py tests/unit/test_jit_cache_key_completeness.py -q",
+      "exit_code": 0,
+      "what_was_measured": "16 focused unit tests passed, including the failing-before regression for invalidating a compile factory when a helper referenced only by its nested traced body is rebound, plus existing JIT cache-key and drift coverage. Raw log: /job/raw/unit-final.log."
+    }
+  ],
+  "gpu_execution": true,
+  "native_rebuilt": false,
+  "remaining_limitations": "No native C++/LLVM code changed, so the prepared native rebuild was not applicable. The repository's aiter-based PS test module could not import because the prepared aiter requires Triton >=3.6.0 while the pinned environment has Triton 3.5.1+rocm7.2.0.gita272dfa8; validation therefore used the current FlyDSL PA tile implementation directly, with an independent PyTorch numerical reference. Upstream issue API/CLI inspection was blocked by ROCm organization token policy; the supplied issue snapshot and mirror issue were treated as problem data without changing credentials."
+}

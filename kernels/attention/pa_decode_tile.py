@@ -30,8 +30,6 @@ One CTA (4 waves) per (seq, kv_head) runs a flash-style online softmax over
 an LDS round-trip on P transposing ownership between the two MMAs.
 """
 
-import functools
-
 import torch
 
 import flydsl.compiler as flyc
@@ -58,7 +56,7 @@ LOG2E = 1.4426950408889634
 BF16_KV_SUPPORTED_ARCHS = ("gfx942", "gfx950")
 
 
-@functools.lru_cache(maxsize=None)
+@flyc.dependency_lru_cache(maxsize=None)
 def compile_pa_decode_tile(
     *,
     head_dim: int,

@@ -583,6 +583,12 @@ The JIT disk cache auto-invalidates when kernel source code or closure values ch
 FLYDSL_RUNTIME_ENABLE_CACHE=0 python my_script.py  # or: rm -rf ~/.flydsl/cache
 ```
 
+This setting does not disable ordinary Python caches. Compile factories that
+define a JIT kernel inside a cached function should use
+`@flyc.dependency_lru_cache(...)` instead of `@functools.lru_cache(...)`. It has
+the same cache API, but clears its in-process entries when a referenced Python
+helper or constant (including one used by a nested kernel body) changes.
+
 ### 9.4 Compile-only mode
 
 ```bash
