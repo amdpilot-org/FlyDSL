@@ -1143,6 +1143,13 @@ class InsertEmptyYieldForSCFFor(Transformer):
             self.symbol_scopes.record_symbol(iv_name)
             node.body = self._visit_stmt_block(node.body)
 
+        # A dynamic scf.for has no early-exit path, so Python's ``else`` suite
+        # runs unconditionally after the loop.  Keep it outside the generated
+        # body function so it observes the final loop-carried values.  Dropping
+        # these statements used to silently omit their side effects and value
+        # updates (including when the range had zero iterations).
+        orelse = self._visit_stmt_block(node.orelse) if node.orelse else []
+
         if loop_carried_var_name:
             node.body.append(
                 ast.copy_location(
@@ -1262,7 +1269,7 @@ class InsertEmptyYieldForSCFFor(Transformer):
             ast.fix_missing_locations(post_stmt)
             post_stmts.append(post_stmt)
 
-        return pre_stmts + [body_func, dispatch_stmt] + post_stmts
+        return pre_stmts + [body_func, dispatch_stmt] + post_stmts + orelse
 
     def visit_For(self, node: ast.For) -> ast.For:
         if self._is_range_constexpr(node.iter):
