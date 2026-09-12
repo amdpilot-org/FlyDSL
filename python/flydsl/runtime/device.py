@@ -3,10 +3,83 @@
 
 import functools
 import os
+import shutil
 import subprocess
+from pathlib import Path
 from typing import Optional
 
 _ROCM_AGENT_TIMEOUT_S = int(os.environ.get("FLYDSL_ROCM_AGENT_TIMEOUT", "300"))
+
+
+class RocmToolchainError(RuntimeError):
+    """Raised when an explicitly selected ROCm toolkit is unusable."""
+
+
+def _validate_rocm_toolkit(root: Path, source: str) -> str:
+    """Validate the files used by MLIR's ROCDL serializer."""
+    root = root.expanduser().absolute()
+    linker = root / "llvm" / "bin" / "ld.lld"
+    bitcode = root / "amdgcn" / "bitcode"
+
+    if not linker.exists():
+        raise RocmToolchainError(f"ROCm toolkit from {source} is missing linker: {linker}")
+    if not linker.is_file():
+        raise RocmToolchainError(f"ROCm toolkit linker from {source} is not a file: {linker}")
+    if not os.access(linker, os.X_OK):
+        raise RocmToolchainError(f"ROCm toolkit linker from {source} is not executable: {linker}")
+    if not bitcode.is_dir():
+        raise RocmToolchainError(f"ROCm toolkit from {source} is missing device libraries: {bitcode}")
+    return str(root)
+
+
+def _toolkit_from_path_linker(linker: str) -> Optional[str]:
+    """Infer a toolkit root from either a PATH link or its resolved target."""
+    linker_path = Path(linker).absolute()
+    candidates = []
+    if linker_path.parent.name == "bin" and linker_path.parent.parent.name == "llvm":
+        candidates.append(linker_path.parents[2])
+
+    # Distribution packages commonly expose ld.lld through an arbitrary PATH
+    # symlink while the target lives below <toolkit>/lib/llvm/bin. Walk the
+    # resolved target's ancestors and accept only a root that fully validates.
+    resolved = linker_path.resolve()
+    candidates.extend(resolved.parents)
+    for root in dict.fromkeys(candidates):
+        try:
+            return _validate_rocm_toolkit(root, "PATH")
+        except RocmToolchainError:
+            continue
+    return None
+
+
+def get_rocm_toolkit_path() -> str:
+    """Return a validated ROCm root for ``gpu-module-to-binary``.
+
+    Discovery is deterministic: ``FLYDSL_ROCM_TOOLKIT_PATH``, the standard
+    ROCm root variables, ``ld.lld`` on ``PATH``, then ``/opt/rocm``. Explicit
+    roots are diagnosed instead of silently falling through to another
+    installation.
+    """
+    for env_var in ("FLYDSL_ROCM_TOOLKIT_PATH", "ROCM_PATH", "ROCM_ROOT", "ROCM_HOME"):
+        value = os.environ.get(env_var)
+        if value:
+            return _validate_rocm_toolkit(Path(value), env_var)
+
+    linker = shutil.which("ld.lld")
+    if linker:
+        toolkit = _toolkit_from_path_linker(linker)
+        if toolkit:
+            return toolkit
+
+    opt_rocm = Path("/opt/rocm")
+    if opt_rocm.exists():
+        return _validate_rocm_toolkit(opt_rocm, "default /opt/rocm")
+
+    searched = (
+        "FLYDSL_ROCM_TOOLKIT_PATH, ROCM_PATH, ROCM_ROOT, ROCM_HOME, "
+        "a linker associated with a usable ROCm toolkit on PATH, and /opt/rocm"
+    )
+    raise RocmToolchainError(f"Unable to find a usable ROCm toolkit; searched {searched}")
 
 
 def _arch_from_rocm_agent_enumerator() -> Optional[str]:

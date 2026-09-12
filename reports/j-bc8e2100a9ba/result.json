@@ -1,0 +1,60 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/946",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/648",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Independently reproduced all three review counterexamples at candidate commit cace24273ede0742f57b4ef6d716485384721a9b. Corrected lossless MLIR pass-option quoting for double-quote and backslash paths, and discovered validated ROCm roots through resolved arbitrary private-bin ld.lld symlinks while preserving the candidate's precedence and diagnostics.",
+  "tests": [
+    {
+      "command": "FLYDSL_ROCM_TOOLKIT_PATH=<valid-private-root-containing-double-quote> python -m pytest 'tests/kernels/test_vec_add.py::test_benchmark_vector_add[4]' -q -s --tb=short",
+      "exit_code": 1,
+      "what_was_measured": "Exact candidate failing-before reproduction in the actual gpu-module-to-binary path; lld invocation failed."
+    },
+    {
+      "command": "FLYDSL_ROCM_TOOLKIT_PATH=<valid-private-root-containing-backslash> python -m pytest 'tests/kernels/test_vec_add.py::test_benchmark_vector_add[4]' -q -s --tb=short",
+      "exit_code": 1,
+      "what_was_measured": "Exact candidate failing-before reproduction in the actual gpu-module-to-binary path; lld invocation failed."
+    },
+    {
+      "command": "PATH=<arbitrary-private-bin-with-ld.lld-symlink> python <discovery-probe>",
+      "exit_code": 0,
+      "what_was_measured": "Exact candidate found the private linker with shutil.which but ignored it and returned /opt/rocm."
+    },
+    {
+      "command": "python -m pytest tests/unit/test_rocm_toolkit_discovery.py tests/unit/test_external_llvm_codegen.py -q",
+      "exit_code": 0,
+      "what_was_measured": "Corrected focused regressions and backend coverage; 22 passed."
+    },
+    {
+      "command": "FLYDSL_ROCM_TOOLKIT_PATH=<valid-private-root-containing-double-quote> python -m pytest 'tests/kernels/test_vec_add.py::test_benchmark_vector_add[4]' -q -s --tb=short",
+      "exit_code": 0,
+      "what_was_measured": "Corrected real compilation and gfx950 numerical execution; maximum error 0.00e+00 against Torch a + b."
+    },
+    {
+      "command": "FLYDSL_ROCM_TOOLKIT_PATH=<valid-private-root-containing-backslash> python -m pytest 'tests/kernels/test_vec_add.py::test_benchmark_vector_add[4]' -q -s --tb=short",
+      "exit_code": 0,
+      "what_was_measured": "Corrected real compilation and gfx950 numerical execution; maximum error 0.00e+00 against Torch a + b."
+    },
+    {
+      "command": "PATH=<arbitrary-private-bin-with-ld.lld-symlink> FLYDSL_DUMP_IR=1 python -m pytest 'tests/kernels/test_vec_add.py::test_benchmark_vector_add[4]' -q -s --tb=short",
+      "exit_code": 0,
+      "what_was_measured": "PATH-only discovery selected the resolved validated toolkit, compiled and ran with maximum error 0.00e+00, and emitted 4,227-byte gfx950 ISA with vecAddKernel_0 and s_endpgm."
+    },
+    {
+      "command": "python -m pytest tests/unit -q",
+      "exit_code": 0,
+      "what_was_measured": "Complete corrected unit suite; 1109 passed and 17 skipped."
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "Quote-root, backslash-root, and arbitrary-PATH cases each ran vector add on AMD Instinct MI355X gfx950 with max error 0.00e+00. The PATH-only run emitted 4,227-byte ISA naming gfx950 and vecAddKernel_0 and containing s_endpgm."
+  },
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "The reported gfx1250 GPU and ROCm 6 environment were unavailable; hardware execution and toolkit compatibility there remain unverified.",
+    "GPU and ISA validation used the assigned gfx950 GPU with ROCm 7.2.",
+    "A textual MLIR pass option cannot losslessly represent a value containing both single and double quote characters; this case now raises a precise ValueError before compilation.",
+    "No native rebuild was required because the correction changes Python only; validation used the prepared pinned native extension and LLVM."
+  ]
+}

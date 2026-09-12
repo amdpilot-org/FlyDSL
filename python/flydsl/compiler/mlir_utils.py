@@ -6,6 +6,18 @@ from typing import Any
 from .._mlir import ir
 
 
+def quote_pass_option_value(value: str) -> str:
+    """Quote a string for use as a value in a textual MLIR pass pipeline."""
+    # The pass-option parser strips delimiters but preserves escape sequences
+    # literally. Select a delimiter absent from the value instead of changing
+    # filesystem-significant quote or backslash characters.
+    if "'" not in value:
+        return f"'{value}'"
+    if '"' not in value:
+        return f'"{value}"'
+    raise ValueError("MLIR textual pass options cannot represent a value containing both quote types")
+
+
 def convert_to_mlir_attr(value: Any) -> ir.Attribute:
     if isinstance(value, ir.Attribute):
         return value
