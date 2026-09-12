@@ -1,0 +1,55 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/621",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/591",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/570",
+  "candidate_commit": "38a10491e23ee8277d57186679da7108206498c6",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_verified",
+  "recommendation": "accept",
+  "fully_resolves_original": true,
+  "summary": "Independent review reproduced the weak AOT validation and failed-set memory contamination on the prepared base. At the exact candidate commit, strict envelope/type/version/key/payload validation rejected the original and adversarial invalid artifacts, failed writes no longer contaminated memory, focused cache-key tests passed, and a fresh-process GPU cache round trip produced correct output.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-799cd05b89b6/venv/bin/python /job/review-evidence-j-799cd05b89b6/adversarial_aot_review.py (base acf7e67b7d22847e345938ca54fcc137bd7b2a1f)",
+      "exit_code": 0,
+      "what_was_measured": "The base accepted an unversioned CompiledArtifact pickle, accepted schema_version=True as a dictionary payload, retained an invalid payload in memory/disk, and retained a valid artifact in memory after cache-directory creation failed. This reproduced the original weak-validation behavior and the reported remaining contamination gap."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-799cd05b89b6/venv/bin/python -m pytest -q tests/unit/test_aot_cache_schema.py (candidate 38a10491e23ee8277d57186679da7108206498c6)",
+      "exit_code": 0,
+      "what_was_measured": "All 7 candidate regressions passed, including strict bool schema-version rejection and failed-set cache isolation."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-799cd05b89b6/venv/bin/python /job/review-evidence-j-799cd05b89b6/adversarial_aot_review.py (candidate 38a10491e23ee8277d57186679da7108206498c6)",
+      "exit_code": 0,
+      "what_was_measured": "Independent cases rejected raw legacy pickles and schema_version=True with RuntimeError; invalid-payload and I/O-failed set operations left no in-memory entry."
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-799cd05b89b6/venv/bin/python -m pytest -q tests/unit/test_jit_cache_key.py tests/unit/test_jit_cache_key_completeness.py (candidate 38a10491e23ee8277d57186679da7108206498c6)",
+      "exit_code": 0,
+      "what_was_measured": "All 19 related cache-key and interface-completeness tests passed."
+    },
+    {
+      "command": "FLYDSL_RUNTIME_CACHE_DIR=/tmp/flydsl-review-j-799cd05b89b6-cache /tmp/amdpilot-repo-j-799cd05b89b6/venv/bin/python examples/01-vectorAdd.py (twice in separate processes at candidate commit)",
+      "exit_code": 0,
+      "what_was_measured": "Both MI350X/gfx950 executions printed PASS against torch A+B; the persisted file was independently inspected as a dictionary containing artifact, cache_key, format=flydsl.compiled-artifact, and schema_version=1, and the second process exercised its persisted cache."
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "One assigned AMD Instinct MI350X (gfx950, ROCm 7.2 / torch 2.9.1+rocm7.2.0.git7e1940d4) executed vector addition twice with independent torch numerical comparison; both runs printed PASS."
+  },
+  "native_rebuilt": false,
+  "native_rebuild_reason": "The candidate changes only python/flydsl/compiler/jit_function.py, a Python test, and a prior report. No C++ or native compiler source changed, so the prepared rebuild command was not applicable. The runtime continued to use the image's pinned native extension while Python imported from /job/repo/python.",
+  "remaining_counterexamples": [],
+  "remaining_limitations": [
+    "GPU execution was validated only on the assigned MI350X/gfx950; no claim is made for architectures unavailable in this job.",
+    "The schema logic itself is host-side Python and received direct regression/adversarial coverage; no native rebuild was needed or performed.",
+    "Pickle is deserialized before envelope validation, so this is compatibility/integrity validation rather than protection from malicious pickle input; hostile-cache security was not part of the reported contract."
+  ],
+  "source_paths": {
+    "python": "/job/repo/python/flydsl/compiler/jit_function.py",
+    "native": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir",
+    "raw_evidence": "/job/review-evidence-j-799cd05b89b6"
+  }
+}
