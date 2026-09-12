@@ -1,0 +1,39 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/688",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_verified",
+  "summary": "Candidate 135c348c82288d8362df74d859a56e9c8862ab1a fixes the reproducible dynamic for...else suite-dropping defect. It is verified as a correct subset of the broad AST-rewriter issue, not as exhaustive closure of every potential control-flow mutation risk.",
+  "tests": [
+    {
+      "command": "ROCR_VISIBLE_DEVICES=0 HIP_VISIBLE_DEVICES=0 CUDA_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-7512a1480731/cache-base /tmp/amdpilot-repo-j-7512a1480731/venv/bin/python -m pytest -q -s /job/review-evidence-j-7512a1480731/candidate_regression.py",
+      "exit_code": 1,
+      "what_was_measured": "Prepared-base failing-before reproduction: 3 cases passed and both zero-trip/nonzero-trip for...else cases failed with stale values; exact integer comparisons used rtol=0 and atol=0."
+    },
+    {
+      "command": "ROCR_VISIBLE_DEVICES=0 HIP_VISIBLE_DEVICES=0 CUDA_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-7512a1480731/cache-candidate /tmp/amdpilot-repo-j-7512a1480731/venv/bin/python -m pytest -q -s /job/review-evidence-j-7512a1480731/candidate_regression.py /job/review-evidence-j-7512a1480731/adversarial_for_else.py",
+      "exit_code": 0,
+      "what_was_measured": "Exact candidate head: 12 GPU numerical cases passed, including seven independent boundary cases for negative/zero/nonzero bounds, else-only definitions, direct side effects, final carried values, and nested for...else."
+    },
+    {
+      "command": "ROCR_VISIBLE_DEVICES=0 HIP_VISIBLE_DEVICES=0 CUDA_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-7512a1480731/cache-focused /tmp/amdpilot-repo-j-7512a1480731/venv/bin/python -m pytest -q -s tests/system/test_control_flow_independent_refs_e2e.py tests/system/test_if_liveout_minimal.py tests/system/test_for_vector_carry_shape_e2e.py tests/system/test_control_flow_compile.py tests/system/test_for_auto_iter_args_e2e.py tests/unit/test_for_dispatch_paths.py tests/unit/test_for_auto_iter_args.py tests/unit/test_while_dispatch_paths.py /job/review-evidence-j-7512a1480731/adversarial_for_else.py",
+      "exit_code": 0,
+      "what_was_measured": "45 focused AST-rewriter and control-flow tests passed, including real GPU numerical execution."
+    },
+    {
+      "command": "ROCR_VISIBLE_DEVICES=0 HIP_VISIBLE_DEVICES=0 CUDA_VISIBLE_DEVICES=0 FLYDSL_RUNTIME_ENABLE_CACHE=0 FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-7512a1480731/cache-ir FLYDSL_DUMP_IR=1 FLYDSL_DUMP_DIR=/job/review-evidence-j-7512a1480731/ir-final /tmp/amdpilot-repo-j-7512a1480731/venv/bin/python -m pytest -q -s '/job/review-evidence-j-7512a1480731/adversarial_for_else.py::test_nested_for_else_observes_each_final_carried_value[2-3-24]'",
+      "exit_code": 0,
+      "what_was_measured": "Nested dynamic loops produced the exact value 24 on gfx950; retained origin MLIR contains nested scf.for/scf.yield and final ISA targets gfx950 with arithmetic and global_store_dword."
+    },
+    {
+      "command": "git diff --check acf7e67b7d22847e345938ca54fcc137bd7b2a1f..135c348c82288d8362df74d859a56e9c8862ab1a && /tmp/amdpilot-repo-j-7512a1480731/venv/bin/python -m compileall -q python/flydsl/compiler/ast_rewriter.py tests/system/test_control_flow_independent_refs_e2e.py",
+      "exit_code": 0,
+      "what_was_measured": "Candidate diff has no whitespace errors and changed Python sources compile."
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "One assigned AMD Instinct MI355X gfx950 executed the failing-before and passing-after exact integer regressions. Retained gfx950 MLIR/LLVM/ISA artifacts are under /job/review-evidence-j-7512a1480731/ir-final/_nested_kernel_0/."
+  },
+  "native_rebuilt": false,
+  "remaining_limitations": "Only gfx950 was available. Candidate changes are Python-only, so the prepared pinned native compiler was used and no C++ rebuild was needed. Dynamic break/continue and unspecified AST-rewriter risks outside the demonstrated for...else defect remain unverified. Raw logs are under /job/review-evidence-j-7512a1480731; source paths reviewed were /job/repo/python/flydsl/compiler/ast_rewriter.py and /job/repo/tests/system/test_control_flow_independent_refs_e2e.py."
+}
