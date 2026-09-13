@@ -1,0 +1,38 @@
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-cf6a0ddd3ff5/cache/aiter/module_aiter_core.so
+Logits Diff: 0.000005, Max Diff: 8.614014, Mean Diff: 0.945579
+ ✓ Check passed
+dispatch=inline-bm16 activation=silu tokens=1 cosine=0.99999505 max_abs=8.61401367
+Logits Diff: 0.000004, Max Diff: 10.738525, Mean Diff: 0.902498
+ ✓ Check passed
+dispatch=inline-bm16 activation=silu tokens=2 cosine=0.99999583 max_abs=10.73852539
+Logits Diff: 0.000004, Max Diff: 7.886963, Mean Diff: 0.992236
+ ✓ Check passed
+dispatch=inline-bm16 activation=silu tokens=4 cosine=0.99999559 max_abs=7.88696289
+Logits Diff: 0.000010, Max Diff: 20.774979, Mean Diff: 1.283297
+ ✓ Check passed
+dispatch=inline-bm16 activation=silu tokens=16 cosine=0.99998963 max_abs=20.77497864
+Logits Diff: 0.000004, Max Diff: 11.841919, Mean Diff: 1.033458
+ ✓ Check passed
+dispatch=inline-bm16 activation=silu tokens=32 cosine=0.99999577 max_abs=11.84191895
+Logits Diff: 0.000007, Max Diff: 49.569336, Mean Diff: 0.984238
+ ✓ Check passed
+dispatch=inline-bm16 activation=silu tokens=256 cosine=0.99999273 max_abs=49.56933594
+Logits Diff: 0.000004, Max Diff: 0.048412, Mean Diff: 0.006502
+ ✓ Check passed
+dispatch=inline-bm16 activation=swigluoai tokens=1 cosine=0.99999553 max_abs=0.04841232
+Logits Diff: 0.000005, Max Diff: 0.044950, Mean Diff: 0.006740
+ ✓ Check passed
+dispatch=inline-bm16 activation=swigluoai tokens=2 cosine=0.99999541 max_abs=0.04494953
+Logits Diff: 0.000004, Max Diff: 0.050198, Mean Diff: 0.006903
+ ✓ Check passed
+dispatch=inline-bm16 activation=swigluoai tokens=4 cosine=0.99999547 max_abs=0.05019808
+Logits Diff: 0.000004, Max Diff: 0.072439, Mean Diff: 0.006981
+ ✓ Check passed
+dispatch=inline-bm16 activation=swigluoai tokens=16 cosine=0.99999559 max_abs=0.07243919
+Logits Diff: 0.000004, Max Diff: 0.090653, Mean Diff: 0.006992
+ ✓ Check passed
+dispatch=inline-bm16 activation=swigluoai tokens=32 cosine=0.99999571 max_abs=0.09065342
+Logits Diff: 0.000005, Max Diff: 0.140962, Mean Diff: 0.006866
+ ✓ Check passed
+dispatch=inline-bm16 activation=swigluoai tokens=256 cosine=0.99999523 max_abs=0.14096212

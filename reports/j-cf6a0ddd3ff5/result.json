@@ -1,0 +1,63 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/717",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/703",
+  "candidate_url": "https://github.com/amdpilot-org/FlyDSL/pull/702",
+  "candidate_commit": "bec00d1619c7e2cc818f23526157315efca2885d",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_verified",
+  "recommendation": "accept",
+  "fully_resolves_original": true,
+  "remaining_counterexamples": [],
+  "summary": "The base reproduced the real inline-BM16 failure at normalized logits difference 0.0078781. The exact candidate passed the same probe at 0.001035 by correcting the independent reference to quantize the BF16 input actually consumed by the unchanged inline kernel. Candidate regressions and independent adversarial inline cases passed on one gfx950 GPU, including MiniMax production dimensions and both SiLU and SwiGLU-OAI.",
+  "tests": [
+    {
+      "command": "PYTHONPATH=/job/repo:/job/repo/python /tmp/amdpilot-repo-j-cf6a0ddd3ff5/venv/bin/python /tmp/amdpilot-repo-j-cf6a0ddd3ff5/probe_inline_quant.py (base acf7e67)",
+      "exit_code": 1,
+      "what_was_measured": "Real inline-BM16 kernel failing-before plus raw reference packed bytes, E8M0 scales, and dequantized values; normalized logits difference 0.0078781 exceeded 0.002.",
+      "evidence_paths": ["reports/j-cf6a0ddd3ff5/raw/baseline-inline-probe-rerun.log"]
+    },
+    {
+      "command": "PYTHONPATH=/job/repo:/job/repo/python /tmp/amdpilot-repo-j-cf6a0ddd3ff5/venv/bin/python /tmp/amdpilot-repo-j-cf6a0ddd3ff5/probe_inline_quant.py (candidate bec00d1)",
+      "exit_code": 0,
+      "what_was_measured": "Identical real-kernel passing-after probe; normalized logits difference 0.001035 with unchanged 0.002 gate.",
+      "evidence_paths": ["reports/j-cf6a0ddd3ff5/raw/candidate-inline-probe.log"]
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-cf6a0ddd3ff5/venv/bin/python -m pytest tests/kernels/test_moe_gemm.py::test_minimax_m3_a4w4_swigluoai -q -s",
+      "exit_code": 0,
+      "what_was_measured": "Routed top-k4 plus one shared expert, duplicate routes, nonuniform weights, SwiGLU-OAI, and tokens 1/2/4/16/32/256; 6 passed.",
+      "evidence_paths": ["reports/j-cf6a0ddd3ff5/raw/candidate-small-token-sweep.log"]
+    },
+    {
+      "command": "FLYDSL_RUN_MINIMAX_M3_SHAPE=1 /tmp/amdpilot-repo-j-cf6a0ddd3ff5/venv/bin/python -m pytest tests/kernels/test_moe_gemm.py::test_minimax_m3_a4w4_model_shape -vv -s",
+      "exit_code": 0,
+      "what_was_measured": "Actual packed-BM32 and inline-BM16 dispatches at hidden 6144, intermediate 3072, E128, top-k4, shared expert, tokens 1/2/4/16/32/256; packed SwiGLU-OAI, inline SiLU, and inline SwiGLU-OAI all passed independent FP32 references.",
+      "evidence_paths": ["reports/j-cf6a0ddd3ff5/raw/candidate-production-shape.log"]
+    },
+    {
+      "command": "PYTHONPATH=/job/repo:/job/repo/python /tmp/amdpilot-repo-j-cf6a0ddd3ff5/venv/bin/python reports/j-cf6a0ddd3ff5/adversarial_inline_review.py",
+      "exit_code": 0,
+      "what_was_measured": "Independent actual inline-BM16 adversarial execution with zero blocks, signed/exact values, extreme dynamic range, duplicate routes, nonuniform weights, both activations, and six token counts; all strict normalized-error checks passed.",
+      "evidence_paths": ["reports/j-cf6a0ddd3ff5/adversarial_inline_review.py", "reports/j-cf6a0ddd3ff5/raw/candidate-adversarial-inline.log"]
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-cf6a0ddd3ff5/venv/bin/python -m pytest tests/kernels/test_moe_gemm.py::test_mxfp_moe_variants -k fp4 -q -s",
+      "exit_code": 0,
+      "what_was_measured": "FP4 preservation regression: packed BM32 and inline BM16 passed; explicitly unqualified BM64 interleaved remained xfailed.",
+      "evidence_paths": ["reports/j-cf6a0ddd3ff5/raw/candidate-fp4-regression.log"]
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "One AMD Instinct MI350X, gfx950, was visible and used by all kernel tests; device/toolchain details are retained in reports/j-cf6a0ddd3ff5/raw/environment.log."
+  },
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "BM64 interleaved A4W4 remains numerically unqualified and xfailed; it was explicitly not a prerequisite for this inline investigation.",
+    "FP8 activation remains quarantined and is outside this A4W4 review.",
+    "No full-model inference, multi-rank expert parallelism, serving integration, or automatic AITER/SGLang adoption was claimed or tested.",
+    "The packed-A4 path still has no EP valid mask.",
+    "Only the available single MI350X/gfx950 architecture was tested.",
+    "No C++ changed, so the pinned native compiler library was used without rebuild."
+  ]
+}
