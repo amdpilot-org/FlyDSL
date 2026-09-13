@@ -839,10 +839,13 @@ def _run_mxfp_moe_e2e(
 
     # --- reference (stage1 -> host re-quant -> stage2) ------------------------
     if not skip_ref:
+        ref_x_q, ref_x_scale = (x_q, x_scale)
+        if inline_quant:
+            ref_x_q, ref_x_scale = _per_1x32_fp4_quant(hidden.float())
         ref1 = torch_moe_gemm1(
-            x_q,
+            ref_x_q,
             w1_q,
-            x_scale,
+            ref_x_scale,
             w1_scale,
             topk_ids.long(),
             topk_weights,
@@ -900,10 +903,10 @@ def test_mxfp_moe_variants(a_dtype, variant):
     BM==32 (atomic), inline_quant (BM==16, bf16 hidden -> on-device quant), and the
     interleaved gate/up layout. a4w4 (fp4) and a8w4 (fp8) run all three; a16w4
     (bf16 A) has no inline-quant/interleave path, so it only runs bm32_atomic."""
-    if a_dtype == "fp4" and variant != "bm32_atomic":
+    if a_dtype == "fp4" and variant == "interleave_bm64":
         pytest.xfail(
-            "A4W4 inline quantization and BM64 interleaved layouts remain numerically unqualified; "
-            "the MiniMax-M3 entry uses the strict-reference-checked packed-A4 BM32 path"
+            "A4W4 BM64 interleaved layout remains numerically unqualified; "
+            "the MiniMax-M3 entry uses BM32 packed-A4 or BM16 inline quantization"
         )
     if a_dtype == "a16w4" and variant != "bm32_atomic":
         pytest.skip("a16w4 has no inline_quant / interleave gemm1 variant (bf16 A, atomic gemm2 only)")
@@ -1016,14 +1019,20 @@ def test_minimax_m3_a4w4_swigluoai(tokens):
     os.environ.get("FLYDSL_RUN_MINIMAX_M3_SHAPE") != "1",
     reason="set FLYDSL_RUN_MINIMAX_M3_SHAPE=1 for the 128-expert production-shape qualification",
 )
-def test_minimax_m3_a4w4_model_shape():
+@pytest.mark.parametrize(
+    "inline_quant,activation",
+    [(False, "swigluoai"), (True, "silu"), (True, "swigluoai")],
+    ids=["packed-swigluoai", "inline-silu", "inline-swigluoai"],
+)
+def test_minimax_m3_a4w4_model_shape(inline_quant, activation):
     """Exact MiniMax-M3 routed projection dimensions (6144x3072, E128, top-k 4).
 
     This is a kernel-level qualification with synthetic quantized projections; it
     intentionally does not claim full-model generation or multi-rank EP coverage.
     """
     device = torch.device("cuda")
-    model_dim, inter_dim, experts, topk, tile_m = 6144, 3072, 128, 4, 32
+    model_dim, inter_dim, experts, topk = 6144, 3072, 128, 4
+    tile_m = 16 if inline_quant else 32
     gen = torch.Generator(device=device).manual_seed(717)
     w1 = torch.randn((experts, 2 * inter_dim, model_dim), generator=gen, device=device) * 0.02
     w2 = torch.randn((experts, model_dim, inter_dim), generator=gen, device=device) * 0.005
@@ -1041,7 +1050,8 @@ def test_minimax_m3_a4w4_model_shape():
             tokens=tokens, model_dim=model_dim, inter_dim=inter_dim, experts=experts,
             topk=topk, tile_m=tile_m, use_reduce=False, x_fp32=x, w1_fp32=w1,
             w2_fp32=w2, topk_ids=ids, topk_weights=weights, routing=routing,
-            activation="swigluoai", swiglu_alpha=1.702, swiglu_limit=7.0,
+            inline_quant=inline_quant, activation=activation,
+            swiglu_alpha=1.702, swiglu_limit=7.0,
         )
         shared_ids = torch.zeros((tokens, 1), dtype=torch.long, device=device)
         shared_weights = torch.ones((tokens, 1), dtype=torch.float32, device=device)
@@ -1053,7 +1063,8 @@ def test_minimax_m3_a4w4_model_shape():
             tokens=tokens, model_dim=model_dim, inter_dim=inter_dim, experts=1, topk=1,
             tile_m=tile_m, use_reduce=False, x_fp32=x, w1_fp32=w1[:1], w2_fp32=w2[:1],
             topk_ids=shared_ids, topk_weights=shared_weights, routing=shared_routing,
-            activation="swigluoai", swiglu_alpha=1.702, swiglu_limit=7.0,
+            inline_quant=inline_quant, activation=activation,
+            swiglu_alpha=1.702, swiglu_limit=7.0,
         )
         out = out + shared
         ref = ref + shared_ref
@@ -1061,7 +1072,11 @@ def test_minimax_m3_a4w4_model_shape():
         assert verify_output(out, ref, rtol=2e-3, atol=2e-3, logits_diff_threshold=2e-3)
         cosine = torch.nn.functional.cosine_similarity(out.flatten(), ref.flatten(), dim=0).item()
         max_abs = (out - ref).abs().max().item()
-        print(f"MiniMax-M3 A4W4 tokens={tokens}: cosine={cosine:.8f} max_abs={max_abs:.8f}")
+        dispatch = "inline-bm16" if inline_quant else "packed-bm32"
+        print(
+            f"MiniMax-M3 A4W4 dispatch={dispatch} activation={activation} tokens={tokens}: "
+            f"cosine={cosine:.8f} max_abs={max_abs:.8f}"
+        )
 
 
 @pytest.mark.skipif("gfx95" not in ARCH, reason="a16w4 requires gfx950+")
