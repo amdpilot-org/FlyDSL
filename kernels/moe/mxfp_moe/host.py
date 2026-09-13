@@ -50,7 +50,8 @@ _G2_SUPPORTED = {
 
 @functools.cache
 def _get_compiled_gemm1(
-    BM, use_nt, inline_quant, D_HIDDEN, D_INTER, NE, topk, BN, BK, interleave, xcd_swizzle, a_dtype
+    BM, use_nt, inline_quant, D_HIDDEN, D_INTER, NE, topk, BN, BK, interleave, xcd_swizzle, a_dtype,
+    activation, swiglu_alpha, swiglu_limit
 ):
     return compile_gemm1_a4w4_port(
         BM,
@@ -65,6 +66,9 @@ def _get_compiled_gemm1(
         interleave=interleave,
         xcd_swizzle=xcd_swizzle,
         a_dtype=a_dtype,
+        activation=activation,
+        swiglu_alpha=swiglu_alpha,
+        swiglu_limit=swiglu_limit,
     )
 
 
@@ -109,13 +113,18 @@ def flydsl_mxfp4_gemm1(
     interleave=False,
     xcd_swizzle=0,
     a_dtype="fp4",
+    activation="silu",
+    swiglu_alpha=1.702,
+    swiglu_limit=7.0,
     stream=None,
 ):
-    """Fused stage1: gate+up GEMM + SiLU + fp4 re-quant.
+    """Fused stage1: gate+up GEMM + activation + fp4 re-quant.
 
     ``a_dtype`` selects the activation format: "fp4" (a4w4, mxfp4 A) or "fp8"
     (a8w4, fp8 e4m3 A x mxfp4 W1). Writes the sorted fp4 intermediate into
     ``inter_sorted_quant`` / ``inter_sorted_shuffled_scale`` (both pre-allocated).
+    ``activation="swigluoai"`` selects the MiniMax-M3/GPT-OSS clamped activation;
+    the default remains plain SiLU for API compatibility.
     """
     if D_HIDDEN % BK != 0:
         raise NotImplementedError(f"mxfp_moe gemm1 requires D_HIDDEN (K) % {BK} == 0, got H={D_HIDDEN}")
@@ -143,7 +152,8 @@ def flydsl_mxfp4_gemm1(
         )
 
     launch = _get_compiled_gemm1(
-        BM, use_nt, inline_quant, D_HIDDEN, D_INTER, NE, topk, BN, BK, interleave, xcd_swizzle, a_dtype
+        BM, use_nt, inline_quant, D_HIDDEN, D_INTER, NE, topk, BN, BK, interleave, xcd_swizzle, a_dtype,
+        activation, float(swiglu_alpha), float(swiglu_limit)
     )
     grid = gemm1_grid(n_tokens, BM, NE=NE, TOPK=topk, INTER=D_INTER, BN=BN)
     _run_compiled(
