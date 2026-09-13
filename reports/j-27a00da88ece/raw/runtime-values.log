@@ -1,0 +1,11 @@
+FLYDSL_AUTOTUNE_CACHE_DIR=/tmp/amdpilot-repo-j-27a00da88ece/cache/autotune
+FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-27a00da88ece/cache/flydsl
+TRITON_CACHE_DIR=/tmp/amdpilot-repo-j-27a00da88ece/cache/triton
+XDG_CACHE_HOME=/tmp/amdpilot-repo-j-27a00da88ece/cache
+PYTHONPATH=/job/repo/python
+sys.executable=/tmp/amdpilot-repo-j-27a00da88ece/venv/bin/python
+flydsl=/job/repo/python/flydsl/__init__.py
+torch=2.9.1+rocm7.2.0.git7e1940d4
+hip=7.2.26015-fc0010cf6a
+device=AMD Instinct MI350X
+capability=(9, 5)

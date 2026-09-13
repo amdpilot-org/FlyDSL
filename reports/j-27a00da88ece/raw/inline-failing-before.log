@@ -1,0 +1,17 @@
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] [pid=2646 pname=MainProcess] start build [module_aiter_core] under /tmp/amdpilot-repo-j-27a00da88ece/cache/aiter/build/module_aiter_core
+[aiter] Current hipcc not support: -mllvm -amdgpu-coerce-illegal-types=1, skip it.
+[aiter] [pid=2646 pname=MainProcess] [32mfinish build [module_aiter_core], cost 13.9s [0m
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-27a00da88ece/cache/aiter/module_aiter_core.so
+ERROR:root:logits_diff: 0.007878099790699977 is too large (threshold: 0.002)
+BYPASS_XFAIL: A4W4 inline quantization and BM64 interleaved layouts remain numerically unqualified; the MiniMax-M3 entry uses the strict-reference-checked packed-A4 BM32 path
+Logits Diff: 0.007878, Max Diff: 0.117442, Mean Diff: 0.014200
+✗ Check failed: logits_diff 0.007878099790699977 > 0.002
+Traceback (most recent call last):
+  File "<stdin>", line 7, in <module>
+  File "/job/repo/tests/kernels/test_moe_gemm.py", line 937, in test_mxfp_moe_variants
+    _run_mxfp_moe_e2e(
+  File "/job/repo/tests/kernels/test_moe_gemm.py", line 872, in _run_mxfp_moe_e2e
+    assert verify_output(out, ref2, rtol=2e-3, atol=2e-3, logits_diff_threshold=2e-3)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

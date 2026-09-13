@@ -1,0 +1,49 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/717",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "fixed",
+  "summary": "Reproduced the BM16 inline A4W4 numerical failure and attributed it to an invalid FP32 reference input: the actual kernel consumes BF16. The narrow repair makes the independent MXFP4 reference quantize those exact BF16 values. Exact MiniMax dimensions passed for inline SiLU and SwiGLU-OAI at 1/2/4/16/32/256 tokens, while packed BM32 remains passing and BM64 remains explicitly xfailed.",
+  "tests": [
+    {
+      "command": "/tmp/amdpilot-repo-j-27a00da88ece/venv/bin/python with pytest.xfail bypass, deterministic seed 717, calling test_mxfp_moe_variants('fp4', 'inline_bm16') before repair",
+      "exit_code": 1,
+      "what_was_measured": "Actual fused BM16 inline kernel failed the unchanged normalized-logit threshold: 0.007878099790699977 > 0.002; max diff 0.117442, mean diff 0.014200.",
+      "evidence_paths": ["reports/j-27a00da88ece/raw/inline-failing-before.log"]
+    },
+    {
+      "command": "/tmp/amdpilot-repo-j-27a00da88ece/venv/bin/python reports/j-27a00da88ece/probe_inline_quant.py",
+      "exit_code": 0,
+      "what_was_measured": "Raw FP4 packed bytes, E8M0 scale bytes and independent dequantized values for adversarial inputs, followed by the actual BM16 inline fused kernel; normalized error 0.001035 at the unchanged 0.002 gate.",
+      "evidence_paths": ["reports/j-27a00da88ece/probe_inline_quant.py", "reports/j-27a00da88ece/raw/inline-probe-after.log"]
+    },
+    {
+      "command": "FLYDSL_RUN_MINIMAX_M3_SHAPE=1 python -m pytest test_minimax_m3_a4w4_model_shape[inline-silu] test_minimax_m3_a4w4_model_shape[inline-swigluoai] -vv -s",
+      "exit_code": 0,
+      "what_was_measured": "Actual BM16 inline dispatch with independent BF16->per-32 E8M0/FP4->FP32 references for SiLU and SwiGLU-OAI, routed E128/top-k4 plus one shared expert, exact 6144x3072 dimensions, tokens 1/2/4/16/32/256; 2 tests passed.",
+      "evidence_paths": ["reports/j-27a00da88ece/raw/minimax-inline-model-shape.log"]
+    },
+    {
+      "command": "FLYDSL_RUN_MINIMAX_M3_SHAPE=1 python -m pytest test_minimax_m3_a4w4_model_shape[packed-swigluoai] test_mxfp_moe_variants[interleave_bm64-fp4] -vv -s",
+      "exit_code": 0,
+      "what_was_measured": "Preserved exact-shape packed BM32 candidate coverage at all six token counts; BM64 remained xfailed. One passed, one xfailed.",
+      "evidence_paths": ["reports/j-27a00da88ece/raw/packed-and-bm64-preservation.log"]
+    },
+    {
+      "command": "rocminfo; hipcc --version; Python import/device probe",
+      "exit_code": 0,
+      "what_was_measured": "AMD Instinct MI350X/gfx950, ROCm HIP 7.2.26015, AMD clang 22.0.0git, source and native import locations.",
+      "evidence_paths": ["reports/j-27a00da88ece/raw/device-toolchain.log"]
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "All numerical logs identify AMD Instinct MI350X capability (9,5)/gfx950 and contain real fused-kernel results."
+  },
+  "native_rebuilt": false,
+  "remaining_limitations": [
+    "BM64 interleaved A4W4 remains numerically unqualified and explicitly xfailed.",
+    "No full-model inference, multi-rank expert parallelism, BM64 qualification, or serving-path integration was performed.",
+    "The packed-A4 path still does not accept an EP valid mask.",
+    "No claim is made that AITER or SGLang automatically adopts this FlyDSL kernel."
+  ]
+}
