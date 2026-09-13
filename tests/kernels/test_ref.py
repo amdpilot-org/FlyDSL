@@ -99,6 +99,9 @@ def torch_moe_gemm1(
     doweight_stage1: bool,
     group_size: int = -1,
     scale_w1_groups: torch.Tensor | None = None,
+    activation: str = "silu",
+    swiglu_alpha: float = 1.702,
+    swiglu_limit: float = 7.0,
 ) -> torch.Tensor:
     """Return [tokens, topk, inter_dim] fp32.
 
@@ -154,7 +157,14 @@ def torch_moe_gemm1(
         y2 = F.linear(x_in, w1[e, :, :])  # [num, 2*inter_dim]
         gate = y2[:, :inter_dim]
         up = y2[:, inter_dim:]
-        y = F.silu(gate) * up
+        if activation == "silu":
+            y = F.silu(gate) * up
+        elif activation == "swigluoai":
+            gate = torch.minimum(gate, torch.tensor(swiglu_limit, device=gate.device))
+            up = torch.clamp(up, -swiglu_limit, swiglu_limit)
+            y = gate * torch.sigmoid(swiglu_alpha * gate) * (up + 1.0)
+        else:
+            raise ValueError(f"unsupported activation: {activation!r}")
         if doweight_stage1:
             y = y * topk_weights[t_idx, s_idx].unsqueeze(-1)
         out[t_idx, s_idx, :] = y

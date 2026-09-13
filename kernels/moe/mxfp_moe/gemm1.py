@@ -25,6 +25,7 @@ from .mxfp4_gemm_common import (
     _scalar_store,
     _scale_mma_atoms,
     _silu_mul_batch,
+    _swiglu_oai_mul_batch,
     _udiv,
     _umax_i32,
     _umod,
@@ -90,6 +91,9 @@ def _gemm1_body(
     BK,
     inline_quant=False,
     a_dtype="fp4",
+    activation="silu",
+    swiglu_alpha=1.702,
+    swiglu_limit=7.0,
     K,
     N_OUT,
     NE,
@@ -601,7 +605,10 @@ def _gemm1_body(
             up_col = fx.Int32(128) + gate_col
             gate_vs[ee] = acc_load(acc_idx(row_local, gate_col))
             up_vs[ee] = acc_load(acc_idx(row_local, up_col))
-        result = _silu_mul_batch(gate_vs, up_vs)
+        if const_expr(activation == "swigluoai"):
+            result = _swiglu_oai_mul_batch(gate_vs, up_vs, swiglu_alpha, swiglu_limit)
+        else:
+            result = _silu_mul_batch(gate_vs, up_vs)
 
         local_max = fx.absf(result[0])
         for ee in range_constexpr(1, 8):
@@ -691,9 +698,14 @@ def compile_gemm1_a4w4_port(
     interleave=False,
     xcd_swizzle=0,
     a_dtype="fp4",
+    activation="silu",
+    swiglu_alpha=1.702,
+    swiglu_limit=7.0,
 ):
     if a_dtype not in ("fp4", "fp8"):
         raise AssertionError(f"a_dtype must be 'fp4' or 'fp8', got {a_dtype!r}")
+    if activation not in ("silu", "swigluoai"):
+        raise AssertionError(f"activation must be 'silu' or 'swigluoai', got {activation!r}")
     if (BM, use_nt, inline_quant) not in _G1_VARIANTS[a_dtype]:
         raise AssertionError(
             f"unsupported gemm1 variant (a_dtype={a_dtype}, BM={BM}, use_nt={use_nt}, inline_quant={inline_quant})"
@@ -716,7 +728,8 @@ def compile_gemm1_a4w4_port(
     # Tag with H/INTER/NE so different shape specializations get distinct
     # kernel/smem symbols (so KIMI and non-KIMI instances never collide).
     gu_tag = "il" if interleave else "sep"
-    name_suffix = f"{a_dtype}_h{_K}_i{_INTER}_ne{_NE}_bm{BM}_{variant_tag}_{gu_tag}"
+    act_tag = "silu" if activation == "silu" else f"swigluoai_a{swiglu_alpha:g}_l{swiglu_limit:g}"
+    name_suffix = f"{a_dtype}_{act_tag}_h{_K}_i{_INTER}_ne{_NE}_bm{BM}_{variant_tag}_{gu_tag}"
     if xcd_swizzle > 0:
         name_suffix += f"_xcd{xcd_swizzle}"
 
@@ -794,6 +807,9 @@ def compile_gemm1_a4w4_port(
                 BK=BK,
                 inline_quant=inline_quant,
                 a_dtype=a_dtype,
+                activation=activation,
+                swiglu_alpha=swiglu_alpha,
+                swiglu_limit=swiglu_limit,
                 K=_K,
                 N_OUT=_N_OUT,
                 NE=_NE,

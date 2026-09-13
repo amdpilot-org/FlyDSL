@@ -1,0 +1,5 @@
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-375a8af7df94/cache/aiter/module_aiter_core.so
+[W913 02:06:14.830047495 collection.cpp:1133] Warning: ROCTracer produced duplicate flow start: 1 (function operator())
+FlyDSL MoE stage1[fp4]: 7.3 us M_eff=128 TFLOPS=18.35 TB/s=0.309
+FlyDSL MoE stage2[fp4] atomic: 5.7 us 1024x256 E=8 K=4 M_eff=128 TFLOPS=11.85 TB/s=0.211

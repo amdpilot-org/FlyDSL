@@ -1,0 +1,38 @@
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-375a8af7df94/cache/aiter/module_aiter_core.so
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 9 items / 6 deselected / 3 selected
+
+tests/kernels/test_moe_gemm.py .Logits Diff: 0.008376, Max Diff: 0.114379, Mean Diff: 0.014228
+✗ Check failed: logits_diff 0.008375778026786462 > 0.002
+FLogits Diff: 0.993828, Max Diff: 1.082526, Mean Diff: 0.161178
+✗ Check failed: logits_diff 0.9938280985404071 > 0.002
+F
+
+=================================== FAILURES ===================================
+___________________ test_mxfp_moe_variants[inline_bm16-fp4] ____________________
+tests/kernels/test_moe_gemm.py:932: in test_mxfp_moe_variants
+    _run_mxfp_moe_e2e(
+tests/kernels/test_moe_gemm.py:872: in _run_mxfp_moe_e2e
+    assert verify_output(out, ref2, rtol=2e-3, atol=2e-3, logits_diff_threshold=2e-3)
+E   AssertionError: assert False
+E    +  where False = verify_output(tensor([[ 0.1377,  0.0947, -0.2344,  ...,  0.0703,  0.0732, -0.0559],\n        [-0.2256, -0.2285,  0.0293,  ..., -0.132...1118, -0.4102, -0.1270],\n        [-0.2100,  0.0566,  0.0281,  ..., -0.0161, -0.0245,  0.1719]],\n       device='cuda:0'), tensor([[ 1.0696e-01,  8.3541e-02, -2.5049e-01,  ...,  3.0050e-02,\n          7.2735e-02, -7.8050e-02],\n        [-2.019...       [-2.6212e-01,  5.5406e-02,  3.9630e-02,  ..., -3.0314e-02,\n         -3.3041e-02,  1.7599e-01]], device='cuda:0'), rtol=0.002, atol=0.002, logits_diff_threshold=0.002)
+------------------------------ Captured log call -------------------------------
+ERROR    root:test_common.py:420 logits_diff: 0.008375778026786462 is too large (threshold: 0.002)
+_________________ test_mxfp_moe_variants[interleave_bm64-fp4] __________________
+tests/kernels/test_moe_gemm.py:932: in test_mxfp_moe_variants
+    _run_mxfp_moe_e2e(
+tests/kernels/test_moe_gemm.py:872: in _run_mxfp_moe_e2e
+    assert verify_output(out, ref2, rtol=2e-3, atol=2e-3, logits_diff_threshold=2e-3)
+E   AssertionError: assert False
+E    +  where False = verify_output(tensor([[ 0.0562, -0.0054,  0.2227,  ...,  0.0303,  0.2041,  0.0464],\n        [ 0.1973,  0.1865, -0.0439,  ...,  0.084...0186,  0.0272,  0.1328],\n        [-0.0635, -0.2148, -0.0635,  ..., -0.1221,  0.1084, -0.0630]],\n       device='cuda:0'), tensor([[-0.1953,  0.0894,  0.0766,  ..., -0.1738,  0.0681,  0.0311],\n        [-0.0991, -0.0623,  0.0764,  ..., -0.125...1263, -0.0860, -0.1582],\n        [ 0.1699,  0.1465, -0.0577,  ..., -0.0811,  0.0812, -0.1780]],\n       device='cuda:0'), rtol=0.002, atol=0.002, logits_diff_threshold=0.002)
+------------------------------ Captured log call -------------------------------
+ERROR    root:test_common.py:420 logits_diff: 0.9938280985404071 is too large (threshold: 0.002)
+=========================== short test summary info ============================
+FAILED tests/kernels/test_moe_gemm.py::test_mxfp_moe_variants[inline_bm16-fp4]
+FAILED tests/kernels/test_moe_gemm.py::test_mxfp_moe_variants[interleave_bm64-fp4]
+================== 2 failed, 1 passed, 6 deselected in 9.49s ===================

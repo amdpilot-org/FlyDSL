@@ -99,6 +99,15 @@ GPU_MODULE_NAME = "rmsnorm_module"
 rmsnorm_kernel(self, Input, Gamma, Output, m_in)
 ```
 
+The gfx950 `mxfp_moe` stage-1 launcher accepts `activation="swigluoai"`
+with configurable `swiglu_alpha` and `swiglu_limit`.  This implements the
+MiniMax-M3/GPT-OSS clamped activation while retaining `activation="silu"` as
+the compatibility default.  MiniMax-M3 uses alpha 1.702 and limit 7.0.  Routed
+experts use normalized sigmoid top-k weights multiplied by the model's routed
+scaling factor; its one shared expert is launched as a separate one-expert
+projection and added to the routed result.  This kernel API does not itself
+compute router logits or perform multi-rank expert parallel dispatch.
+
 ---
 
 ## 2. Softmax kernel

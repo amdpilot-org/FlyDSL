@@ -1,0 +1,49 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/717",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_verified",
+  "summary": "Added an opt-in MiniMax-M3 SwiGLU-OAI activation to the existing gfx950 packed-A4/static-W4 fused MoE kernel, retaining SiLU defaults. Qualified exact 6144x3072, 128-expert, top-k-4 routed projections and the one-expert shared projection pattern against independent MXFP4 dequantize/FP32 references. The validated path accepts dynamically quantized packed FP4 activations; the existing on-device BF16-to-FP4 inline variant remains outside the qualified path.",
+  "tests": [
+    {
+      "command": "FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-375a8af7df94/cache PYTHONPATH=/job/repo /tmp/amdpilot-repo-j-375a8af7df94/venv/bin/python -m pytest tests/kernels/test_moe_gemm.py::test_minimax_m3_a4w4_model_shape -vv -s (with FLYDSL_RUN_MINIMAX_M3_SHAPE=1)",
+      "exit_code": 0,
+      "what_was_measured": "GPU numerical correctness for routed plus shared experts at hidden=6144, intermediate/shared_intermediate=3072, routed_experts=128, top_k=4 for token batches 1,2,4,16,32,256. Cosine 0.99999648..0.99999815; max absolute error 0.00149..0.00261; all outputs finite."
+    },
+    {
+      "command": "python -m pytest tests/kernels/test_moe_gemm.py::test_minimax_m3_a4w4_swigluoai -q -s",
+      "exit_code": 0,
+      "what_was_measured": "Six GPU cases covering decode/prefill sizes, nonuniform and duplicate routes, routed plus one-expert shared outputs, zero blocks and 1e-6/1e3 adversarial activation blocks, all finite, against independent dequantized FP32 references with normalized-logit threshold 0.002."
+    },
+    {
+      "command": "python -m pytest tests/kernels/test_moe_gemm.py::test_mxfp_moe_variants -k fp4 -q -s",
+      "exit_code": 1,
+      "what_was_measured": "Defect characterization before quarantine: BM32 packed A4W4 passed; inline BF16-to-FP4 had normalized error 0.0083758 and BM64 interleaved had 0.9938281. These variants remain explicitly xfailed and are not claimed."
+    },
+    {
+      "command": "python -m pytest 'tests/kernels/test_moe_gemm.py::test_mxfp_moe_variants[bm32_atomic-fp4]' tests/kernels/test_moe_gemm.py::test_minimax_m3_a4w4_swigluoai -q",
+      "exit_code": 0,
+      "what_was_measured": "Final focused regression: 7 GPU numerical cases passed."
+    },
+    {
+      "command": "python tests/kernels/test_moe_gemm.py --in_dtype fp4 -dim 1024,256 -t 32 -e 8 -k 4 --tile_m 32 --tile_n 128 --tile_k 256 --gemm2_mode atomic --activation {silu,swigluoai} --seed 717 --num_warmup 5 --num_iters 20",
+      "exit_code": 0,
+      "what_was_measured": "Same-shape/state latency with strict numerics: legacy SiLU stage1/stage2 6.5/5.2 us; SwiGLU-OAI 7.3/5.7 us."
+    }
+  ],
+  "gpu_execution": true,
+  "native_rebuilt": false,
+  "source_paths": [
+    "/job/repo/kernels/moe/mxfp_moe/gemm1.py",
+    "/job/repo/kernels/moe/mxfp_moe/host.py",
+    "/job/repo/kernels/moe/mxfp_moe/mxfp4_gemm_common.py"
+  ],
+  "native_path": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir",
+  "compiler_cache_path": "/tmp/amdpilot-repo-j-375a8af7df94/cache",
+  "remaining_limitations": [
+    "Kernel-level synthetic projection qualification only: no full MiniMax-M3 generation and no model weights were downloaded.",
+    "No multi-rank expert-parallel qualification. The packed-A4 fused path does not expose valid-mask/non-local-slot reduction; callers must compact/remap local experts before launch.",
+    "The on-device BF16-to-FP4 inline variant and BM64 interleaved layout remain numerically unqualified and are explicit xfails; this candidate uses externally dynamically quantized packed FP4 activations with per-32 E8M0 scales.",
+    "The independent reference and test quantizer implement MXFP4 per-group-32 E8M0 conventions; the public model metadata specifies Quark half-even/even scale calculation. No arbitrary INT4 or BF16-activation/W4 result is presented as A4W4.",
+    "A8W4 remains independently xfailed and is not part of this outcome."
+  ]
+}
