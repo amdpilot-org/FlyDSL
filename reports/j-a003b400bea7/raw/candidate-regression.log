@@ -1,0 +1,49 @@
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-a003b400bea7/cache/aiter/module_aiter_core.so
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 7 items
+
+tests/kernels/test_moe_gemm.py .Logits Diff: 0.000005, Max Diff: 0.106483, Mean Diff: 0.013766
+ ✓ Check passed
+Logits Diff: 0.000001, Max Diff: 0.062500, Mean Diff: 0.003555
+ ✓ Check passed
+Logits Diff: 0.000003, Max Diff: 0.137733, Mean Diff: 0.015468
+ ✓ Check passed
+.Logits Diff: 0.000005, Max Diff: 0.150787, Mean Diff: 0.015060
+ ✓ Check passed
+Logits Diff: 0.000001, Max Diff: 0.031250, Mean Diff: 0.003227
+ ✓ Check passed
+Logits Diff: 0.000003, Max Diff: 0.150787, Mean Diff: 0.016066
+ ✓ Check passed
+.Logits Diff: 0.000005, Max Diff: 0.182760, Mean Diff: 0.013997
+ ✓ Check passed
+Logits Diff: 0.000001, Max Diff: 0.046875, Mean Diff: 0.003788
+ ✓ Check passed
+Logits Diff: 0.000003, Max Diff: 0.182760, Mean Diff: 0.015750
+ ✓ Check passed
+.Logits Diff: 0.000005, Max Diff: 0.168699, Mean Diff: 0.014388
+ ✓ Check passed
+Logits Diff: 0.000001, Max Diff: 0.062500, Mean Diff: 0.003714
+ ✓ Check passed
+Logits Diff: 0.000002, Max Diff: 0.213127, Mean Diff: 0.015856
+ ✓ Check passed
+.Logits Diff: 0.000004, Max Diff: 0.170788, Mean Diff: 0.013907
+ ✓ Check passed
+Logits Diff: 0.000002, Max Diff: 0.062500, Mean Diff: 0.004022
+ ✓ Check passed
+Logits Diff: 0.000002, Max Diff: 0.186413, Mean Diff: 0.015584
+ ✓ Check passed
+.Logits Diff: 0.000004, Max Diff: 0.208818, Mean Diff: 0.013598
+ ✓ Check passed
+Logits Diff: 0.000001, Max Diff: 0.062500, Mean Diff: 0.002963
+ ✓ Check passed
+Logits Diff: 0.000002, Max Diff: 0.215698, Mean Diff: 0.014824
+ ✓ Check passed
+.
+
+============================== 7 passed in 12.15s ==============================
+pytest_exit=0

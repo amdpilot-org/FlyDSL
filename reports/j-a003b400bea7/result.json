@@ -1,0 +1,55 @@
+{
+  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/717",
+  "mirror_issue_url": "https://github.com/amdpilot-org/FlyDSL/issues/699",
+  "candidate_pr_url": "https://github.com/amdpilot-org/FlyDSL/pull/698",
+  "candidate_commit": "8f8d9aaffdcf57ce573a96609134690f24639f31",
+  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
+  "outcome": "candidate_verified",
+  "recommendation": "accept",
+  "fully_resolves_original": true,
+  "summary": "The exact candidate adds and numerically qualifies MiniMax-M3 SwiGLU-OAI on the existing gfx950 packed-A4/static-W4 fused MoE path while preserving the SiLU API default. Baseline support was absent/quarantined; candidate regressions, exact model-dimension routed/shared projections, and an independent adversarial GPU case passed.",
+  "tests": [
+    {
+      "command": "python signature inspection on recorded base",
+      "exit_code": 0,
+      "what_was_measured": "The prepared base imported FlyDSL from /job/repo/python/flydsl and flydsl_mxfp4_gemm1 had no activation parameter."
+    },
+    {
+      "command": "python -m pytest 'tests/kernels/test_moe_gemm.py::test_mxfp_moe_variants[bm32_atomic-fp4]' -q -rxX (base)",
+      "exit_code": 0,
+      "what_was_measured": "The base did not execute packed A4W4 correctness; it was xfailed with run=False because the path was recorded as numerically broken/memory-unsafe."
+    },
+    {
+      "command": "python -m pytest tests/kernels/test_moe_gemm.py::test_minimax_m3_a4w4_swigluoai -q (base)",
+      "exit_code": 4,
+      "what_was_measured": "The MiniMax regression and entry-point behavior did not exist on the recorded base."
+    },
+    {
+      "command": "python -m pytest 'tests/kernels/test_moe_gemm.py::test_mxfp_moe_variants[bm32_atomic-fp4]' tests/kernels/test_moe_gemm.py::test_minimax_m3_a4w4_swigluoai -q -s (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Seven gfx950 GPU tests passed, covering strict packed A4W4 correctness and MiniMax routed/shared cases at 1/2/4/16/32/256 tokens with duplicate/nonuniform routes and zero/extreme activation blocks."
+    },
+    {
+      "command": "FLYDSL_RUN_MINIMAX_M3_SHAPE=1 python -m pytest tests/kernels/test_moe_gemm.py::test_minimax_m3_a4w4_model_shape -vv -s (candidate)",
+      "exit_code": 0,
+      "what_was_measured": "Exact hidden=6144, intermediate=3072, 128 routed experts, top-k=4 plus one shared expert at 1/2/4/16/32/256 tokens. Cosine 0.99999654..0.99999821, max absolute error 0.00155360..0.00260985, finite outputs."
+    },
+    {
+      "command": "reviewer-authored Python adversarial invocation of _run_mxfp_moe_e2e at candidate commit",
+      "exit_code": 0,
+      "what_was_measured": "Three tokens (padding boundary), E3/top-k-4 with every route duplicated, zero/1e-6/positive and negative 1e3 blocks, and non-default alpha=1.25/limit=3.5. Output was finite; cosine 0.99999702, max absolute error 0.046875, mean absolute error 0.00181039, normalized-logit error 0.000003."
+    }
+  ],
+  "gpu_execution": {
+    "value": true,
+    "evidence": "All candidate numerical commands executed on the assigned AMD Instinct MI350X gfx950 GPU; raw logs contain compiler/runtime output and measured errors."
+  },
+  "native_rebuilt": false,
+  "remaining_counterexamples": [],
+  "remaining_limitations": [
+    "Kernel-level synthetic projection qualification only; no full MiniMax-M3 generation or model-weight loading was performed.",
+    "No multi-rank expert-parallel dispatch was exercised, and the packed-A4 path has no valid-mask/non-local-slot API.",
+    "Inline BF16-to-FP4 quantization and BM64 interleaved variants remain explicitly unqualified and are not part of the verified packed-A4 path.",
+    "Only gfx950 was available; behavior on other architectures is unverified."
+  ]
+}

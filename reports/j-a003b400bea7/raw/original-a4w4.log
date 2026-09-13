@@ -1,0 +1,13 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 1 item
+
+tests/kernels/test_moe_gemm.py x                                         [100%]
+
+=========================== short test summary info ============================
+XFAIL tests/kernels/test_moe_gemm.py::test_mxfp_moe_variants[bm32_atomic-fp4] - [NOTRUN] pre-existing mxfp4 fused gemm2 + fp8-gemm1 A-path bug, e2e cos ~0.1; strict gate exposes it, not an a16w4 regression (kernel is also memory-unsafe -> run=False to avoid crashing the session). TODO(issue #NNN)
+============================= 1 xfailed in 17.15s ==============================
+pytest_exit=0

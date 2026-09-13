@@ -1,0 +1,6 @@
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-a003b400bea7/cache/aiter/module_aiter_core.so
+Logits Diff: 0.000003, Max Diff: 0.046875, Mean Diff: 0.001810
+ ✓ Check passed
+shape (3, 1024) finite True cosine 0.9999970197677612 max_abs 0.046875 mean_abs 0.0018103942275047302
+python_exit=0
