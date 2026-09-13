@@ -1,0 +1,23 @@
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] [pid=2929 pname=MainProcess] start build [module_aiter_core] under /tmp/amdpilot-repo-j-cf6a0ddd3ff5/cache/aiter/build/module_aiter_core
+[aiter] Current hipcc not support: -mllvm -amdgpu-coerce-illegal-types=1, skip it.
+[aiter] [pid=2929 pname=MainProcess] [32mfinish build [module_aiter_core], cost 13.9s [0m
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-cf6a0ddd3ff5/cache/aiter/module_aiter_core.so
+ERROR:root:logits_diff: 0.007878099790699977 is too large (threshold: 0.002)
+{"case": "exact_and_signed_zero", "fp32_vs_bf16_input_max_abs": 0.0, "packed_byte_mismatches": 0, "scale_byte_mismatches": 0, "bf16_packed_hex": [[128, 162, 196, 213, 128, 162, 196, 213, 128, 162, 196, 213, 128, 162, 196, 213]], "bf16_scale_u8": [[126]], "bf16_dequantized": [[0.0, -0.0, 0.5, -0.5, 1.0, -1.0, 1.5, -1.5, 0.0, -0.0, 0.5, -0.5, 1.0, -1.0, 1.5, -1.5, 0.0, -0.0, 0.5, -0.5, 1.0, -1.0, 1.5, -1.5, 0.0, -0.0, 0.5, -0.5, 1.0, -1.0, 1.5, -1.5]]}
+{"case": "ties_and_padding", "fp32_vs_bf16_input_max_abs": 0.0, "packed_byte_mismatches": 0, "scale_byte_mismatches": 0, "bf16_packed_hex": [[16, 33, 66, 100, 16, 33, 66, 100, 16, 33, 66, 100, 0, 0, 0, 0]], "bf16_scale_u8": [[128]], "bf16_dequantized": [[0.0, 1.0, 1.0, 2.0, 2.0, 4.0, 4.0, 8.0, 0.0, 1.0, 1.0, 2.0, 2.0, 4.0, 4.0, 8.0, 0.0, 1.0, 1.0, 2.0, 2.0, 4.0, 4.0, 8.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]}
+{"case": "zero_block", "fp32_vs_bf16_input_max_abs": 0.0, "packed_byte_mismatches": 0, "scale_byte_mismatches": 0, "bf16_packed_hex": [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], "bf16_scale_u8": [[0]], "bf16_dequantized": [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]}
+{"case": "extreme_dynamic_range", "fp32_vs_bf16_input_max_abs": 1.6221974874497391e-09, "packed_byte_mismatches": 0, "scale_byte_mismatches": 0, "bf16_packed_hex": [[128, 128, 128, 230, 128, 128, 128, 230, 128, 128, 128, 230, 128, 128, 128, 230]], "bf16_scale_u8": [[135]], "bf16_dequantized": [[0.0, -0.0, 0.0, -0.0, 0.0, -0.0, 1024.0, -1024.0, 0.0, -0.0, 0.0, -0.0, 0.0, -0.0, 1024.0, -1024.0, 0.0, -0.0, 0.0, -0.0, 0.0, -0.0, 1024.0, -1024.0, 0.0, -0.0, 0.0, -0.0, 0.0, -0.0, 1024.0, -1024.0]]}
+Logits Diff: 0.007878, Max Diff: 0.117442, Mean Diff: 0.014200
+✗ Check failed: logits_diff 0.007878099790699977 > 0.002
+Traceback (most recent call last):
+  File "/tmp/amdpilot-repo-j-cf6a0ddd3ff5/probe_inline_quant.py", line 57, in <module>
+    main()
+  File "/tmp/amdpilot-repo-j-cf6a0ddd3ff5/probe_inline_quant.py", line 53, in main
+    test_mxfp_moe_variants("fp4", "inline_bm16")
+  File "/job/repo/tests/kernels/test_moe_gemm.py", line 923, in test_mxfp_moe_variants
+    _run_mxfp_moe_e2e(
+  File "/job/repo/tests/kernels/test_moe_gemm.py", line 854, in _run_mxfp_moe_e2e
+    assert verify_output(out, ref2, rtol=2e-3, atol=2e-3, logits_diff_threshold=2e-3)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

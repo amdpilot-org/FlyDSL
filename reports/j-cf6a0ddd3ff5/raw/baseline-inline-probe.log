@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/tmp/amdpilot-repo-j-cf6a0ddd3ff5/probe_inline_quant.py", line 17, in <module>
+    from tests.kernels.test_moe_gemm import (
+ModuleNotFoundError: No module named 'tests'

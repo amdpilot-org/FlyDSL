@@ -1,0 +1,14 @@
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-cf6a0ddd3ff5/cache/aiter/module_aiter_core.so
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 9 items / 6 deselected / 3 selected
+
+tests/kernels/test_moe_gemm.py .Logits Diff: 0.000901, Max Diff: 0.084074, Mean Diff: 0.002188
+ ✓ Check passed
+.x
+
+================== 2 passed, 6 deselected, 1 xfailed in 6.25s ==================
