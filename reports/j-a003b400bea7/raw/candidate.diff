@@ -1,0 +1,2790 @@
+diff --git a/docs/prebuilt_kernels_guide.md b/docs/prebuilt_kernels_guide.md
+index a515de2..c52991c 100644
+--- a/docs/prebuilt_kernels_guide.md
++++ b/docs/prebuilt_kernels_guide.md
+@@ -22,160 +22,169 @@ All kernels use the `@flyc.kernel`/`@flyc.jit` API from `flydsl.compiler` and `f
+ ### 1.1 LayerNorm (`kernels/norm/layernorm_kernel.py`)
+ 
+ Computes `LayerNorm(x) = (x - mean) / sqrt(var + eps) * gamma + beta` for each row.
+ 
+ **Builder:**
+ ```python
+ from kernels.norm.layernorm_kernel import build_layernorm_module
+ 
+ executor = build_layernorm_module(N=8192, dtype_str="bf16")
+ ```
+ 
+ **Configuration constants:**
+ | Constant | Value | Description |
+ |---|---|---|
+ | `BLOCK_THREADS` | 256 | Threads per block |
+ | `WARP_SIZE` | 64 | AMD wavefront size |
+ | `VEC_WIDTH` | 8 | Vector load/store width |
+ | `VEC_ALIGN` | 16 | Alignment for vector ops (bytes) |
+ | `EPS` | 1e-5 | Numerical stability epsilon |
+ | `USE_NONTEMPORAL` | True | Non-temporal stores for output |
+ 
+ **Algorithm:**
+ - **Two-pass normalization**: Pass 1 computes mean and variance, Pass 2 applies affine transform
+ - **Fast path**: When `N == BLOCK_THREADS * VEC_WIDTH * 4` (for example, N=8192), uses fully register-resident computation with no scalar tail
+ - **Generic path**: Handles arbitrary N with vector body + scalar tail
+ - **bf16 handling**: Software round-to-nearest-even (RNE) pack on gfx942; hardware `cvt_pk_bf16_f32` on gfx950+
+ - **Warp reduction**: XOR-shuffle-based intra-wave reduction (shifts: 32, 16, 8, 4, 2, 1), then LDS-based cross-wave synchronization
+ 
+ **Kernel signature** (using `@flyc.kernel` API):
+ ```
+ GPU_MODULE_NAME = "layernorm_module"
+ 
+ @kernel
+ layernorm_kernel(self, Input, Gamma, Beta, Output, m_in)
+ 
+ @jit
+ __call__(self, Input, Gamma, Beta, Output, m_in)
+ ```
+ 
+ ### 1.2 RMSNorm (`kernels/norm/rmsnorm_kernel.py`)
+ 
+ Computes `RMSNorm(x) = x / sqrt(mean(x^2) + eps) * gamma`.
+ 
+ **Builder:**
+ ```python
+ from kernels.norm.rmsnorm_kernel import build_rmsnorm_module
+ 
+ executor = build_rmsnorm_module(N=8192, dtype_str="bf16", store_rstd=False)
+ ```
+ 
+ `build_rmsnorm_module(N, dtype_str, store_rstd=False, eps=EPS,
+ BLOCK_THREADS=BLOCK_THREADS, weight_dtype_str=None)` optionally writes the
+ per-row reciprocal std (`rstd`) for use by the backward pass.
+ `weight_dtype_str` defaults to `dtype_str`; FP16/BF16 activations additionally
+ support FP32 weights.
+ 
+ **Backward:** `build_rmsnorm_bwd_module(N, dtype_str,
+ weight_dtype_str=None)` builds the fused RMSNorm backward kernel (grid `(M,)`,
+ one block per row). Kernel signature
+ `rmsnorm_bwd_kernel(Input, Gamma, DY, Rstd, DX, DWeight)`: reads the forward
+ `Rstd`, writes `DX` (input grad), and atomic-adds into `DWeight` (fp32 weight
+ grad). The forward bakes `eps` into `Rstd`, so the backward does not need it.
+ The public plain and fused-add training wrappers return `dweight` in the
+ original weight dtype.
+ 
+ **Configuration constants:** Same as LayerNorm (BLOCK_THREADS=256, VEC_WIDTH=8, etc.)
+ 
+ **Algorithm (3-pass with LDS caching):**
+ 1. **Pass 0**: Global → LDS row cache (one-pass global read, vectorized)
+ 2. **Pass 1**: Sum-of-squares computation from LDS row cache
+ 3. **Pass 2**: Normalize + gamma multiply + store with software pipeline for Gamma prefetch
+ 
+ **Kernel signature:**
+ ```
+ GPU_MODULE_NAME = "rmsnorm_module"
+ 
+ @kernel
+ rmsnorm_kernel(self, Input, Gamma, Output, m_in)
+ ```
+ 
++The gfx950 `mxfp_moe` stage-1 launcher accepts `activation="swigluoai"`
++with configurable `swiglu_alpha` and `swiglu_limit`.  This implements the
++MiniMax-M3/GPT-OSS clamped activation while retaining `activation="silu"` as
++the compatibility default.  MiniMax-M3 uses alpha 1.702 and limit 7.0.  Routed
++experts use normalized sigmoid top-k weights multiplied by the model's routed
++scaling factor; its one shared expert is launched as a separate one-expert
++projection and added to the routed result.  This kernel API does not itself
++compute router logits or perform multi-rank expert parallel dispatch.
++
+ ---
+ 
+ ## 2. Softmax kernel
+ 
+ ### 2.1 Softmax (`kernels/norm/softmax_kernel.py`)
+ 
+ Computes row-wise softmax: `softmax(x)_i = exp(x_i - max(x)) / sum(exp(x - max(x)))`.
+ 
+ **Builder:**
+ ```python
+ from kernels.norm.softmax_kernel import build_softmax_module
+ 
+ executor = build_softmax_module(M=32768, N=8192, dtype_str="bf16")
+ ```
+ 
+ **Configuration:**
+ | Parameter | Value | Description |
+ |---|---|---|
+ | `BLOCK_THREADS` | 256 by default; 64/128/256/512 for full-row candidates | Total threads per block |
+ | `THREADS_PER_ROW` | Defaults to `BLOCK_THREADS`; 8/16/32/64 for short-row candidates | Reduction subgroup assigned to one row |
+ | `ROWS_PER_BLOCK` | 1 by default; derived from `BLOCK_THREADS / THREADS_PER_ROW` | Independent rows packed into one block |
+ | `vec_width` | `128 // elem_bits` (8 for f16/bf16, 4 for f32) | Derived from the 128-bit transaction contract |
+ | `WARP_SIZE` | 64 on CDNA, 32 on RDNA | Wavefront size, resolved from the target arch |
+ 
+ `THREADS_PER_ROW` also selects the data-movement path: with
+ `tile_cols = THREADS_PER_ROW * vec_width`, a row takes the vectorized fast path when
+ `N % tile_cols == 0` and the scalar generic path otherwise.
+ 
+ **Opt-in autotuning** (`kernels/norm/softmax_autotune.py`):
+ ```python
+ from kernels.norm.softmax_autotune import softmax_autotuned
+ 
+ softmax_autotuned(x, y)              # serves the tuned or default config, never searches
+ ```
+ Ordinary calls follow the searched-winner cache → offline artifact → compatibility default
+ (`BLOCK_THREADS=256`) ordering and never benchmark. `FLYDSL_AUTOTUNE=1` forces a search over
+ a bounded, shape-aware space:
+ 
+ - full-row `BLOCK_THREADS ∈ {64,128,256,512}` ×
+   `waves_per_eu ∈ {none,1,2,4}`;
+ - Quack-style short-row packing that decouples `THREADS_PER_ROW` from total
+   block threads and processes several rows per block.
+ 
+ The search-space rationale was checked against AITER
+ `536118aaf94047b0b559e0730749352659419b34`, SGLang
+ `955704544c60e920672aa434cefa2ce78c0ceb4c`, and Tri Dao's Quack
+ `60d88082272a256fa9b3b2ab631c82cfa78337c6`. Quack's portable ideas are the
+ row-width-dependent reduction subgroup, a separate 128/256-thread CTA size,
+ multiple rows per CTA, and an online/non-online algorithm choice; its
+ multi-CTA cluster reduction is NVIDIA-specific. AITER's standalone Triton
+ kernel is a fixed two-pass online/reload implementation (`.cg`, eight warps,
+ two stages, `waves_per_eu=2`), not an autotuned space. The pinned SGLang tree
+ has attention-local and top-k softmax implementations but no directly comparable
+ standalone row-wise kernel; attention tile/stage choices are therefore not
+ imported here.
+ 
+ Every candidate is numerically validated before ranking and uses the shared
+ GPU-backlog and batched-event timer. Input cache policy is deliberately not a
+ search axis: on gfx950, non-temporal loads changed rank between repeated use of
+ one address and rotation across fresh addresses. Cache residency is absent from
+ the shape-only artifact identity, so persisting either result would encode an
+ unstated workload assumption. The tested three-pass reload algorithm is also
+ excluded because it lost to the register-buffered compatibility path; a future
+ algorithm axis should implement a true online pair reduction before entering
+ the default search.
+ 
+ Within a 2% timing tie, the selector favors the compatibility default, then no
+ explicit `waves_per_eu`, then more rows per block. Larger measured improvements
+ still win; the tie rule only avoids persisting noise-level differences between
+ 6–10 µs candidates. Softmax uses 10 warmup and 100 measured launches, divided
+ into five GPU-backlogged event windows, so bandwidth-scale candidates are also
+ ranked from a stable sample.
+ 
+ Artifacts use the name `softmax_fwd` and cover forward only. Softmax backward
+ has no autotune adopter in this change. See [`autotune_guide.md`](autotune_guide.md).
+ 
+ **Algorithm (6 stages):**
+ 1. **Load data**: Vectorized global loads into register buffer with validity masks
+ 2. **Local max**: Per-thread vector reduction (`maxnumf`)
+ 3. **Global max**: Block-wide shuffle reduction (intra-wave XOR → wave0 finalize via LDS)
+diff --git a/kernels/moe/mxfp_moe/gemm1.py b/kernels/moe/mxfp_moe/gemm1.py
+index 687e27c..bc5beb3 100644
+--- a/kernels/moe/mxfp_moe/gemm1.py
++++ b/kernels/moe/mxfp_moe/gemm1.py
+@@ -1,172 +1,176 @@
+ # SPDX-License-Identifier: Apache-2.0
+ # Copyright (C) 2025-2026 FlyDSL Project Contributors
+ 
+ import flydsl.compiler as flyc
+ import flydsl.expr as fx
+ from flydsl._mlir import ir
+ from flydsl._mlir.dialects import llvm
+ from flydsl.expr import arith, const_expr, gpu, range_constexpr, rocdl
+ from flydsl.expr.typing import T
+ 
+ from . import dpp_utils
+ from .mxfp4_gemm_common import (
+     _e8m0_from_amax,
+     _global_i32_at,
+     _global_i32_buffer_tiles,
+     _global_i32_buffer_view,
+     _global_i32_load,
+     _global_scalar_tiles,
+     _inline_dpp_quad_amax,
+     _inline_e8m0,
+     _layout_idx,
+     _lds_swizzle_mask,
+     _pkmax_u16,
+     _raw,
+     _scalar_store,
+     _scale_mma_atoms,
+     _silu_mul_batch,
++    _swiglu_oai_mul_batch,
+     _udiv,
+     _umax_i32,
+     _umod,
+     bq_bytes_for,
+     bscale_bytes_for,
+     k_half_for,
+     k_tiles_total_for,
+     kas_per_chunk_dw_for,
+     kbs_per_expert_dw_for,
+     kBS_stride_k0_dw,
+     kbs_stride_n0_dw_for,
+     kmchunks_for,
+     kStages,
+     kunroll_for,
+     lds_acc_bytes_for,
+     num_n_blocks_for,
+ )
+ 
+ 
+ def n_out_for(inter):
+     return 2 * inter
+ 
+ 
+ def k_g2_half_for(inter):
+     return inter // 2
+ 
+ 
+ def out_as_per_chunk_dw_for(inter):
+     return ((inter // 32) // 4 // 2) * 64
+ 
+ 
+ def gemm1_grid(n_tokens, BM, *, NE, TOPK, INTER, BN=256):
+     num_n_blocks = num_n_blocks_for(n_out_for(INTER), BN)
+     if BM == 128:
+         max_m_blocks = (n_tokens * TOPK + NE * (BM - 1) + BM - 1) // BM
+     else:
+         active = min(n_tokens * TOPK, NE)
+         max_m_blocks = (n_tokens * TOPK + active * (BM - 1) + BM - 1) // BM
+     return max_m_blocks * num_n_blocks
+ 
+ 
+ @flyc.jit
+ def _gemm1_body(
+     lds_raw_ptr,
+     arg_aq,
+     arg_ascale,
+     arg_bq,
+     arg_bscale,
+     arg_eids,
+     arg_mind,
+     arg_aqout,
+     arg_ascaleout,
+     arg_hidden,
+     bx_i32,
+     lane,
+     wave,
+     use_nt,
+     i32_ntok,
+     i32_total_m_blocks,
+     *,
+     BM,
+     BN,
+     BK,
+     inline_quant=False,
+     a_dtype="fp4",
++    activation="silu",
++    swiglu_alpha=1.702,
++    swiglu_limit=7.0,
+     K,
+     N_OUT,
+     NE,
+     interleave=False,
+ ):
+     # A-code tile bytes/row: fp4 packs 2 codes/byte (BK/2); fp8 is 1 B/elem (BK).
+     KH_TILE = BK if a_dtype == "fp8" else BK // 2
+     K_HALF = k_half_for(K)
+     # A row bytes: fp4 = K/2, fp8 = K (B is always mxfp4 -> keeps K_HALF).
+     A_ROW_BYTES = K if a_dtype == "fp8" else K_HALF
+     K_TILES_TOTAL = k_tiles_total_for(K, BK)
+     kUnroll = kunroll_for(K, BK)
+     kAS_per_chunk_dw = kas_per_chunk_dw_for(K)
+     kBS_stride_n0_dw = kbs_stride_n0_dw_for(K)
+     kBS_per_expert_dw = kbs_per_expert_dw_for(N_OUT, K)
+     BQ_BYTES = bq_bytes_for(NE, N_OUT, K)
+     BSCALE_BYTES = bscale_bytes_for(NE, N_OUT, K)
+     NUM_N_BLOCKS = num_n_blocks_for(N_OUT, BN)
+     inter = N_OUT // 2
+     OUT_AS_PER_CHUNK_DW = out_as_per_chunk_dw_for(inter)
+     K_G2_HALF = k_g2_half_for(inter)
+     kAStages, kSubBlocks, kMChunks, _ = _bm_constants(BM, BN, KH_TILE, K_TILES_TOTAL)
+ 
+     BN_INT = BN // 2
+     b_aux = 2 if use_nt else 0
+     M_REPS = BM // 16
+ 
+     n_block_idx = bx_i32 % fx.Int32(NUM_N_BLOCKS)
+     m_block_idx = bx_i32 // fx.Int32(NUM_N_BLOCKS)
+     e = rocdl.readfirstlane(T.i32, _raw(_global_i32_at(arg_eids, m_block_idx)))
+     m_row = m_block_idx * fx.Int32(BM)
+ 
+     lane_div_16 = lane // fx.Int32(16)
+     lane_mod_16 = lane % fx.Int32(16)
+     lane_div_8 = lane // fx.Int32(8)
+     lane_mod_8 = lane % fx.Int32(8)
+ 
+     aq_num_records = fx.Int64(i32_ntok * fx.Int32(A_ROW_BYTES))
+     _asc_per_mb = max(BM // 32, 1) * kAS_per_chunk_dw * 4
+     ascale_num = fx.Int64(i32_total_m_blocks) * fx.Int64(_asc_per_mb)
+ 
+     bq_tiles = _global_i32_buffer_tiles(arg_bq, BQ_BYTES, 4)
+     bq_copy_atom = fx.make_copy_atom(fx.rocdl.BufferCopy128b(b_aux), fx.Int32)
+     bq_reg_lay = fx.make_layout(4, 1)
+ 
+     bscale_tiles = _global_i32_buffer_tiles(arg_bscale, BSCALE_BYTES, 1)
+     bscale_copy_atom = fx.make_copy_atom(fx.rocdl.BufferCopy32b(), fx.Int32)
+     bscale_reg_lay = fx.make_layout(1, 1)
+ 
+     # aq/ascale: global->LDS async DMA (no register fragment), via BufferCopyLDS.
+     aq_buf = _global_i32_buffer_view(arg_aq, aq_num_records)
+     aq_dma_tiles4 = fx.logical_divide(aq_buf, fx.make_layout(4, 1))
+     aq_dma_atom = fx.make_copy_atom(fx.rocdl.BufferCopyLDS128b(), fx.Int32)
+ 
+     ascale_buf = _global_i32_buffer_view(arg_ascale, ascale_num)
+     ascale_dma_tiles4 = fx.logical_divide(ascale_buf, fx.make_layout(4, 1))
+     ascale_dma_tiles1 = fx.logical_divide(ascale_buf, fx.make_layout(1, 1))
+     ascale_dma_atom16 = fx.make_copy_atom(fx.rocdl.BufferCopyLDS128b(), fx.Int32)
+     ascale_dma_atom4 = fx.make_copy_atom(fx.rocdl.BufferCopyLDS32b(), fx.Int32)
+ 
+     if const_expr(inline_quant):
+         hidden_num = fx.Int64(i32_ntok * fx.Int32(K * 2))
+         hidden_tiles = _global_i32_buffer_tiles(arg_hidden, hidden_num, 4)
+         hidden_copy_atom = fx.make_copy_atom(fx.rocdl.BufferCopy128b(), fx.Int32)
+         hidden_reg_lay = fx.make_layout(4, 1)
+ 
+     # Union LDS region [s_aq | s_asc], reused as lds_acc (f32 accumulator) in the
+     # epilogue. s_aq/lds_acc start at lds_raw_ptr; s_asc follows at
+     # +kAStages*BM*KH_TILE.
+ 
+     cached_actual_row = []
+     cached_row_inline = None
+     if const_expr(inline_quant):
+         rcls = wave * fx.Int32(4) + lane_div_16
+         cached_row_inline = _global_i32_at(arg_mind, m_row + rcls)
+     else:
+         for sub in range_constexpr(kSubBlocks):
+             idx = m_row + wave * fx.Int32(BM // 4) + fx.Int32(sub * 8) + lane_div_8
+             cached_actual_row.append(_global_i32_at(arg_mind, idx))
+ 
+@@ -524,311 +528,323 @@ def _gemm1_body(
+                 rocdl.s_setprio(0)
+             rocdl.sched_barrier(0)
+             issue_b_load_j(b[slot_b], K_C, J)
+             rocdl.sched_barrier(0)
+         issue_b_scale_load(b_scale_v[slot_b], K_C)
+         if const_expr(inline_quant):
+             scale_accum = _inline_quant_core_batch([(0, 0, h_v0), (1, 0, h_v1)], write_slot, fx.Int32(0))
+             inline_quant_pack_write(K_C, scale_accum)
+ 
+     for S in range_constexpr(kStages):
+         kt = K_TILES_TOTAL - kStages + S
+         gpu.barrier()
+         if const_expr(BM == 128):
+             asc_cur = issue_a_scale_ds_read(kt)
+             a_cur = issue_a_ds_read(kt % kAStages)
+         else:
+             a_cur = issue_a_ds_read(kt % kAStages)
+             asc_cur = issue_a_scale_ds_read(kt)
+         for J in range_constexpr(4):
+             mfma_cluster(b[kt % kStages], a_cur, asc_cur, b_scale_v[kt % kStages], J)
+ 
+     gpu.barrier()
+ 
+     # lds_acc reuses the s_aq region (offset 0) as an f32 accumulator.
+     acc_layout = fx.make_layout((BM, BN), (BN, 1))
+ 
+     def acc_idx(row, col):
+         return _layout_idx(acc_layout, row, col)
+ 
+     acc_copy_atom = fx.make_copy_atom(fx.UniversalCopy32b(), fx.Float32)
+     acc_reg_lay = fx.make_layout(1, 1)
+     acc_flat_view = fx.make_view(fx.recast_iter(fx.Float32, lds_raw_ptr), fx.make_layout(BM * BN, 1))
+     acc_flat_tiles = fx.logical_divide(acc_flat_view, fx.make_layout(1, 1))
+ 
+     def acc_store(idx, value):
+         r = fx.make_rmem_tensor(acc_reg_lay, fx.Float32)
+         r.store(fx.Vector.from_elements([fx.Float32(value)], fx.Float32))
+         fx.copy(acc_copy_atom, r, fx.slice(acc_flat_tiles, (None, idx)))
+ 
+     def acc_load(idx):
+         r = fx.make_rmem_tensor(acc_reg_lay, fx.Float32)
+         fx.copy(acc_copy_atom, fx.slice(acc_flat_tiles, (None, idx)), r)
+         return r.load()[0]
+ 
+     for i in range_constexpr(kMChunks):
+         row_base = fx.Int32(i * 16) + lane_div_16 * fx.Int32(4)
+         for J in range_constexpr(4):
+             is_up = (J % 2) == 1
+             J_local = J // 2
+             col_local = wave * fx.Int32(32) + fx.Int32(J_local * 16) + lane_mod_16
+             lds_col = (fx.Int32(128) + col_local) if is_up else col_local
+             vec = fx.Vector(fx.memref_load_vec(accm[i][J]))
+             for v in range_constexpr(4):
+                 idx = acc_idx(row_base + fx.Int32(v), lds_col)
+                 acc_store(idx, vec[v])
+ 
+     gpu.barrier()
+ 
+     tx_i32 = fx.Int32(gpu.thread_id("x"))
+     m_lane = tx_i32 // fx.Int32(16)
+     n_lane = tx_i32 % fx.Int32(16)
+     wave_grp = n_lane // fx.Int32(4)
+     kk = n_lane % fx.Int32(4)
+ 
+     aqout_layout = fx.make_layout((BM, K_G2_HALF), (K_G2_HALF, 1))
+     # UniversalCopy has no nontemporal/cache-hint knob; dropped (perf-neutral).
+     aqout_tiles = _global_scalar_tiles(arg_aqout, fx.Int32, 1 << 24)
+     scales_per_mr = [None] * M_REPS
+ 
+     for mr in range_constexpr(M_REPS):
+         row_local = fx.Int32(mr * 16) + m_lane
+ 
+         gate_vs = [None] * 8
+         up_vs = [None] * 8
+         for ee in range_constexpr(8):
+             col_in_grp = fx.Int32(8) * kk + fx.Int32(ee)
+             gate_col = wave_grp * fx.Int32(32) + col_in_grp
+             up_col = fx.Int32(128) + gate_col
+             gate_vs[ee] = acc_load(acc_idx(row_local, gate_col))
+             up_vs[ee] = acc_load(acc_idx(row_local, up_col))
+-        result = _silu_mul_batch(gate_vs, up_vs)
++        if const_expr(activation == "swigluoai"):
++            result = _swiglu_oai_mul_batch(gate_vs, up_vs, swiglu_alpha, swiglu_limit)
++        else:
++            result = _silu_mul_batch(gate_vs, up_vs)
+ 
+         local_max = fx.absf(result[0])
+         for ee in range_constexpr(1, 8):
+             local_max = fx.maxnumf(local_max, fx.absf(result[ee]))
+         lm_i = _inline_dpp_quad_amax(fx.Int32(_raw(local_max).bitcast(T.i32)))
+         local_max = fx.Float32(_raw(lm_i).bitcast(T.f32))
+ 
+         e8m0, qscale = _e8m0_from_amax(local_max)
+         scales_per_mr[mr] = e8m0
+ 
+         packed_i32 = _raw(fx.Int32(0))
+         qscale_raw = _raw(qscale)
+         for w in range_constexpr(4):
+             packed_i32 = rocdl.cvt_scalef32_pk_fp4_f32(
+                 T.i32, packed_i32, _raw(result[2 * w]), _raw(result[2 * w + 1]), qscale_raw, w
+             )
+         packed = fx.Int32(packed_i32)
+ 
+         byte_pos = n_block_idx * fx.Int32(BN_INT // 2) + wave_grp * fx.Int32(16) + kk * fx.Int32(4)
+         out_row = m_row + row_local
+         store_off = _layout_idx(aqout_layout, out_row, byte_pos)
+         _scalar_store(aqout_tiles, store_off // fx.Int32(4), packed, fx.Int32)
+ 
+     # (chunk, ku, wave_grp, m_lane) -> dword index; shape is a placeholder.
+     ascaleout_layout = fx.make_layout((1 << 20, 2, 4, 16), (OUT_AS_PER_CHUNK_DW, 64, 16, 1))
+     ascaleout_i8_tiles = _global_scalar_tiles(arg_ascaleout, fx.Int8, 1 << 26)
+     ascaleout_i16_tiles = _global_scalar_tiles(arg_ascaleout, fx.Int16, 1 << 25)
+     if kk == fx.Int32(0):
+         ku = n_block_idx >> fx.Int32(1)
+         ikxdl = n_block_idx & fx.Int32(1)
+         if const_expr(BM == 16):
+             chunk = m_block_idx
+             dword_off = _layout_idx(ascaleout_layout, chunk, ku, wave_grp, m_lane)
+             addr = dword_off * fx.Int32(4) + ikxdl * fx.Int32(2)
+             _scalar_store(ascaleout_i8_tiles, addr, scales_per_mr[0], fx.Int8)
+         else:
+             for sub in range_constexpr(kSubBlocks):
+                 chunk = m_block_idx * fx.Int32(kSubBlocks) + fx.Int32(sub)
+                 dword_off = _layout_idx(ascaleout_layout, chunk, ku, wave_grp, m_lane)
+                 pair_i32 = scales_per_mr[sub * 2 + 0] | (scales_per_mr[sub * 2 + 1] << fx.Int32(8))
+                 addr = dword_off * fx.Int32(4) + ikxdl * fx.Int32(2)
+                 _scalar_store(ascaleout_i16_tiles, addr // fx.Int32(2), pair_i32, fx.Int16)
+ 
+ 
+ def _bm_constants(BM, BN, KH_TILE, K_TILES_TOTAL):
+     kAStages = 2 if BM == 128 else 3
+     kSubBlocks = 1 if BM < 32 else BM // 32
+     kMChunks = kmchunks_for(BM)
+     s_aq_bytes = kAStages * BM * KH_TILE
+     s_asc_bytes = kSubBlocks * K_TILES_TOTAL * 256
+     lds_acc_bytes = lds_acc_bytes_for(BM, BN)
+     lds_bytes = max(s_aq_bytes + s_asc_bytes, lds_acc_bytes)
+     return kAStages, kSubBlocks, kMChunks, lds_bytes
+ 
+ 
+ _G1_VARIANTS = {
+     "fp4": {
+         (32, True, False),
+         (32, False, False),
+         (64, False, False),
+         (128, False, False),
+         (16, True, True),
+     },
+     # a8w4: fp8 (e4m3) A x mxfp4 W1. Same tiling as fp4; A is 1 B/elem so the
+     # A-LDS tile doubles. inline_quant (bf16 hidden -> fp8) supported at (16,True).
+     "fp8": {
+         (32, True, False),
+         (32, False, False),
+         (64, False, False),
+         (128, False, False),
+         (16, True, True),
+     },
+ }
+ 
+ 
+ def compile_gemm1_a4w4_port(
+     BM=32,
+     use_nt=True,
+     inline_quant=False,
+     *,
+     D_HIDDEN,
+     D_INTER,
+     NE,
+     TOPK,
+     BN=256,
+     BK=256,
+     interleave=False,
+     xcd_swizzle=0,
+     a_dtype="fp4",
++    activation="silu",
++    swiglu_alpha=1.702,
++    swiglu_limit=7.0,
+ ):
+     if a_dtype not in ("fp4", "fp8"):
+         raise AssertionError(f"a_dtype must be 'fp4' or 'fp8', got {a_dtype!r}")
++    if activation not in ("silu", "swigluoai"):
++        raise AssertionError(f"activation must be 'silu' or 'swigluoai', got {activation!r}")
+     if (BM, use_nt, inline_quant) not in _G1_VARIANTS[a_dtype]:
+         raise AssertionError(
+             f"unsupported gemm1 variant (a_dtype={a_dtype}, BM={BM}, use_nt={use_nt}, inline_quant={inline_quant})"
+         )
+ 
+     assert BN == 256 and BK == 256, f"only BN==BK==256 supported, got BN={BN} BK={BK}"
+     KH_TILE = BK if a_dtype == "fp8" else BK // 2
+     _K = D_HIDDEN
+     assert _K % BK == 0, f"D_HIDDEN (K) must be a multiple of {BK}, got {_K}"
+     _INTER = D_INTER
+     _N_OUT = n_out_for(_INTER)
+     assert _N_OUT % BN == 0, f"2*D_INTER (N_OUT) must be a multiple of {BN}, got {_N_OUT}"
+     _NE = NE
+     _K_TILES_TOTAL = k_tiles_total_for(_K, BK)
+     _NUM_N_BLOCKS = num_n_blocks_for(_N_OUT, BN)
+ 
+     _, _, _, lds_bytes = _bm_constants(BM, BN, KH_TILE, _K_TILES_TOTAL)
+ 
+     variant_tag = "iq" if inline_quant else ("nt" if use_nt else "cached")
+     # Tag with H/INTER/NE so different shape specializations get distinct
+     # kernel/smem symbols (so KIMI and non-KIMI instances never collide).
+     gu_tag = "il" if interleave else "sep"
+-    name_suffix = f"{a_dtype}_h{_K}_i{_INTER}_ne{_NE}_bm{BM}_{variant_tag}_{gu_tag}"
++    act_tag = "silu" if activation == "silu" else f"swigluoai_a{swiglu_alpha:g}_l{swiglu_limit:g}"
++    name_suffix = f"{a_dtype}_{act_tag}_h{_K}_i{_INTER}_ne{_NE}_bm{BM}_{variant_tag}_{gu_tag}"
+     if xcd_swizzle > 0:
+         name_suffix += f"_xcd{xcd_swizzle}"
+ 
+     @fx.struct
+     class SharedStorage:
+         raw: fx.Array[fx.Uint8, lds_bytes, 16]
+ 
+     @flyc.kernel(name=f"gemm1_a4w4_port_{name_suffix}", known_block_size=[256, 1, 1])
+     def gemm1_kernel(
+         arg_aq: fx.Int64,
+         arg_ascale: fx.Int64,
+         arg_bq: fx.Int64,
+         arg_bscale: fx.Int64,
+         arg_eids: fx.Int64,
+         arg_cumsum: fx.Int64,
+         arg_mind: fx.Int64,
+         i32_ntok: fx.Int32,
+         arg_aqout: fx.Int64,
+         arg_ascaleout: fx.Int64,
+         arg_hidden: fx.Int64,
+     ):
+         lds_raw_ptr = fx.SharedAllocator().allocate(SharedStorage).peek().raw.ptr
+         tx = gpu.thread_id("x")
+         bx = gpu.block_id("x")
+         tx_i32 = fx.Int32(tx)
+         bx_i32 = fx.Int32(bx)
+         lane = tx_i32 % fx.Int32(64)
+         wave = rocdl.readfirstlane(T.i32, tx_i32 // fx.Int32(64))
+         cumsum0 = _global_i32_at(arg_cumsum, fx.Int32(0))
+         total_m_blocks = cumsum0 // fx.Int32(BM)
+         bound = total_m_blocks * fx.Int32(_NUM_N_BLOCKS)
+ 
+         _NXCD = 8
+         _xq = _udiv(bound, _NXCD)
+         _xr = _umod(bound, _NXCD)
+         _SW = xcd_swizzle
+ 
+         def _xcd(pid):
+             xc = _umod(pid, _NXCD)
+             wgid = xc * _xq + fx.Int32(arith.minsi(_raw(xc), _raw(_xr))) + _udiv(pid, _NXCD)
+             _ng = fx.Int32(_SW * _NUM_N_BLOCKS)
+             group_id = wgid // _ng
+             first_pid_m = group_id * fx.Int32(_SW)
+             remaining_m = total_m_blocks - first_pid_m
+             group_size_m = fx.Int32(arith.minsi(_raw(remaining_m), _raw(fx.Int32(_SW))))
+             wig = wgid % _ng
+             m_block = first_pid_m + (wig % group_size_m)
+             n_block = wig // group_size_m
+             return m_block * fx.Int32(_NUM_N_BLOCKS) + n_block
+ 
+         if bx_i32 < bound:
+             if const_expr(_SW > 0):
+                 _tile = _xcd(bx_i32)
+             else:
+                 _tile = bx_i32
+             _gemm1_body(
+                 lds_raw_ptr,
+                 arg_aq,
+                 arg_ascale,
+                 arg_bq,
+                 arg_bscale,
+                 arg_eids,
+                 arg_mind,
+                 arg_aqout,
+                 arg_ascaleout,
+                 arg_hidden,
+                 _tile,
+                 lane,
+                 wave,
+                 use_nt,
+                 i32_ntok,
+                 total_m_blocks,
+                 BM=BM,
+                 BN=BN,
+                 BK=BK,
+                 inline_quant=inline_quant,
+                 a_dtype=a_dtype,
++                activation=activation,
++                swiglu_alpha=swiglu_alpha,
++                swiglu_limit=swiglu_limit,
+                 K=_K,
+                 N_OUT=_N_OUT,
+                 NE=_NE,
+                 interleave=interleave,
+             )
+ 
+     @flyc.jit
+     def launch_gemm1(
+         arg_aq: fx.Int64,
+         arg_ascale: fx.Int64,
+         arg_bq: fx.Int64,
+         arg_bscale: fx.Int64,
+         arg_eids: fx.Int64,
+         arg_cumsum: fx.Int64,
+         arg_mind: fx.Int64,
+         i32_ntok: fx.Int32,
+         i32_grid: fx.Int32,
+         arg_aqout: fx.Int64,
+         arg_ascaleout: fx.Int64,
+         arg_hidden: fx.Int64,
+         stream: fx.Stream,
+     ):
+         grid_x = fx.Int64(i32_grid)
+         gemm1_kernel(
+             arg_aq,
+             arg_ascale,
+             arg_bq,
+             arg_bscale,
+             arg_eids,
+             arg_cumsum,
+             arg_mind,
+             i32_ntok,
+             arg_aqout,
+             arg_ascaleout,
+             arg_hidden,
+         ).launch(grid=(grid_x, 1, 1), block=(256, 1, 1), stream=stream)
+ 
+     return launch_gemm1
+diff --git a/kernels/moe/mxfp_moe/host.py b/kernels/moe/mxfp_moe/host.py
+index 9c3b701..405f5ad 100644
+--- a/kernels/moe/mxfp_moe/host.py
++++ b/kernels/moe/mxfp_moe/host.py
+@@ -1,226 +1,236 @@
+ # SPDX-License-Identifier: Apache-2.0
+ # Copyright (c) 2025 FlyDSL Project Contributors
+ 
+ """Host-side launch glue for the fused a4w4 mxfp_moe kernels.
+ 
+ Ported (self-contained) from aiter's ``mxfp4_gemm1_kernels.py`` /
+ ``mxfp4_gemm2_kernels.py``. Kernel launch args are raw device pointers
+ (``fx.Int64``); tensors are passed as ``.data_ptr()``.
+ """
+ 
+ import functools
+ 
+ import torch
+ 
+ from kernels.common.tensor_shim import _run_compiled
+ from kernels.moe.mxfp_moe.gemm1 import compile_gemm1_a4w4_port, gemm1_grid
+ from kernels.moe.mxfp_moe.gemm2 import compile_gemm2_a4w4_port
+ 
+ # gemm1 (BM, use_nt, inline_quant, a_dtype) variants the kernel supports.
+ # a_dtype="fp4" is a4w4 (mxfp4 A); "fp8" is a8w4 (fp8 e4m3 A x mxfp4 W1).
+ _G1_SUPPORTED = {
+     (32, True, False, "fp4"),
+     (32, False, False, "fp4"),
+     (64, False, False, "fp4"),
+     (128, False, False, "fp4"),
+     (16, True, True, "fp4"),
+     (32, True, False, "fp8"),
+     (32, False, False, "fp8"),
+     (64, False, False, "fp8"),
+     (128, False, False, "fp8"),
+     (16, True, True, "fp8"),
+ }
+ 
+ # gemm2 (BM, use_nt, epilog) variants the kernel supports.
+ _G2_SUPPORTED = {
+     (16, False, "atomic"),
+     (16, True, "atomic"),
+     (32, False, "atomic"),
+     (32, True, "atomic"),
+     (64, False, "atomic"),
+     (64, True, "atomic"),
+     (128, False, "nonatomic"),
+     (128, False, "nonatomic_mxfp4"),
+     (128, False, "nonatomic_fp8"),
+     (32, False, "nonatomic_cshuffle"),
+     (64, False, "nonatomic_cshuffle"),
+     (128, False, "nonatomic_cshuffle"),
+ }
+ 
+ 
+ @functools.cache
+ def _get_compiled_gemm1(
+-    BM, use_nt, inline_quant, D_HIDDEN, D_INTER, NE, topk, BN, BK, interleave, xcd_swizzle, a_dtype
++    BM, use_nt, inline_quant, D_HIDDEN, D_INTER, NE, topk, BN, BK, interleave, xcd_swizzle, a_dtype,
++    activation, swiglu_alpha, swiglu_limit
+ ):
+     return compile_gemm1_a4w4_port(
+         BM,
+         use_nt,
+         inline_quant,
+         D_HIDDEN=D_HIDDEN,
+         D_INTER=D_INTER,
+         NE=NE,
+         TOPK=topk,
+         BN=BN,
+         BK=BK,
+         interleave=interleave,
+         xcd_swizzle=xcd_swizzle,
+         a_dtype=a_dtype,
++        activation=activation,
++        swiglu_alpha=swiglu_alpha,
++        swiglu_limit=swiglu_limit,
+     )
+ 
+ 
+ @functools.cache
+ def _get_compiled_gemm2(BM, use_nt, NE, N_OUT, epilog, D_INTER, D_INTER_REAL, BN, BK, xcd_swizzle):
+     return compile_gemm2_a4w4_port(
+         BM=BM,
+         use_nt=use_nt,
+         NE=NE,
+         N_OUT=N_OUT,
+         epilog=epilog,
+         D_INTER=D_INTER,
+         D_INTER_REAL=D_INTER_REAL,
+         BN=BN,
+         BK=BK,
+         xcd_swizzle=xcd_swizzle,
+     )
+ 
+ 
+ def flydsl_mxfp4_gemm1(
+     *,
+     a_quant,
+     a_scale_sorted_shuffled,
+     w1_u8,
+     w1_scale_u8,
+     sorted_expert_ids,
+     cumsum_tensor,
+     m_indices,
+     inter_sorted_quant,
+     inter_sorted_shuffled_scale,
+     hidden_states,
+     n_tokens,
+     BM,
+     use_nt,
+     inline_quant,
+     NE,
+     D_HIDDEN,
+     D_INTER,
+     topk,
+     BN=256,
+     BK=256,
+     interleave=False,
+     xcd_swizzle=0,
+     a_dtype="fp4",
++    activation="silu",
++    swiglu_alpha=1.702,
++    swiglu_limit=7.0,
+     stream=None,
+ ):
+-    """Fused stage1: gate+up GEMM + SiLU + fp4 re-quant.
++    """Fused stage1: gate+up GEMM + activation + fp4 re-quant.
+ 
+     ``a_dtype`` selects the activation format: "fp4" (a4w4, mxfp4 A) or "fp8"
+     (a8w4, fp8 e4m3 A x mxfp4 W1). Writes the sorted fp4 intermediate into
+     ``inter_sorted_quant`` / ``inter_sorted_shuffled_scale`` (both pre-allocated).
++    ``activation="swigluoai"`` selects the MiniMax-M3/GPT-OSS clamped activation;
++    the default remains plain SiLU for API compatibility.
+     """
+     if D_HIDDEN % BK != 0:
+         raise NotImplementedError(f"mxfp_moe gemm1 requires D_HIDDEN (K) % {BK} == 0, got H={D_HIDDEN}")
+     if (2 * D_INTER) % BN != 0:
+         raise NotImplementedError(f"mxfp_moe gemm1 requires 2*D_INTER (N_OUT) % {BN} == 0, got D_INTER={D_INTER}")
+ 
+     # Non-temporal (streaming) B loads help at small M -- there is no cross-tile
+     # weight reuse, so streaming avoids polluting L2. But once M is large enough
+     # that each expert owns more than one M-block, consecutive M-tiles of the
+     # same expert reuse the same W1 columns: streaming then discards reusable B
+     # and the kernel becomes HBM-read-bound (L2 hit ~34% vs ~59%). Switch to the
+     # cached (non-nt) variant when total M-blocks >= experts (avg >= 1 padded
+     # block/expert), which measured ~22% faster at M_eff=8192 while the small-M
+     # streaming win is preserved below the crossover. Only auto-relax the BM==32
+     # streaming default; never force streaming on when the caller disabled it.
+     if use_nt and not inline_quant and BM == 32:
+         total_m_blocks = (int(n_tokens) * int(topk) + BM - 1) // BM
+         if total_m_blocks >= int(NE):
+             use_nt = False
+ 
+     if (BM, use_nt, inline_quant, a_dtype) not in _G1_SUPPORTED:
+         raise NotImplementedError(
+             f"mxfp_moe gemm1 unsupported variant "
+             f"(BM={BM}, use_nt={use_nt}, inline_quant={inline_quant}, a_dtype={a_dtype})"
+         )
+ 
+     launch = _get_compiled_gemm1(
+-        BM, use_nt, inline_quant, D_HIDDEN, D_INTER, NE, topk, BN, BK, interleave, xcd_swizzle, a_dtype
++        BM, use_nt, inline_quant, D_HIDDEN, D_INTER, NE, topk, BN, BK, interleave, xcd_swizzle, a_dtype,
++        activation, float(swiglu_alpha), float(swiglu_limit)
+     )
+     grid = gemm1_grid(n_tokens, BM, NE=NE, TOPK=topk, INTER=D_INTER, BN=BN)
+     _run_compiled(
+         launch,
+         a_quant.data_ptr(),
+         a_scale_sorted_shuffled.data_ptr(),
+         w1_u8.data_ptr(),
+         w1_scale_u8.data_ptr(),
+         sorted_expert_ids.data_ptr(),
+         cumsum_tensor.data_ptr(),
+         m_indices.data_ptr(),
+         int(n_tokens),
+         int(grid),
+         inter_sorted_quant.data_ptr(),
+         inter_sorted_shuffled_scale.data_ptr(),
+         hidden_states.data_ptr(),
+         torch.cuda.current_stream() if stream is None else stream,
+     )
+     return inter_sorted_quant, inter_sorted_shuffled_scale
+ 
+ 
+ def flydsl_mxfp4_gemm2(
+     *,
+     inter_sorted_quant,
+     inter_sorted_shuffled_scale,
+     w2_u8,
+     w2_scale_u8,
+     sorted_expert_ids,
+     cumsum_tensor,
+     sorted_token_ids,
+     sorted_weights,
+     flat_out,
+     M_logical,
+     max_sorted,
+     BM,
+     use_nt,
+     epilog,
+     NE,
+     D_HIDDEN,
+     D_INTER,
+     topk,
+     flat_out_scale=None,
+     D_INTER_REAL=None,
+     BN=256,
+     BK=256,
+     xcd_swizzle=0,
+     stream=None,
+ ):
+     """Down-projection stage2. Consumes the stage1 sorted fp4 intermediate."""
+     if D_INTER % BK != 0:
+         raise NotImplementedError(
+             f"mxfp_moe gemm2 contraction D_INTER (inter_dim) must be a multiple of " f"{BK}, got D_INTER={D_INTER}"
+         )
+     if D_HIDDEN % BN != 0:
+         raise NotImplementedError(f"mxfp_moe gemm2 requires D_HIDDEN (N_OUT=model_dim) % {BN} == 0, got H={D_HIDDEN}")
+     _cshuffle_default = epilog == "nonatomic" and BM == 128
+     if (BM, use_nt, epilog) not in _G2_SUPPORTED:
+         raise NotImplementedError(f"mxfp_moe gemm2 unsupported variant (BM={BM}, use_nt={use_nt}, epilog={epilog})")
+ 
+     if xcd_swizzle == 0 and epilog in ("nonatomic", "nonatomic_fp8"):
+         xcd_swizzle = 3
+     if _cshuffle_default:
+         epilog = "nonatomic_cshuffle"
+     launch = _get_compiled_gemm2(BM, use_nt, NE, D_HIDDEN, epilog, D_INTER, D_INTER_REAL, BN, BK, xcd_swizzle)
+     max_m_blocks = (max_sorted + BM - 1) // BM
+     if flat_out_scale is None:
+         flat_out_scale = torch.empty(1, dtype=torch.uint8, device=flat_out.device)
+ 
+     _run_compiled(
+         launch,
+         inter_sorted_quant.data_ptr(),
+         inter_sorted_shuffled_scale.data_ptr(),
+         w2_u8.data_ptr(),
+         w2_scale_u8.data_ptr(),
+         sorted_expert_ids.data_ptr(),
+         cumsum_tensor.data_ptr(),
+         sorted_token_ids.data_ptr(),
+         sorted_weights.data_ptr(),
+         int(M_logical),
+         int(max_m_blocks),
+diff --git a/kernels/moe/mxfp_moe/mxfp4_gemm_common.py b/kernels/moe/mxfp_moe/mxfp4_gemm_common.py
+index ffb06af..0501f58 100644
+--- a/kernels/moe/mxfp_moe/mxfp4_gemm_common.py
++++ b/kernels/moe/mxfp_moe/mxfp4_gemm_common.py
+@@ -179,147 +179,168 @@ def flat_buffer_view(arg, base_elems, elem_ty, *, align, elem_bytes, fold=True,
+         off_i64 = fx.Uint32(base).to(fx.Uint64).bitcast(fx.Int64)
+         base_iter = fx.inttoptr(ptr_ty, fx.Int64(arg) + off_i64 * fx.Int64(elem_bytes))
+     else:
+         base_iter = fx.inttoptr(ptr_ty, fx.Int64(arg))
+     view = fx.Tensor(fx.make_view(base_iter, fx.make_layout((1, 1), (1, 1))))
+     if num_records_bytes is not None:
+         return fx.rocdl.make_buffer_tensor(view, num_records_bytes=num_records_bytes)
+     return fx.rocdl.make_buffer_tensor(view, max_size=True)
+ 
+ 
+ # A-LDS bank-conflict swizzle as layout algebra: over the flat 16-byte-block index
+ # (row*8 + block_col) the manual XOR mask equals SwizzleType(3, 0, 4) (verified bit-for-bit).
+ _A_LDS_BLOCKS_PER_ROW = 8  # 128-byte fp4 row / 16-byte block
+ 
+ 
+ def _a_lds_swz_block_layout(rows):
+     """Composed layout over 16-byte A-LDS blocks: (rows, 8) row-major, swizzled S<3,0,4>.
+ 
+     crd2idx((row, block_col), <this>) == the manual `(byte_off ^ mask) // 16` block index.
+     """
+     return fx.make_composed_layout(
+         fx.static(fx.SwizzleType.get(3, 0, 4)),
+         fx.make_layout((rows, _A_LDS_BLOCKS_PER_ROW), (_A_LDS_BLOCKS_PER_ROW, 1)),
+     )
+ 
+ 
+ def _a_lds_swz_block_idx(swz_layout, row, block_col):
+     """Swizzled 16-byte-block index for (row, block_col) via layout algebra."""
+     return fx.Int32(crd2idx([fx.Int64(row), fx.Int64(block_col)], swz_layout))
+ 
+ 
+ def _fabs_f32(x):
+     return fmath.absf(x)
+ 
+ 
+ fabs_f32 = _fabs_f32
+ 
+ 
+ _FMT_MAX_FP4 = 6.0
+ _FMT_MAX_FP8_E4M3 = 448.0
+ 
+ 
+ def _e8m0_roundup(amax_f32, fmt_max):
+     wi = (amax_f32 * fx.Float32(1.0 / fmt_max)).bitcast(fx.Int32)
+     bexp = (wi + fx.Int32(0x7FFFFF)).shrui(fx.Int32(23)) & fx.Int32(0xFF)
+     return (bexp < fx.Int32(254)).select(bexp, fx.Int32(254))
+ 
+ 
+ def _e8m0_from_amax(amax_f32):
+     e8m0 = _e8m0_roundup(amax_f32, _FMT_MAX_FP4)
+     qscale = (e8m0 << fx.Int32(23)).bitcast(fx.Float32)
+     return e8m0, qscale
+ 
+ 
+ def _e8m0_from_amax_fp8(amax_f32):
+     e8m0 = _e8m0_roundup(amax_f32, _FMT_MAX_FP8_E4M3)
+     qscale = (e8m0 << fx.Int32(23)).bitcast(fx.Float32)
+     return e8m0, qscale
+ 
+ 
+ def _inline_e8m0(amax_u16_i32):
+     f32 = ((fx.Int32(amax_u16_i32) & fx.Int32(0xFFFF)) << fx.Int32(16)).bitcast(fx.Float32)
+     return _e8m0_roundup(f32, _FMT_MAX_FP4)
+ 
+ 
+ def _pkmax_u16(a_i32, b_i32):
+     _v2i16 = T.vec(2, T.i16)
+     va = llvm.BitcastOp(_v2i16, _raw(a_i32)).result
+     vb = llvm.BitcastOp(_v2i16, _raw(b_i32)).result
+     vm = arith.MaxUIOp(va, vb).result
+     out = llvm.BitcastOp(T.i32, vm).result
+     return fx.Int32(out)
+ 
+ 
+ def _silu_mul_batch(gs, us):
+     e = [fx.Float32(rocdl.exp2(T.f32, _raw(g * fx.Float32(-LOG2E)))) for g in gs]
+     sig = [fx.Float32(rocdl.rcp(T.f32, _raw(fx.Float32(1.0) + ei))) for ei in e]
+     return [gs[i] * sig[i] * us[i] for i in range(len(gs))]
+ 
+ 
++def _swiglu_oai_mul_batch(gs, us, alpha, limit):
++    """MiniMax-M3/GPT-OSS SwiGLU-OAI activation.
++
++    ``min(g, limit) * sigmoid(alpha * min(g, limit)) *
++    (clamp(u, -limit, limit) + 1)``.  ``alpha`` and ``limit`` are compile-time
++    specialization values supplied by the model configuration.
++    """
++    alpha_f = fx.Float32(alpha)
++    limit_f = fx.Float32(limit)
++    neg_limit_f = fx.Float32(-limit)
++    one = fx.Float32(1.0)
++    out = []
++    for g, u in zip(gs, us):
++        g = g.minimumf(limit_f)
++        u = u.maximumf(neg_limit_f).minimumf(limit_f)
++        e = fx.Float32(rocdl.exp2(T.f32, _raw(g * alpha_f * fx.Float32(-LOG2E))))
++        sig = fx.Float32(rocdl.rcp(T.f32, _raw(one + e)))
++        out.append(g * sig * (u + one))
++    return out
++
++
+ def _umax_i32(a, b):
+     is_gt = fx.as_ir_value((a) > (b))
+     return fx.Int32(arith.select(is_gt, _raw(a), _raw(b)))
+ 
+ 
+ def _inline_dpp_quad_amax(a32):
+     a32 = fx.Int32(_raw(a32))
+     s1 = fx.Int32(dpp_utils.update_dpp_i32(_raw(a32), _raw(a32), 0xB1, 0xF, 0xF, True))
+     a32 = _umax_i32(a32, s1)
+     s2 = fx.Int32(dpp_utils.update_dpp_i32(_raw(a32), _raw(a32), 0x4E, 0xF, 0xF, True))
+     return _umax_i32(a32, s2)
+ 
+ 
+ def k_half_for(k):
+     return k // 2
+ 
+ 
+ def k_tiles_total_for(k, BK):
+     return k // BK
+ 
+ 
+ def kunroll_for(k, BK):
+     return k_tiles_total_for(k, BK) - kStages
+ 
+ 
+ def kas_c_k1_for(k):
+     return (k // 32) // 4 // 2
+ 
+ 
+ def kbs_c_k1_for(k):
+     return (k // 32) // 4 // 2
+ 
+ 
+ def kbs_stride_n0_dw_for(k):
+     return kbs_c_k1_for(k) * 64
+ 
+ 
+ def kas_per_chunk_dw_for(k):
+     return kas_c_k1_for(k) * 64
+ 
+ 
+ def num_n_blocks_for(n, BN):
+     return n // BN
+ 
+ 
+ def kbs_c_n1_for(n):
+     return n // 16 // 2
+ 
+ 
+ def kbs_per_expert_dw_for(n, k):
+     return kbs_c_n1_for(n) * kbs_stride_n0_dw_for(k)
+ 
+ 
+ def bq_bytes_for(ne, n, k):
+     return ne * n * k_half_for(k)
+ 
+ 
+ def bscale_bytes_for(ne, n, k):
+     return ne * kbs_per_expert_dw_for(n, k) * 4
+ 
+ 
+ def kmchunks_for(BM):
+     return BM // 16
+ 
+ 
+ def lds_acc_bytes_for(rows, BN):
+     return rows * BN * 4
+diff --git a/reports/j-375a8af7df94/README.md b/reports/j-375a8af7df94/README.md
+new file mode 100644
+index 0000000..8d898c8
+--- /dev/null
++++ b/reports/j-375a8af7df94/README.md
+@@ -0,0 +1,33 @@
++# MiniMax-M3 A4W4 MoE qualification
++
++Model metadata was read from `amd/MiniMax-M3-MXFP4` revision
++`b83d14e3d64bf373a207f3c2a7e9f0b0f1e7fc3a`: hidden size 6144,
++intermediate/shared-intermediate size 3072, 128 routed experts, top-k 4, one
++shared expert, sigmoid routing with normalized weights scaled by 2.0, and
++SwiGLU-OAI (`alpha=1.702`, `limit=7.0`). Its Quark global configuration uses
++dynamic FP4 inputs, static FP4 weights, group size 32, E8M0 scales, even scale
++calculation, and half-even rounding.
++
++The existing FlyDSL source already supplied real gfx950 scaled-MFMA A4W4 MoE
++stage-1/stage-2 kernels. This change adds the missing model activation as an
++opt-in specialization while keeping plain SiLU as the API default. Routed and
++shared experts use the same projection kernels; the shared expert is a separate
++one-expert invocation whose output is added to the routed result.
++
++The strict numerical gate is a normalized-logit difference of 0.002, alongside
++finite-output checks and reported cosine/max-absolute error. This threshold is
++tight enough to detect the observed broken variants (0.0084 and 0.994 normalized
++error) while the qualified routed-plus-shared model-shape path is at least
++0.99999648 cosine.
++
++Raw command output is retained in `raw/`. Compiler cache artifacts remain in
++`/tmp/amdpilot-repo-j-375a8af7df94/cache`; their metadata records target
++`gfx950` and kernels such as
++`gemm1_a4w4_port_fp4_swigluoai_a1.702_l7_h6144_i3072_ne128_bm32_cached_sep`.
++No C++ source changed, so rebuilding the native compiler would not validate any
++additional code in this patch and was not performed.
++
++This is not full-model generation or distributed expert-parallel qualification.
++The packed-A4 path does not accept an EP valid mask, and the pre-existing inline
++quantization and BM64 interleaved variants remain unqualified rather than being
++silently treated as complete.
+diff --git a/reports/j-375a8af7df94/raw/a4w4-variants.log b/reports/j-375a8af7df94/raw/a4w4-variants.log
+new file mode 100644
+index 0000000..482ec44
+--- /dev/null
++++ b/reports/j-375a8af7df94/raw/a4w4-variants.log
+@@ -0,0 +1,38 @@
++[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
++[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-375a8af7df94/cache/aiter/module_aiter_core.so
++============================= test session starts ==============================
++platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
++rootdir: /job/repo/tests
++configfile: pytest.ini
++plugins: hypothesis-6.150.2, anyio-4.14.2
++collected 9 items / 6 deselected / 3 selected
++
++tests/kernels/test_moe_gemm.py .Logits Diff: 0.008376, Max Diff: 0.114379, Mean Diff: 0.014228
++✗ Check failed: logits_diff 0.008375778026786462 > 0.002
++FLogits Diff: 0.993828, Max Diff: 1.082526, Mean Diff: 0.161178
++✗ Check failed: logits_diff 0.9938280985404071 > 0.002
++F
++
++=================================== FAILURES ===================================
++___________________ test_mxfp_moe_variants[inline_bm16-fp4] ____________________
++tests/kernels/test_moe_gemm.py:932: in test_mxfp_moe_variants
++    _run_mxfp_moe_e2e(
++tests/kernels/test_moe_gemm.py:872: in _run_mxfp_moe_e2e
++    assert verify_output(out, ref2, rtol=2e-3, atol=2e-3, logits_diff_threshold=2e-3)
++E   AssertionError: assert False
++E    +  where False = verify_output(tensor([[ 0.1377,  0.0947, -0.2344,  ...,  0.0703,  0.0732, -0.0559],\n        [-0.2256, -0.2285,  0.0293,  ..., -0.132...1118, -0.4102, -0.1270],\n        [-0.2100,  0.0566,  0.0281,  ..., -0.0161, -0.0245,  0.1719]],\n       device='cuda:0'), tensor([[ 1.0696e-01,  8.3541e-02, -2.5049e-01,  ...,  3.0050e-02,\n          7.2735e-02, -7.8050e-02],\n        [-2.019...       [-2.6212e-01,  5.5406e-02,  3.9630e-02,  ..., -3.0314e-02,\n         -3.3041e-02,  1.7599e-01]], device='cuda:0'), rtol=0.002, atol=0.002, logits_diff_threshold=0.002)
++------------------------------ Captured log call -------------------------------
++ERROR    root:test_common.py:420 logits_diff: 0.008375778026786462 is too large (threshold: 0.002)
++_________________ test_mxfp_moe_variants[interleave_bm64-fp4] __________________
++tests/kernels/test_moe_gemm.py:932: in test_mxfp_moe_variants
++    _run_mxfp_moe_e2e(
++tests/kernels/test_moe_gemm.py:872: in _run_mxfp_moe_e2e
++    assert verify_output(out, ref2, rtol=2e-3, atol=2e-3, logits_diff_threshold=2e-3)
++E   AssertionError: assert False
++E    +  where False = verify_output(tensor([[ 0.0562, -0.0054,  0.2227,  ...,  0.0303,  0.2041,  0.0464],\n        [ 0.1973,  0.1865, -0.0439,  ...,  0.084...0186,  0.0272,  0.1328],\n        [-0.0635, -0.2148, -0.0635,  ..., -0.1221,  0.1084, -0.0630]],\n       device='cuda:0'), tensor([[-0.1953,  0.0894,  0.0766,  ..., -0.1738,  0.0681,  0.0311],\n        [-0.0991, -0.0623,  0.0764,  ..., -0.125...1263, -0.0860, -0.1582],\n        [ 0.1699,  0.1465, -0.0577,  ..., -0.0811,  0.0812, -0.1780]],\n       device='cuda:0'), rtol=0.002, atol=0.002, logits_diff_threshold=0.002)
++------------------------------ Captured log call -------------------------------
++ERROR    root:test_common.py:420 logits_diff: 0.9938280985404071 is too large (threshold: 0.002)
++=========================== short test summary info ============================
++FAILED tests/kernels/test_moe_gemm.py::test_mxfp_moe_variants[inline_bm16-fp4]
++FAILED tests/kernels/test_moe_gemm.py::test_mxfp_moe_variants[interleave_bm64-fp4]
++================== 2 failed, 1 passed, 6 deselected in 9.49s ===================
+diff --git a/reports/j-375a8af7df94/raw/failing-before.log b/reports/j-375a8af7df94/raw/failing-before.log
+new file mode 100644
+index 0000000..86be5b7
+--- /dev/null
++++ b/reports/j-375a8af7df94/raw/failing-before.log
+@@ -0,0 +1,17 @@
++============================= test session starts ==============================
++platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0 -- /tmp/amdpilot-repo-j-375a8af7df94/venv/bin/python
++cachedir: .pytest_cache
++hypothesis profile 'default'
++rootdir: /job/repo/tests
++configfile: pytest.ini
++plugins: hypothesis-6.150.2, anyio-4.14.2
++collecting ... [aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
++[aiter] [pid=2967 pname=MainProcess] start build [module_aiter_core] under /tmp/amdpilot-repo-j-375a8af7df94/cache/aiter/build/module_aiter_core
++[aiter] Current hipcc not support: -mllvm -amdgpu-coerce-illegal-types=1, skip it.
++[aiter] [pid=2967 pname=MainProcess] [32mfinish build [module_aiter_core], cost 13.9s [0m
++[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-375a8af7df94/cache/aiter/module_aiter_core.so
++collected 1 item
++
++tests/kernels/test_moe_gemm.py::test_mxfp_moe_variants[bm32_atomic-fp4] PASSED
++
++============================== 1 passed in 21.98s ==============================
+diff --git a/reports/j-375a8af7df94/raw/final-focused.log b/reports/j-375a8af7df94/raw/final-focused.log
+new file mode 100644
+index 0000000..b82b33c
+--- /dev/null
++++ b/reports/j-375a8af7df94/raw/final-focused.log
+@@ -0,0 +1,10 @@
++============================= test session starts ==============================
++platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
++rootdir: /job/repo/tests
++configfile: pytest.ini
++plugins: hypothesis-6.150.2, anyio-4.14.2
++collected 7 items
++
++tests/kernels/test_moe_gemm.py .......                                   [100%]
++
++============================== 7 passed in 5.25s ===============================
+diff --git a/reports/j-375a8af7df94/raw/latency-silu.log b/reports/j-375a8af7df94/raw/latency-silu.log
+new file mode 100644
+index 0000000..edb79a1
+--- /dev/null
++++ b/reports/j-375a8af7df94/raw/latency-silu.log
+@@ -0,0 +1,5 @@
++[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
++[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-375a8af7df94/cache/aiter/module_aiter_core.so
++[W913 02:06:07.737626512 collection.cpp:1133] Warning: ROCTracer produced duplicate flow start: 1 (function operator())
++FlyDSL MoE stage1[fp4]: 6.5 us M_eff=128 TFLOPS=20.67 TB/s=0.348
++FlyDSL MoE stage2[fp4] atomic: 5.2 us 1024x256 E=8 K=4 M_eff=128 TFLOPS=12.92 TB/s=0.231
+diff --git a/reports/j-375a8af7df94/raw/latency-swigluoai.log b/reports/j-375a8af7df94/raw/latency-swigluoai.log
+new file mode 100644
+index 0000000..da1d46f
+--- /dev/null
++++ b/reports/j-375a8af7df94/raw/latency-swigluoai.log
+@@ -0,0 +1,5 @@
++[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
++[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-375a8af7df94/cache/aiter/module_aiter_core.so
++[W913 02:06:14.830047495 collection.cpp:1133] Warning: ROCTracer produced duplicate flow start: 1 (function operator())
++FlyDSL MoE stage1[fp4]: 7.3 us M_eff=128 TFLOPS=18.35 TB/s=0.309
++FlyDSL MoE stage2[fp4] atomic: 5.7 us 1024x256 E=8 K=4 M_eff=128 TFLOPS=11.85 TB/s=0.211
+diff --git a/reports/j-375a8af7df94/raw/minimax-adversarial-sweep.log b/reports/j-375a8af7df94/raw/minimax-adversarial-sweep.log
+new file mode 100644
+index 0000000..249a48c
+--- /dev/null
++++ b/reports/j-375a8af7df94/raw/minimax-adversarial-sweep.log
+@@ -0,0 +1,48 @@
++[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
++[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-375a8af7df94/cache/aiter/module_aiter_core.so
++============================= test session starts ==============================
++platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
++rootdir: /job/repo/tests
++configfile: pytest.ini
++plugins: hypothesis-6.150.2, anyio-4.14.2
++collected 6 items
++
++tests/kernels/test_moe_gemm.py Logits Diff: 0.000004, Max Diff: 0.105278, Mean Diff: 0.013043
++ ✓ Check passed
++Logits Diff: 0.000001, Max Diff: 0.062500, Mean Diff: 0.003555
++ ✓ Check passed
++Logits Diff: 0.000002, Max Diff: 0.105278, Mean Diff: 0.014573
++ ✓ Check passed
++.Logits Diff: 0.000005, Max Diff: 0.150787, Mean Diff: 0.015060
++ ✓ Check passed
++Logits Diff: 0.000001, Max Diff: 0.031250, Mean Diff: 0.003227
++ ✓ Check passed
++Logits Diff: 0.000003, Max Diff: 0.150787, Mean Diff: 0.016066
++ ✓ Check passed
++.Logits Diff: 0.000005, Max Diff: 0.182760, Mean Diff: 0.014102
++ ✓ Check passed
++Logits Diff: 0.000001, Max Diff: 0.046875, Mean Diff: 0.003788
++ ✓ Check passed
++Logits Diff: 0.000003, Max Diff: 0.182760, Mean Diff: 0.015816
++ ✓ Check passed
++.Logits Diff: 0.000005, Max Diff: 0.168699, Mean Diff: 0.014367
++ ✓ Check passed
++Logits Diff: 0.000001, Max Diff: 0.062500, Mean Diff: 0.003714
++ ✓ Check passed
++Logits Diff: 0.000002, Max Diff: 0.213127, Mean Diff: 0.015830
++ ✓ Check passed
++.Logits Diff: 0.000004, Max Diff: 0.170788, Mean Diff: 0.013884
++ ✓ Check passed
++Logits Diff: 0.000002, Max Diff: 0.062500, Mean Diff: 0.004022
++ ✓ Check passed
++Logits Diff: 0.000002, Max Diff: 0.186413, Mean Diff: 0.015575
++ ✓ Check passed
++.Logits Diff: 0.000004, Max Diff: 0.208818, Mean Diff: 0.013567
++ ✓ Check passed
++Logits Diff: 0.000001, Max Diff: 0.062500, Mean Diff: 0.002963
++ ✓ Check passed
++Logits Diff: 0.000002, Max Diff: 0.237000, Mean Diff: 0.014798
++ ✓ Check passed
++.
++
++============================== 6 passed in 5.31s ===============================
+diff --git a/reports/j-375a8af7df94/raw/minimax-model-shape.log b/reports/j-375a8af7df94/raw/minimax-model-shape.log
+new file mode 100644
+index 0000000..c13516a
+--- /dev/null
++++ b/reports/j-375a8af7df94/raw/minimax-model-shape.log
+@@ -0,0 +1,20 @@
++============================= test session starts ==============================
++platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0 -- /tmp/amdpilot-repo-j-375a8af7df94/venv/bin/python
++cachedir: .pytest_cache
++hypothesis profile 'default'
++rootdir: /job/repo/tests
++configfile: pytest.ini
++plugins: hypothesis-6.150.2, anyio-4.14.2
++collecting ... [aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
++[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-375a8af7df94/cache/aiter/module_aiter_core.so
++collected 1 item
++
++tests/kernels/test_moe_gemm.py::test_minimax_m3_a4w4_model_shape MiniMax-M3 A4W4 tokens=1: cosine=0.99999815 max_abs=0.00148664
++MiniMax-M3 A4W4 tokens=2: cosine=0.99999797 max_abs=0.00156841
++MiniMax-M3 A4W4 tokens=4: cosine=0.99999708 max_abs=0.00161207
++MiniMax-M3 A4W4 tokens=16: cosine=0.99999666 max_abs=0.00196862
++MiniMax-M3 A4W4 tokens=32: cosine=0.99999648 max_abs=0.00245625
++MiniMax-M3 A4W4 tokens=256: cosine=0.99999648 max_abs=0.00260985
++PASSED
++
++============================== 1 passed in 10.82s ==============================
+diff --git a/reports/j-375a8af7df94/result.json b/reports/j-375a8af7df94/result.json
+new file mode 100644
+index 0000000..6711a21
+--- /dev/null
++++ b/reports/j-375a8af7df94/result.json
+@@ -0,0 +1,49 @@
++{
++  "source_issue_url": "https://github.com/ROCm/FlyDSL/issues/717",
++  "base_commit": "acf7e67b7d22847e345938ca54fcc137bd7b2a1f",
++  "outcome": "candidate_verified",
++  "summary": "Added an opt-in MiniMax-M3 SwiGLU-OAI activation to the existing gfx950 packed-A4/static-W4 fused MoE kernel, retaining SiLU defaults. Qualified exact 6144x3072, 128-expert, top-k-4 routed projections and the one-expert shared projection pattern against independent MXFP4 dequantize/FP32 references. The validated path accepts dynamically quantized packed FP4 activations; the existing on-device BF16-to-FP4 inline variant remains outside the qualified path.",
++  "tests": [
++    {
++      "command": "FLYDSL_RUNTIME_CACHE_DIR=/tmp/amdpilot-repo-j-375a8af7df94/cache PYTHONPATH=/job/repo /tmp/amdpilot-repo-j-375a8af7df94/venv/bin/python -m pytest tests/kernels/test_moe_gemm.py::test_minimax_m3_a4w4_model_shape -vv -s (with FLYDSL_RUN_MINIMAX_M3_SHAPE=1)",
++      "exit_code": 0,
++      "what_was_measured": "GPU numerical correctness for routed plus shared experts at hidden=6144, intermediate/shared_intermediate=3072, routed_experts=128, top_k=4 for token batches 1,2,4,16,32,256. Cosine 0.99999648..0.99999815; max absolute error 0.00149..0.00261; all outputs finite."
++    },
++    {
++      "command": "python -m pytest tests/kernels/test_moe_gemm.py::test_minimax_m3_a4w4_swigluoai -q -s",
++      "exit_code": 0,
++      "what_was_measured": "Six GPU cases covering decode/prefill sizes, nonuniform and duplicate routes, routed plus one-expert shared outputs, zero blocks and 1e-6/1e3 adversarial activation blocks, all finite, against independent dequantized FP32 references with normalized-logit threshold 0.002."
++    },
++    {
++      "command": "python -m pytest tests/kernels/test_moe_gemm.py::test_mxfp_moe_variants -k fp4 -q -s",
++      "exit_code": 1,
++      "what_was_measured": "Defect characterization before quarantine: BM32 packed A4W4 passed; inline BF16-to-FP4 had normalized error 0.0083758 and BM64 interleaved had 0.9938281. These variants remain explicitly xfailed and are not claimed."
++    },
++    {
++      "command": "python -m pytest 'tests/kernels/test_moe_gemm.py::test_mxfp_moe_variants[bm32_atomic-fp4]' tests/kernels/test_moe_gemm.py::test_minimax_m3_a4w4_swigluoai -q",
++      "exit_code": 0,
++      "what_was_measured": "Final focused regression: 7 GPU numerical cases passed."
++    },
++    {
++      "command": "python tests/kernels/test_moe_gemm.py --in_dtype fp4 -dim 1024,256 -t 32 -e 8 -k 4 --tile_m 32 --tile_n 128 --tile_k 256 --gemm2_mode atomic --activation {silu,swigluoai} --seed 717 --num_warmup 5 --num_iters 20",
++      "exit_code": 0,
++      "what_was_measured": "Same-shape/state latency with strict numerics: legacy SiLU stage1/stage2 6.5/5.2 us; SwiGLU-OAI 7.3/5.7 us."
++    }
++  ],
++  "gpu_execution": true,
++  "native_rebuilt": false,
++  "source_paths": [
++    "/job/repo/kernels/moe/mxfp_moe/gemm1.py",
++    "/job/repo/kernels/moe/mxfp_moe/host.py",
++    "/job/repo/kernels/moe/mxfp_moe/mxfp4_gemm_common.py"
++  ],
++  "native_path": "/opt/venv/lib/python3.12/site-packages/flydsl/_mlir",
++  "compiler_cache_path": "/tmp/amdpilot-repo-j-375a8af7df94/cache",
++  "remaining_limitations": [
++    "Kernel-level synthetic projection qualification only: no full MiniMax-M3 generation and no model weights were downloaded.",
++    "No multi-rank expert-parallel qualification. The packed-A4 fused path does not expose valid-mask/non-local-slot reduction; callers must compact/remap local experts before launch.",
++    "The on-device BF16-to-FP4 inline variant and BM64 interleaved layout remain numerically unqualified and are explicit xfails; this candidate uses externally dynamically quantized packed FP4 activations with per-32 E8M0 scales.",
++    "The independent reference and test quantizer implement MXFP4 per-group-32 E8M0 conventions; the public model metadata specifies Quark half-even/even scale calculation. No arbitrary INT4 or BF16-activation/W4 result is presented as A4W4.",
++    "A8W4 remains independently xfailed and is not part of this outcome."
++  ]
++}
+diff --git a/tests/kernels/test_moe_gemm.py b/tests/kernels/test_moe_gemm.py
+index 1d0d3e9..5eff986 100644
+--- a/tests/kernels/test_moe_gemm.py
++++ b/tests/kernels/test_moe_gemm.py
+@@ -508,515 +508,639 @@ def _run_a16w4_moe_e2e(
+             D_INTER=inter_dim,
+             topk=topk,
+             tile_m=BM,
+             tile_n=g1_tile_n,
+             tile_k=256,
+             w_dtype=w_dtype,
+             use_csv_config=use_csv,
+         )
+ 
+     if num_iters > 0:
+         _, us1 = run_perftest(_g1_launch, num_iters=int(num_iters), num_warmup=int(num_warmup))
+         _print_mxfp_moe_perf(1, us1, label, tokens, topk, model_dim, inter_dim, experts, a_dtype="a16")
+     else:
+         _g1_launch()
+ 
+     # stage2 -> bf16 [tokens, model_dim] (atomic routing-weighted scatter)
+     out_buf = torch.zeros(tokens * model_dim, dtype=torch.bfloat16, device=dev)
+ 
+     def _g2_launch():
+         flydsl_a16w4_gemm2(
+             inter_sorted_bf16=inter_sorted,
+             w2_u8=w2_shuf,
+             w2_scale_u8=w2_scale_1d,
+             sorted_expert_ids=sorted_expert_ids,
+             cumsum_tensor=cumsum,
+             sorted_token_ids=sorted_token_ids,
+             sorted_weights=sorted_weights,
+             flat_out=out_buf,
+             M_logical=tokens,
+             max_sorted=sorted_size,
+             NE=experts,
+             D_HIDDEN=model_dim,
+             D_INTER=inter_dim,
+             topk=topk,
+             tile_m=BM,
+             tile_n=None if _is_int4_w else 256,
+             tile_k=256,
+             w_dtype=w_dtype,
+             use_csv_config=use_csv,
+         )
+ 
+     if num_iters > 0:
+         _, us2 = run_perftest(_g2_launch, num_iters=int(num_iters), num_warmup=int(num_warmup))
+         _print_mxfp_moe_perf(2, us2, label, tokens, topk, model_dim, inter_dim, experts, a_dtype="a16")
+         out_buf.zero_()
+     _g2_launch()
+     torch.cuda.synchronize()
+     out = out_buf.view(tokens, model_dim).float()
+ 
+     if not skip_ref:
+         # bf16 A (scale=None) x {mxfp4|int4|raw-bf16} W; no re-quant of the stage1 intermediate.
+         ref1 = torch_moe_gemm1(
+             x_bf16,
+             w1_ref_e,
+             None,
+             w1_scale_ref,
+             topk_ids.long(),
+             topk_weights,
+             inter_dim=inter_dim,
+             doweight_stage1=False,
+             group_size=A16WI4_GROUP if _is_int4_w else -1,
+             scale_w1_groups=w1_scale_groups,
+         )
+         ref2 = torch_moe_gemm2(
+             ref1.to(torch.bfloat16),
+             w2_ref_e,
+             None,
+             w2_scale_ref,
+             topk_ids.long(),
+             topk_weights,
+             model_dim=model_dim,
+             doweight_stage2=True,
+             group_size=A16WI4_GROUP if _is_int4_w else -1,
+             scale_w2_groups=w2_scale_groups,
+         )
+         # a16w4 (bf16 A x mxfp4 W) is numerically faithful (e2e cos ~0.9999); enforce
+         # a strict, asserted gate so regressions are caught. NOTE: rtol/atol must be
+         # tight too -- verify_output early-returns True when <5% of elements exceed
+         # the allclose tol, which makes a loose rtol/atol (0.5) mask the logits check.
+         assert verify_output(out, ref2, rtol=2e-3, atol=2e-3, logits_diff_threshold=2e-3)
++        return out, ref2
++    return out, None
+ 
+ 
+ def _run_mxfp_moe_e2e(
+     *,
+     tokens: int,
+     model_dim: int,
+     inter_dim: int,
+     experts: int,
+     topk: int,
+     tile_m: int,
+     use_reduce: bool,
+     x_fp32: torch.Tensor,
+     w1_fp32: torch.Tensor,
+     w2_fp32: torch.Tensor,
+     topk_ids: torch.Tensor,
+     topk_weights: torch.Tensor,
+     routing: RoutingBuffers,
+     a_dtype: str = "fp4",
+     inline_quant: bool = False,
+     interleave: bool = False,
+     skip_ref: bool = False,
+     num_iters: int = 0,
+     num_warmup: int = 0,
+     in_dtype_label: Optional[str] = None,
+     w_dtype: str = "mxfp4",
++    activation: str = "silu",
++    swiglu_alpha: float = 1.702,
++    swiglu_limit: float = 7.0,
+ ):
+     """End-to-end a4w4 / a8w4 correctness via the fused mxfp_moe pipeline.
+ 
+     ``a_dtype`` selects the stage1 activation: "fp4" (a4w4, MX-FP4 A) or "fp8"
+     (a8w4, MX-FP8 e4m3 A). W1/W2 are always MX-FP4 and the stage1->stage2
+     intermediate is re-quantized to fp4 on-device, so stage2 is identical for both.
+     Stage1 (fused gate+up GEMM + SiLU + on-device fp4 re-quant) writes a sorted
+     fp4 intermediate consumed directly by stage2 (down-proj). Compared against the
+     torch reference (torch_moe_gemm1 -> host re-quant -> torch_moe_gemm2).
+     """
+     from tests.kernels.utils import gemm_common_utils as gcu
+ 
+     dev = x_fp32.device
+     BM = int(tile_m)
+     N_OUT = 2 * inter_dim
+     sorted_token_ids, sorted_weights, sorted_expert_ids, num_valid_ids, sorted_size, _blocks = routing
+     sorted_token_ids = sorted_token_ids.to(dev)
+     sorted_weights = sorted_weights.to(dev)
+     sorted_expert_ids = sorted_expert_ids.to(dev)
+     num_valid_ids = num_valid_ids.to(dev)
+ 
+     if a_dtype == "a16":
+-        _run_a16w4_moe_e2e(
++        return _run_a16w4_moe_e2e(
+             tokens=tokens,
+             model_dim=model_dim,
+             inter_dim=inter_dim,
+             experts=experts,
+             topk=topk,
+             BM=BM,
+             x_fp32=x_fp32,
+             w1_fp32=w1_fp32,
+             w2_fp32=w2_fp32,
+             topk_ids=topk_ids,
+             topk_weights=topk_weights,
+             sorted_token_ids=sorted_token_ids,
+             sorted_weights=sorted_weights,
+             sorted_expert_ids=sorted_expert_ids,
+             num_valid_ids=num_valid_ids,
+             sorted_size=sorted_size,
+             skip_ref=skip_ref,
+             gcu=gcu,
+             w_dtype=w_dtype,
+             num_iters=num_iters,
+             num_warmup=num_warmup,
+             in_dtype_label=in_dtype_label,
+         )
+         return
+ 
+     # --- quantize activations / weights (per-1x32 e8m0) ------------------------
+     # A: MX-FP8 (e4m3, 1 B/elem) for a8w4; MX-FP4 (0.5 B/elem) for a4w4. W is MX-FP4.
+     if a_dtype == "fp8":
+         x_q, x_scale = _per_1x32_mxfp8_quant(x_fp32)  # [T, K] fp8, [T, K/32] u8
+     else:
+         x_q, x_scale = _per_1x32_fp4_quant(x_fp32)  # [T, K/2] u8, [T, K/32] u8
+     w1_q, w1_scale = _per_1x32_fp4_quant(w1_fp32.reshape(experts * N_OUT, model_dim))
+     w2_q, w2_scale = _per_1x32_fp4_quant(w2_fp32.reshape(experts * model_dim, inter_dim))
+ 
+     # --- fused-kernel host contract -------------------------------------------
+     # cumsum[0] == total padded sorted rows (kernel derives m-blocks = cumsum[0]//BM).
+     cumsum = num_valid_ids.to(torch.int32).contiguous()
+     # A rows are gathered by unpacked token id (padding entries -> OOB, clamped to 0).
+     m_indices = (sorted_token_ids & 0x00FFFFFF).to(torch.int32).contiguous()
+ 
+     w1_shuf = shuffle_weight(w1_q.view(torch.float4_e2m1fn_x2)).view(torch.uint8).contiguous()
+     w1_scale_1d = gcu.e8m0_shuffle(w1_scale.view(experts * N_OUT, model_dim // 32)).view(torch.uint8).contiguous()
+     if inline_quant:
+         # inline_quant computes A + A-scale on-device from bf16 hidden; the sorted
+         # A-scale (and a_quant) are unused, so skip the moe sort (also undefined at BM<32).
+         x_scale_sort = x_scale.view(torch.uint8).contiguous()
+     else:
+         x_scale_sort = (
+             gcu.moe_mxfp4_sort(
+                 x_scale[:tokens].view(tokens, 1, -1),
+                 sorted_ids=sorted_token_ids,
+                 num_valid_ids=num_valid_ids,
+                 token_num=tokens,
+                 block_size=BM,
+             )
+             .view(torch.uint8)
+             .contiguous()
+         )
+ 
+     # sorted fp4 intermediate (stage1 output -> stage2 input)
+     scale_cols = inter_dim // 32
+     padded_rows = (sorted_size + 255) // 256 * 256
+     padded_cols = (scale_cols + 7) // 8 * 8
+     aqout = torch.zeros(sorted_size, inter_dim // 2, dtype=torch.uint8, device=dev)
+     ascaleout = torch.zeros(padded_rows * padded_cols, dtype=torch.uint8, device=dev)
+     # inline_quant reads bf16 hidden and quantizes A on-device (a_quant/a_scale unused);
+     # otherwise A is pre-quantized above and hidden is a dummy.
+     if inline_quant:
+         hidden = x_fp32.to(torch.bfloat16).contiguous()
+     else:
+         hidden = torch.zeros(tokens, model_dim, dtype=torch.bfloat16, device=dev)
+ 
+     # gemm1 uses the non-temporal weight load at BM == 32 and for inline (BM == 16);
+     # larger cached tiles reuse weights across m-blocks.
+     g1_use_nt = True if inline_quant else (BM == 32)
+ 
+     def _g1_launch():
+         flydsl_mxfp4_gemm1(
+             a_quant=x_q.view(torch.uint8).contiguous(),
+             a_scale_sorted_shuffled=x_scale_sort,
+             w1_u8=w1_shuf,
+             w1_scale_u8=w1_scale_1d,
+             sorted_expert_ids=sorted_expert_ids,
+             cumsum_tensor=cumsum,
+             m_indices=m_indices,
+             inter_sorted_quant=aqout,
+             inter_sorted_shuffled_scale=ascaleout,
+             hidden_states=hidden,
+             n_tokens=tokens,
+             BM=BM,
+             use_nt=g1_use_nt,
+             inline_quant=inline_quant,
+             interleave=interleave,
+             NE=experts,
+             D_HIDDEN=model_dim,
+             D_INTER=inter_dim,
+             topk=topk,
+             a_dtype=a_dtype,
++            activation=activation,
++            swiglu_alpha=swiglu_alpha,
++            swiglu_limit=swiglu_limit,
+         )
+ 
+     # gemm1 writes (not accumulates) the sorted fp4 intermediate, so repeated
+     # timed launches leave a valid `aqout`/`ascaleout` for stage2 below.
+     label = in_dtype_label or ("a8w4" if a_dtype == "fp8" else "fp4")
+     if num_iters > 0:
+         _, us1 = run_perftest(_g1_launch, num_iters=int(num_iters), num_warmup=int(num_warmup))
+         _print_mxfp_moe_perf(1, us1, label, tokens, topk, model_dim, inter_dim, experts, a_dtype=a_dtype)
+     else:
+         _g1_launch()
+     torch.cuda.synchronize()
+ 
+     # --- stage2 ---------------------------------------------------------------
+     w2_shuf = shuffle_weight(w2_q.view(torch.float4_e2m1fn_x2)).view(torch.uint8).contiguous()
+     w2_scale_1d = gcu.e8m0_shuffle(w2_scale.view(experts * model_dim, inter_dim // 32)).view(torch.uint8).contiguous()
+ 
+     if use_reduce:
+         # Reduce (nonatomic) epilog writes flat bf16 per sorted position; reduce on
+         # host. The mxfp_moe stage2 mode is coupled to tile_m: reduce is a BM == 128
+         # path, atomic is the BM in {16,32,64} path. (Callers pick the mode by
+         # tile_m; the pytest matrix skips the mismatched combo.)
+         if BM != 128:
+             pytest.skip(f"fused mxfp_moe reduce (nonatomic) epilog requires tile_m == 128, got {BM}")
+         flat = torch.zeros(sorted_size * model_dim, dtype=torch.bfloat16, device=dev)
+ 
+         def _g2_launch():
+             flydsl_mxfp4_gemm2(
+                 inter_sorted_quant=aqout,
+                 inter_sorted_shuffled_scale=ascaleout,
+                 w2_u8=w2_shuf,
+                 w2_scale_u8=w2_scale_1d,
+                 sorted_expert_ids=sorted_expert_ids,
+                 cumsum_tensor=cumsum,
+                 sorted_token_ids=sorted_token_ids,
+                 sorted_weights=sorted_weights,
+                 flat_out=flat,
+                 M_logical=tokens,
+                 max_sorted=sorted_size,
+                 BM=BM,
+                 use_nt=False,
+                 epilog="nonatomic",
+                 NE=experts,
+                 D_HIDDEN=model_dim,
+                 D_INTER=inter_dim,
+                 topk=topk,
+             )
+ 
+         # nonatomic overwrites `flat`, so a timed loop leaves a valid result.
+         if num_iters > 0:
+             _, us2 = run_perftest(_g2_launch, num_iters=int(num_iters), num_warmup=int(num_warmup))
+             _print_mxfp_moe_perf(2, us2, label, tokens, topk, model_dim, inter_dim, experts, use_reduce=True)
+         else:
+             _g2_launch()
+         torch.cuda.synchronize()
+         flat = flat.view(sorted_size, model_dim).float()
+         tok = (sorted_token_ids & 0x00FFFFFF).long()
+         valid = tok < tokens
+         out = torch.zeros(tokens, model_dim, dtype=torch.float32, device=dev)
+         out.index_add_(0, tok[valid], flat[valid] * sorted_weights[valid].unsqueeze(-1))
+     else:
+         # The atomic (scatter-to-token) epilog is supported at BM in {16, 32, 64}.
+         # BM == 128 down-proj is covered by the reduce (nonatomic) path instead.
+         if BM == 128:
+             pytest.skip("fused mxfp_moe atomic epilog unsupported at tile_m == 128; use reduce mode")
+         out_buf = torch.zeros(tokens * model_dim, dtype=torch.bfloat16, device=dev)
+ 
+         def _g2_launch():
+             flydsl_mxfp4_gemm2(
+                 inter_sorted_quant=aqout,
+                 inter_sorted_shuffled_scale=ascaleout,
+                 w2_u8=w2_shuf,
+                 w2_scale_u8=w2_scale_1d,
+                 sorted_expert_ids=sorted_expert_ids,
+                 cumsum_tensor=cumsum,
+                 sorted_token_ids=sorted_token_ids,
+                 sorted_weights=sorted_weights,
+                 flat_out=out_buf,
+                 M_logical=tokens,
+                 max_sorted=sorted_size,
+                 BM=BM,
+                 use_nt=True,
+                 epilog="atomic",
+                 NE=experts,
+                 D_HIDDEN=model_dim,
+                 D_INTER=inter_dim,
+                 topk=topk,
+             )
+ 
+         # atomic accumulates into out_buf; time into it, then zero + one clean
+         # launch for the correctness check below.
+         if num_iters > 0:
+             _, us2 = run_perftest(_g2_launch, num_iters=int(num_iters), num_warmup=int(num_warmup))
+             _print_mxfp_moe_perf(2, us2, label, tokens, topk, model_dim, inter_dim, experts, use_reduce=False)
+             out_buf.zero_()
+         _g2_launch()
+         torch.cuda.synchronize()
+         out = out_buf.view(tokens, model_dim).float()
+ 
+     # --- reference (stage1 -> host re-quant -> stage2) ------------------------
+     if not skip_ref:
+         ref1 = torch_moe_gemm1(
+-            x_q, w1_q, x_scale, w1_scale, topk_ids.long(), topk_weights, inter_dim=inter_dim, doweight_stage1=False
++            x_q,
++            w1_q,
++            x_scale,
++            w1_scale,
++            topk_ids.long(),
++            topk_weights,
++            inter_dim=inter_dim,
++            doweight_stage1=False,
++            activation=activation,
++            swiglu_alpha=swiglu_alpha,
++            swiglu_limit=swiglu_limit,
+         )
+         a2_q, a2_scale = _per_1x32_fp4_quant(ref1.reshape(tokens * topk, inter_dim))
+         ref2 = torch_moe_gemm2(
+             a2_q.view(tokens, topk, -1),
+             w2_q,
+             a2_scale.view(tokens, topk, -1),
+             w2_scale,
+             topk_ids.long(),
+             topk_weights,
+             model_dim=model_dim,
+             doweight_stage2=True,
+         )
+         # Strict, asserted correctness gate. This exposes the pre-existing
+         # fused-mxfp4 defects (broken shared gemm2 down-proj + broken fp8-gemm1
+         # A-path); the a4w4/a8w4 callers are xfail-marked accordingly. NOTE:
+         # rtol/atol must be tight too -- verify_output early-returns True when <5%
+         # of elements exceed the allclose tol, so a loose rtol/atol (0.5) would
+         # mask the logits check (the original bug that let cos~0.1 pass silently).
+         assert verify_output(out, ref2, rtol=2e-3, atol=2e-3, logits_diff_threshold=2e-3)
++        return out, ref2
++    return out, None
+ 
+ 
+-# The fused mxfp4 a4w4/a8w4 pipeline is numerically broken under the strict gate
+-# (independently verified: e2e cos ~0.12 / ~0.07; the shared gemm2 down-proj is
+-# broken and, for a8w4, the fp8-gemm1 A-path too -- stage1 cos 0.16). Beyond wrong
+-# numbers, these kernels are memory-unsafe: launching them and then unwinding an
+-# xfail under pytest teardown corrupts the JIT/HIP module state and cascades an
+-# illegal-address crash into unrelated tests in the same session. So xfail with
+-# run=False: document the expected failure (honest CI signal, not a silent mask)
+-# WITHOUT executing the broken kernel, keeping the a16w4 strict gate runnable.
++# The fp8 activation variant remains quarantined independently of the A4W4 path.
+ _MXFP4_FUSED_XFAIL = pytest.mark.xfail(
+-    reason="pre-existing mxfp4 fused gemm2 + fp8-gemm1 A-path bug, e2e cos ~0.1; "
+-    "strict gate exposes it, not an a16w4 regression (kernel is also memory-unsafe "
+-    "-> run=False to avoid crashing the session). TODO(issue #NNN)",
++    reason="pre-existing fp8-gemm1 A-path bug; not part of the A4W4 qualification",
+     strict=False,
+     run=False,
+ )
+ 
+ 
+ @pytest.mark.skipif("gfx95" not in ARCH, reason="mxfp_moe a4w4/a8w4/a16w4 requires gfx950+")
+ @pytest.mark.parametrize(
+     "a_dtype",
+     [
+-        # a4w4 (fp4) and a8w4 (fp8) hit the broken fused mxfp4 gemm2 (and, for fp8,
+-        # the broken fp8-gemm1 A-path) -> xfail under the strict gate. a16w4 is faithful.
+-        pytest.param("fp4", marks=_MXFP4_FUSED_XFAIL),
++        "fp4",
+         pytest.param("fp8", marks=_MXFP4_FUSED_XFAIL),
+         "a16w4",
+     ],
+ )
+ @pytest.mark.parametrize(
+     "variant",
+     ["bm32_atomic", "inline_bm16", "interleave_bm64"],
+ )
+ def test_mxfp_moe_variants(a_dtype, variant):
+     """Cover the fused mxfp_moe gemm1 variants the FP4-M/L e2e shapes don't reach:
+     BM==32 (atomic), inline_quant (BM==16, bf16 hidden -> on-device quant), and the
+     interleaved gate/up layout. a4w4 (fp4) and a8w4 (fp8) run all three; a16w4
+     (bf16 A) has no inline-quant/interleave path, so it only runs bm32_atomic."""
++    if a_dtype == "fp4" and variant != "bm32_atomic":
++        pytest.xfail(
++            "A4W4 inline quantization and BM64 interleaved layouts remain numerically unqualified; "
++            "the MiniMax-M3 entry uses the strict-reference-checked packed-A4 BM32 path"
++        )
+     if a_dtype == "a16w4" and variant != "bm32_atomic":
+         pytest.skip("a16w4 has no inline_quant / interleave gemm1 variant (bf16 A, atomic gemm2 only)")
+     device = torch.device("cuda")
+     tokens, model_dim, inter_dim, experts, topk = 128, 1024, 256, 8, 2
+     s = 0.2
+     x_fp32 = torch.randn((tokens, model_dim), device=device, dtype=torch.float32) * s
+     w1_fp32 = torch.randn((experts, 2 * inter_dim, model_dim), device=device, dtype=torch.float32) * s
+     w2_fp32 = torch.randn((experts, model_dim, inter_dim), device=device, dtype=torch.float32) * (
+         s / math.sqrt(inter_dim)
+     )
+     score = torch.rand((tokens, experts), device=device, dtype=torch.float32)
+     topk_vals, topk_ids = torch.topk(score, k=topk, dim=1)
+     topk_weights = torch.softmax(topk_vals, dim=1).to(torch.float32)
+ 
+     if variant == "inline_bm16":
+         tile_m, inline_quant, interleave = 16, True, False
+     elif variant == "bm32_atomic":
+         tile_m, inline_quant, interleave = 32, False, False
+     else:  # interleave_bm64
+         tile_m, inline_quant, interleave = 64, False, True
+ 
+     routing = build_routing_buffers(
+         topk_ids=topk_ids,
+         topk_weights=topk_weights,
+         experts=experts,
+         model_dim=model_dim,
+         tile_m=tile_m,
+         moe_sort_mode="torch",
+     )
+     _run_mxfp_moe_e2e(
+         tokens=tokens,
+         model_dim=model_dim,
+         inter_dim=inter_dim,
+         experts=experts,
+         topk=topk,
+         tile_m=tile_m,
+         use_reduce=False,
+         x_fp32=x_fp32,
+         w1_fp32=w1_fp32,
+         w2_fp32=w2_fp32,
+         topk_ids=topk_ids,
+         topk_weights=topk_weights,
+         routing=routing,
+         a_dtype="a16" if a_dtype == "a16w4" else a_dtype,
+         inline_quant=inline_quant,
+         interleave=interleave,
+     )
+ 
+ 
++@pytest.mark.skipif("gfx95" not in ARCH, reason="MiniMax-M3 A4W4 requires gfx950+")
++@pytest.mark.parametrize("tokens", [1, 2, 4, 16, 32, 256])
++def test_minimax_m3_a4w4_swigluoai(tokens):
++    """MiniMax-M3 routed/shared expert semantics with dynamic A4 and static W4.
++
++    Duplicate routes deliberately exercise repeated expert/slot accumulation.  The
++    one-expert invocation is the model's shared expert projection; callers add it
++    to the routed result after applying the model's normalized sigmoid routing
++    weights and routed_scaling_factor.
++    """
++    device = torch.device("cuda")
++    model_dim, inter_dim, experts, topk, tile_m = 1024, 256, 8, 4, 32
++    gen = torch.Generator(device=device).manual_seed(717 + tokens)
++    x = torch.randn((tokens, model_dim), generator=gen, device=device) * 0.35
++    # Adversarial MX blocks: exact zero scale plus a wide but finite dynamic range.
++    x[:, :32] = 0
++    x[:, 32:64:2] = 1.0e-6
++    x[:, 33:64:2] = 1.0e3
++    w1 = torch.randn((experts, 2 * inter_dim, model_dim), generator=gen, device=device) * 0.15
++    w2 = torch.randn((experts, model_dim, inter_dim), generator=gen, device=device) * 0.01
++    # Nonuniform weights and duplicate expert ids are valid slot semantics.
++    ids = torch.arange(tokens * topk, device=device).view(tokens, topk) % experts
++    if tokens:
++        ids[:, -1] = ids[:, 0]
++    raw = torch.rand((tokens, topk), generator=gen, device=device) + 0.05
++    weights = raw / raw.sum(dim=-1, keepdim=True) * 2.0
++    routing = build_routing_buffers(
++        topk_ids=ids, topk_weights=weights, experts=experts, model_dim=model_dim,
++        tile_m=tile_m, moe_sort_mode="torch"
++    )
++    routed, routed_ref = _run_mxfp_moe_e2e(
++        tokens=tokens, model_dim=model_dim, inter_dim=inter_dim, experts=experts,
++        topk=topk, tile_m=tile_m, use_reduce=False, x_fp32=x, w1_fp32=w1,
++        w2_fp32=w2, topk_ids=ids, topk_weights=weights, routing=routing,
++        activation="swigluoai", swiglu_alpha=1.702, swiglu_limit=7.0,
++    )
++    assert torch.isfinite(routed).all() and torch.isfinite(routed_ref).all()
++
++    shared_ids = torch.zeros((tokens, 1), dtype=torch.long, device=device)
++    shared_weights = torch.ones((tokens, 1), dtype=torch.float32, device=device)
++    shared_routing = build_routing_buffers(
++        topk_ids=shared_ids, topk_weights=shared_weights, experts=1,
++        model_dim=model_dim, tile_m=tile_m, moe_sort_mode="torch"
++    )
++    shared, shared_ref = _run_mxfp_moe_e2e(
++        tokens=tokens, model_dim=model_dim, inter_dim=inter_dim, experts=1, topk=1,
++        tile_m=tile_m, use_reduce=False, x_fp32=x, w1_fp32=w1[:1], w2_fp32=w2[:1],
++        topk_ids=shared_ids, topk_weights=shared_weights, routing=shared_routing,
++        activation="swigluoai", swiglu_alpha=1.702, swiglu_limit=7.0,
++    )
++    combined = routed + shared
++    combined_ref = routed_ref + shared_ref
++    assert torch.isfinite(combined).all()
++    assert verify_output(combined, combined_ref, rtol=2e-3, atol=2e-3, logits_diff_threshold=2e-3)
++
++
++@pytest.mark.large_shape
++@pytest.mark.skipif("gfx95" not in ARCH, reason="MiniMax-M3 A4W4 requires gfx950+")
++@pytest.mark.skipif(
++    os.environ.get("FLYDSL_RUN_MINIMAX_M3_SHAPE") != "1",
++    reason="set FLYDSL_RUN_MINIMAX_M3_SHAPE=1 for the 128-expert production-shape qualification",
++)
++def test_minimax_m3_a4w4_model_shape():
++    """Exact MiniMax-M3 routed projection dimensions (6144x3072, E128, top-k 4).
++
++    This is a kernel-level qualification with synthetic quantized projections; it
++    intentionally does not claim full-model generation or multi-rank EP coverage.
++    """
++    device = torch.device("cuda")
++    model_dim, inter_dim, experts, topk, tile_m = 6144, 3072, 128, 4, 32
++    gen = torch.Generator(device=device).manual_seed(717)
++    w1 = torch.randn((experts, 2 * inter_dim, model_dim), generator=gen, device=device) * 0.02
++    w2 = torch.randn((experts, model_dim, inter_dim), generator=gen, device=device) * 0.005
++    for tokens in (1, 2, 4, 16, 32, 256):
++        x = torch.randn((tokens, model_dim), generator=gen, device=device) * 0.2
++        ids = torch.arange(tokens * topk, device=device).view(tokens, topk) % experts
++        ids[:, -1] = ids[:, 0]
++        raw = torch.rand((tokens, topk), generator=gen, device=device) + 0.05
++        weights = raw / raw.sum(dim=-1, keepdim=True) * 2.0
++        routing = build_routing_buffers(
++            topk_ids=ids, topk_weights=weights, experts=experts, model_dim=model_dim,
++            tile_m=tile_m, moe_sort_mode="torch"
++        )
++        out, ref = _run_mxfp_moe_e2e(
++            tokens=tokens, model_dim=model_dim, inter_dim=inter_dim, experts=experts,
++            topk=topk, tile_m=tile_m, use_reduce=False, x_fp32=x, w1_fp32=w1,
++            w2_fp32=w2, topk_ids=ids, topk_weights=weights, routing=routing,
++            activation="swigluoai", swiglu_alpha=1.702, swiglu_limit=7.0,
++        )
++        shared_ids = torch.zeros((tokens, 1), dtype=torch.long, device=device)
++        shared_weights = torch.ones((tokens, 1), dtype=torch.float32, device=device)
++        shared_routing = build_routing_buffers(
++            topk_ids=shared_ids, topk_weights=shared_weights, experts=1,
++            model_dim=model_dim, tile_m=tile_m, moe_sort_mode="torch"
++        )
++        shared, shared_ref = _run_mxfp_moe_e2e(
++            tokens=tokens, model_dim=model_dim, inter_dim=inter_dim, experts=1, topk=1,
++            tile_m=tile_m, use_reduce=False, x_fp32=x, w1_fp32=w1[:1], w2_fp32=w2[:1],
++            topk_ids=shared_ids, topk_weights=shared_weights, routing=shared_routing,
++            activation="swigluoai", swiglu_alpha=1.702, swiglu_limit=7.0,
++        )
++        out = out + shared
++        ref = ref + shared_ref
++        assert torch.isfinite(out).all() and torch.isfinite(ref).all()
++        assert verify_output(out, ref, rtol=2e-3, atol=2e-3, logits_diff_threshold=2e-3)
++        cosine = torch.nn.functional.cosine_similarity(out.flatten(), ref.flatten(), dim=0).item()
++        max_abs = (out - ref).abs().max().item()
++        print(f"MiniMax-M3 A4W4 tokens={tokens}: cosine={cosine:.8f} max_abs={max_abs:.8f}")
++
++
+ @pytest.mark.skipif("gfx95" not in ARCH, reason="a16w4 requires gfx950+")
+ @pytest.mark.parametrize("w_dtype", ["mxfp4", "bf16"], ids=["a16w4", "a16w16"])
+ @pytest.mark.parametrize(
+     "tokens, model_dim, inter_dim, experts, topk, tile_m",
+     [
+         # Small shape (fast) + the Kimi-K3 3584x512 E896 k16 production shape.
+         pytest.param(128, 1024, 256, 8, 2, 32, id="small"),
+         pytest.param(128, 3584, 512, 896, 16, 32, id="kimi512", marks=pytest.mark.large_shape),
+     ],
+ )
+ def test_a16w4_moe_e2e(tokens, model_dim, inter_dim, experts, topk, tile_m, w_dtype):
+     """a16w4 (bf16 A x mxfp4 W1/W2) and a16w16 (bf16 A x raw bf16 W1/W2) fused MoE e2e
+     correctness on a small shape and the Kimi-K3 3584x512 E896 k16 production shape.
+     bf16 A (no quant), bf16 sorted intermediate, atomic gemm2. a16w4 cos vs torch at
+     the fp4 bar; a16w16 is unquantized so cos should be ~1.0."""
+     device = torch.device("cuda")
+     s = 0.2
+     x_fp32 = torch.randn((tokens, model_dim), device=device, dtype=torch.float32) * s
+     w1_fp32 = torch.randn((experts, 2 * inter_dim, model_dim), device=device, dtype=torch.float32) * s
+     w2_fp32 = torch.randn((experts, model_dim, inter_dim), device=device, dtype=torch.float32) * (
+         s / math.sqrt(inter_dim)
+     )
+     score = torch.rand((tokens, experts), device=device, dtype=torch.float32)
+     topk_vals, topk_ids = torch.topk(score, k=topk, dim=1)
+     topk_weights = torch.softmax(topk_vals, dim=1).to(torch.float32)
+     routing = build_routing_buffers(
+         topk_ids=topk_ids,
+         topk_weights=topk_weights,
+         experts=experts,
+         model_dim=model_dim,
+         tile_m=tile_m,
+         moe_sort_mode="torch",
+     )
+     _run_mxfp_moe_e2e(
+         tokens=tokens,
+         model_dim=model_dim,
+         inter_dim=inter_dim,
+         experts=experts,
+         topk=topk,
+         tile_m=tile_m,
+         use_reduce=False,
+         x_fp32=x_fp32,
+         w1_fp32=w1_fp32,
+         w2_fp32=w2_fp32,
+         topk_ids=topk_ids,
+         topk_weights=topk_weights,
+         routing=routing,
+         a_dtype="a16",
+         w_dtype=w_dtype,
+     )
+ 
+ 
+ @pytest.mark.skipif("gfx95" not in ARCH, reason="a16w4 requires gfx950+")
+ @pytest.mark.parametrize(
+     "tokens, model_dim, inter_dim, experts, topk, tile_m",
+     [pytest.param(128, 1024, 256, 8, 2, 32, id="small")],
+ )
+ def test_a16w4_gemm1_guinterleave_parity(tokens, model_dim, inter_dim, experts, topk, tile_m):
+     """Stage1 native-layout (GUGU guinterleave) parity.
+ 
+     Feeding aiter's native ``shuffle_weight_a16w4``/``shuffle_scale_a16w4`` W1+scale
+     (``is_guinterleave=True``) through ``w_layout="guinterleave"`` must produce a
+     bit-identical bf16 intermediate to the standard GGUU-layout run on the SAME mxfp4
+     values -- both are the same kernel math, only the W1/scale memory layout differs.
+     Validates the gemm1 guinterleave weight+scale reindex (no host relayout)."""
+     aiter_shuffle = pytest.importorskip("aiter.ops.shuffle")
+     shuffle_weight_a16w4 = aiter_shuffle.shuffle_weight_a16w4
+     shuffle_scale_a16w4 = aiter_shuffle.shuffle_scale_a16w4
+     from tests.kernels.utils import gemm_common_utils as gcu
+ 
+     device = torch.device("cuda")
+     N_OUT = 2 * inter_dim
+     s = 0.2
+     x_fp32 = torch.randn((tokens, model_dim), device=device, dtype=torch.float32) * s
+     w1_fp32 = torch.randn((experts, N_OUT, model_dim), device=device, dtype=torch.float32) * s
+     score = torch.rand((tokens, experts), device=device, dtype=torch.float32)
+     topk_vals, topk_ids = torch.topk(score, k=topk, dim=1)
+     topk_weights = torch.softmax(topk_vals, dim=1).to(torch.float32)
+     routing = build_routing_buffers(
+         topk_ids=topk_ids,
+@@ -1241,501 +1365,511 @@ def test_a16w4_moe_e2e_native_layout(tokens, model_dim, inter_dim, experts, topk
+             128,
+             1024,
+             256,
+             8,
+             2,
+             64,
+             128,
+             256,
+             256,
+             256,
+             False,
+             id="FP4-M",
+             marks=pytest.mark.skipif("gfx95" not in ARCH, reason="FP4 shape requires gfx950+"),
+         ),
+         pytest.param(
+             256,
+             1024,
+             256,
+             8,
+             2,
+             128,
+             128,
+             256,
+             256,
+             256,
+             False,
+             id="FP4-L",
+             marks=[
+                 pytest.mark.large_shape,
+                 pytest.mark.skipif("gfx95" not in ARCH, reason="FP4 shape requires gfx950+"),
+             ],
+         ),
+     ],
+ )
+ @pytest.mark.parametrize(
+     "in_dtype",
+     [
+         pytest.param("fp4", marks=pytest.mark.skipif("gfx95" not in ARCH, reason="FP4 requires gfx950+")),
+         pytest.param("a8w4", marks=pytest.mark.skipif("gfx95" not in ARCH, reason="A8W4 requires gfx950+")),
+         pytest.param("a16w4", marks=pytest.mark.skipif("gfx95" not in ARCH, reason="A16W4 requires gfx950+")),
+     ],
+ )
+ @pytest.mark.parametrize("out_dtype", ["f16", "bf16", "f32"], ids=["out_f16", "out_bf16", "out_f32"])
+ @pytest.mark.parametrize("use_reduce", [False, True], ids=["atomic", "reduce"])
+ @pytest.mark.parametrize("use_valid_mask", [False, True], ids=["nomask", "mask"])
+ @pytest.mark.parametrize(
+     "test_graph",
+     [
+         pytest.param(False, id="eager"),
+         pytest.param(True, id="graph"),
+     ],
+ )
+ @pytest.mark.parametrize("group_size", [-1, 32], ids=["perrow", "g32"])
+ def test_moe_gemm_2stage(
+     tokens: int,
+     model_dim: int,
+     inter_dim: int,
+     experts: int,
+     topk: int,
+     tile_m: int,
+     tile_n1: int,
+     tile_k1: int,
+     tile_n2: int,
+     tile_k2: int,
+     doweight_stage1: bool,
+     in_dtype: str,
+     out_dtype: str,
+     use_reduce: bool,
+     use_valid_mask: bool,
+     test_graph: bool,
+     group_size: int,
+     *,
+     seed: int = 0,
+     num_iters: int = 5,
+     num_warmup: int = 2,
+     moe_sort_mode: Optional[str] = None,
+     compare_aiter_ck: Optional[bool] = None,
+     init_scale: float = 1.0,
+     skip_ref: bool = False,
+     w_fp4_kernel: bool = False,
++    activation: str = "silu",
++    swiglu_alpha: float = 1.702,
++    swiglu_limit: float = 7.0,
+ ):
+     """Single 2-stage test: gemm1 -> quantize -> gemm2, with routing built once.
+ 
+     When in_dtype='int4_bf16' and group_size>0, uses groupwise scale (W4A16 with per-group dequant).
+     """
+     if (not bool(use_reduce)) and bool(use_valid_mask):
+         pytest.skip("valid_mask is only used in reduce mode (atomic mode ignores it).")
+     out_s = str(out_dtype).strip().lower()
+     if bool(use_reduce) and out_s in ("f32", "fp32", "float"):
+         pytest.skip("reduce mode does not support out_dtype='f32' (non-accumulating gemm2 forbids it).")
+     if group_size > 0 and in_dtype != "int4_bf16":
+         pytest.skip("groupwise scale only applies to int4_bf16 (W4A16)")
+     if in_dtype == "int4_bf16" and not _A16WMIX_GFX:
+         pytest.skip(f"int4_bf16 requires gfx942 or gfx950+, got {ARCH}")
+     if in_dtype in ("fp4", "a8w4", "a16w4", "int4_bf16"):
+         if bool(use_valid_mask):
+             pytest.skip(f"{in_dtype} does not support valid_mask")
+         if out_s not in ("f16", "fp16", "half"):
+             pytest.skip(f"{in_dtype} only supports f16 output")
+     if in_dtype in ("fp4", "a8w4"):
+         # Per-1x32 scale layout requires K >= 256 and tile_k >= 256 on both stages.
+         if model_dim < 256 or tile_k1 < 256:
+             pytest.skip(f"{in_dtype} requires model_dim >= 256 and tile_k >= 256, got {model_dim}, {tile_k1}")
+         if inter_dim < 256 or tile_k2 < 256:
+             pytest.skip(f"{in_dtype} stage2 requires inter_dim >= 256 and tile_k2 >= 256, got {inter_dim}, {tile_k2}")
+         if tile_m < 32 or tile_m % 32 != 0:
+             pytest.skip(f"{in_dtype} requires tile_m % 32 == 0 and tile_m >= 32, got {tile_m}")
+         # The fused mxfp_moe gemm1 unrolls the K loop as prologue(kStages=2) + main +
+         # drain; with model_dim == kStages*tile_k (512) the main loop that inits
+         # the accumulator is empty, so require model_dim > 512 (FP4-S is skipped).
+         if model_dim <= 512:
+             pytest.skip(f"fused mxfp_moe gemm1 requires model_dim > 512, got {model_dim}")
+     if in_dtype in ("a16w4", "int4_bf16"):
+         # a16w4 / a16wi4 constraints (flydsl_a16w4_gemm1/2):
+         #   gemm1 D_INTER % TILE_N(64) == 0 and 2*D_INTER % 256 == 0;
+         #   gemm2 model_dim % 256 == 0 and D_INTER % 256 == 0;
+         #   gemm2 is atomic-epilog only (BM in {16,32,64}) -> no reduce mode, no BM==128.
+         # Do not inherit the fused mxfp tile_m>=32 / model_dim>512 gates: W4A16
+         # bench shapes use tile_m=16, and a16 ignores CLI tile_k.
+         if bool(use_reduce):
+             pytest.skip(f"{in_dtype} gemm2 is atomic-epilog only (no reduce mode)")
+         if inter_dim % 64 != 0 or (2 * inter_dim) % 256 != 0:
+             pytest.skip(f"{in_dtype} gemm1 requires inter_dim % 64 == 0 and 2*inter_dim % 256 == 0, got {inter_dim}")
+         if model_dim % 256 != 0 or inter_dim % 256 != 0:
+             pytest.skip(
+                 f"{in_dtype} gemm2 requires model_dim % 256 == 0 and inter_dim % 256 == 0, got {model_dim},{inter_dim}"
+             )
+         if tile_m not in (16, 32, 64):
+             pytest.skip(f"{in_dtype} gemm2 atomic epilog requires tile_m in (16,32,64), got {tile_m}")
+     device = torch.device("cuda")
+-    # torch.manual_seed(int(seed))
++    torch.manual_seed(int(seed))
+ 
+     # Keep inputs tame by default; fp16 paths are less robust to overflow.
+     # (Callers can still override via pytest param / direct invocation.)
+     if init_scale == 1.0:
+         init_scale = 0.2
+     s = float(init_scale)
+     x_fp32 = torch.randn((tokens, model_dim), device=device, dtype=torch.float32) * s
+     # x_fp32 = torch.ones((tokens, model_dim), device=device, dtype=torch.float32) * s
+     # fan_in = model_dim for W1: [E, 2*inter, model]
+     w1_fp32 = (
+         torch.randn((experts, 2 * inter_dim, model_dim), device=device, dtype=torch.float32) * s
+     )  # * (s / math.sqrt(model_dim))
+     # w1_fp32 = torch.randn((experts, 2 * inter_dim, model_dim), device=device, dtype=torch.float32) * 0.2
+     # w1_fp32 = torch.ones((experts, 2 * inter_dim, model_dim), device=device, dtype=torch.float32) * s
+     # fan_in = inter_dim for W2: [E, model, inter]
+     w2_fp32 = torch.randn((experts, model_dim, inter_dim), device=device, dtype=torch.float32) * (
+         s / math.sqrt(inter_dim)
+     )
+ 
+     score = torch.rand((tokens, experts), device=device, dtype=torch.float32)
+     topk_vals, topk_ids = torch.topk(score, k=topk, dim=1)
+     topk_weights = torch.softmax(topk_vals, dim=1).to(torch.float32)
+ 
+     routing = build_routing_buffers(
+         topk_ids=topk_ids,
+         topk_weights=topk_weights,
+         experts=experts,
+         model_dim=model_dim,
+         tile_m=tile_m,
+         moe_sort_mode=moe_sort_mode,
+     )
+ 
+     # Default routing + comparison knobs for test stability:
+     # - Use torch routing (no aiter dependency for sorting).
+     # - Only compare aiter for fp8, and only when explicitly requested.
+     if moe_sort_mode is None:
+         moe_sort_mode = "torch"
+     if compare_aiter_ck is None:
+         compare_aiter_ck = False
+ 
+     if in_dtype in ("fp4", "a8w4", "a16w4", "int4_bf16"):
+         # a4w4 / a8w4 drive the fused mxfp_moe pipeline (device-side fp4 re-quant).
+         # a16w4 / int4_bf16 keep A raw bf16 and a bf16 intermediate
+         # (a_dtype="a16" -> _run_a16w4_moe_e2e; int4_bf16 uses w_dtype="int4").
+         _a_dtype = {"a8w4": "fp8", "a16w4": "a16", "int4_bf16": "a16"}.get(in_dtype, "fp4")
+         _w_dtype = "int4" if in_dtype == "int4_bf16" else "mxfp4"
+-        # a4w4/a8w4 hit the broken (and memory-unsafe) fused mxfp4 pipeline: the
+-        # shared gemm2 down-proj is broken and, for a8w4, the fp8-gemm1 A-path too
+-        # (independently verified e2e cos ~0.12 / ~0.07). The strict e2e gate would
+-        # fail; running the kernel and unwinding under pytest teardown also cascades
+-        # an illegal-address crash into other tests. When a real reference would be
+-        # checked (skip_ref=False), xfail *without* executing the broken kernel so
+-        # CI stays honest and stable. a16w4 / int4_bf16 stay strict-asserted.
+-        if in_dtype in ("fp4", "a8w4") and not bool(skip_ref):
++        # Keep the independently broken FP8-activation path quarantined. A4W4 is
++        # strict-reference checked and supports either legacy SiLU or SwiGLU-OAI.
++        if in_dtype == "a8w4" and not bool(skip_ref):
+             _xfail_reason = (
+                 "pre-existing mxfp4 fused gemm2 + fp8-gemm1 A-path bug, e2e cos ~0.1; "
+                 "strict gate exposes it, not an a16w4 regression (kernel also "
+                 "memory-unsafe -> not executed here to avoid crashing the session). "
+                 "TODO(issue #NNN)"
+             )
+             # pytest.xfail() only unwinds cleanly inside a pytest session; in the
+             # __main__/script path (CI runs `python test_moe_gemm.py`) it raises an
+             # uncaught XFailed and crashes the job. Xfail under pytest, skip-return
+             # in script mode.
+             if os.environ.get("PYTEST_CURRENT_TEST"):
+                 pytest.xfail(_xfail_reason)
+             print(f"Skipped: {in_dtype}: {_xfail_reason}")
+             return
+         _run_mxfp_moe_e2e(
+             tokens=tokens,
+             model_dim=model_dim,
+             inter_dim=inter_dim,
+             experts=experts,
+             topk=topk,
+             tile_m=tile_m,
+             use_reduce=bool(use_reduce),
+             x_fp32=x_fp32,
+             w1_fp32=w1_fp32,
+             w2_fp32=w2_fp32,
+             topk_ids=topk_ids,
+             topk_weights=topk_weights,
+             routing=routing,
+             a_dtype=_a_dtype,
+             skip_ref=bool(skip_ref),
+             num_iters=num_iters,
+             num_warmup=num_warmup,
+             in_dtype_label=in_dtype,
+             w_dtype=_w_dtype,
++            activation=activation,
++            swiglu_alpha=swiglu_alpha,
++            swiglu_limit=swiglu_limit,
+         )
+         return
+ 
+ 
+ # ---------------------------------------------------------------------------
+ # FP4 (a4w4) quantization helper
+ # ---------------------------------------------------------------------------
+ 
+ 
+ def _per_1x32_fp4_quant(x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+     """Quantize a 2D tensor to MX FP4 with per-1x32 block scaling.
+ 
+     Returns (x_fp4, scale_e8m0) where x_fp4.shape[-1] == x.shape[-1] // 2.
+     """
+     from tests.kernels.utils import gemm_common_utils
+ 
+     block_size = 32
+     F4E2M1_MAX = 6.0
+     MAX_POW2 = int(torch.log2(torch.tensor(F4E2M1_MAX, dtype=torch.float32)).item())
+     dtypeMax = 2.0**MAX_POW2
+ 
+     shape_orig = x.shape
+     x = x.view(-1, shape_orig[-1])
+     m, n = x.shape
+     x_blocks = x.view(-1, block_size).float()
+     max_abs = torch.amax(torch.abs(x_blocks), dim=1)
+     scale_e8m0 = gemm_common_utils.f32_to_e8m0(max_abs / dtypeMax)
+     scale_f32 = gemm_common_utils.e8m0_to_f32(scale_e8m0)
+     y = x_blocks / scale_f32.view(-1, 1)
+     y_fp4 = gemm_common_utils.f32_to_mxfp4(y)
+     y_fp4 = y_fp4.view(*shape_orig[:-1], -1)  # K dim halved
+     scale = scale_e8m0.view(m, -1).view(torch.uint8)
+     return y_fp4, scale
+ 
+ 
+ def _per_1x32_mxfp8_quant(x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+     """Quantize a tensor to MX-FP8 (e4m3fn) with per-1x32 E8M0 block scaling.
+ 
+     Mirrors `_per_1x32_fp4_quant` for the A8W4 path: the activation is kept at
+     1 byte/element (no packing), and each 32-element K block gets its own
+     E8M0 scale stored as uint8.  Returns
+         (x_q [..., K] fp8_e4m3fn, scale_e8m0 [..., K//32] uint8).
+     """
+     from tests.kernels.utils import gemm_common_utils
+ 
+     fp8_max = float(torch.finfo(torch.float8_e4m3fn).max)
+     shape_orig = x.shape
+     x_flat = x.contiguous().view(-1, 32).float()
+     amax = torch.amax(torch.abs(x_flat), dim=-1).clamp_min(1e-30)
+     scale_e8m0 = gemm_common_utils.f32_to_e8m0(amax / fp8_max)
+     scale_f32 = gemm_common_utils.e8m0_to_f32(scale_e8m0).clamp_min(1e-30)
+     x_q = (x_flat / scale_f32.view(-1, 1)).clamp(-fp8_max, fp8_max).to(torch.float8_e4m3fn)
+     x_q = x_q.view(shape_orig).contiguous()
+     scale_bytes = scale_e8m0.view(*shape_orig[:-1], shape_orig[-1] // 32).view(torch.uint8).contiguous()
+     return x_q, scale_bytes
+ 
+ 
+ if __name__ == "__main__":
+     torch.set_default_device("cuda")
+ 
+     # CLI (mirrors key knobs from aiter/op_tests/test_moe_2stage.py, stage1 subset)
+     def _str2bool(v):
+         if v is None:
+             return None
+         if isinstance(v, bool):
+             return v
+         s = str(v).strip().lower()
+         if s in {"1", "true", "t", "yes", "y", "on"}:
+             return True
+         if s in {"0", "false", "f", "no", "n", "off"}:
+             return False
+         raise argparse.ArgumentTypeError(f"invalid bool: {v} (use t/f, true/false, 1/0)")
+ 
+     def _str2tuple_dim(v: str) -> Tuple[int, int]:
+         # aiter uses "-dim 6144,4096" meaning (model_dim, inter_dim)
+         s = str(v).strip()
+         parts = [p.strip() for p in s.split(",") if p.strip()]
+         if len(parts) != 2:
+             raise argparse.ArgumentTypeError(f"invalid -dim {v!r}; expected 'model_dim,inter_dim' e.g. 6144,4096")
+         return int(parts[0]), int(parts[1])
+ 
+     parser = argparse.ArgumentParser(
+         formatter_class=argparse.RawTextHelpFormatter,
+         description=(
+             "MoE 2-stage (FlyDSL MFMA FP8) test/benchmark " "(argparse subset aligned with aiter test_moe_2stage.py)"
+         ),
+     )
+     parser.add_argument(
+         "--in_dtype",
+         type=str,
+         default="fp8",
+         choices=["fp8", "fp16", "bf16", "int8", "int8smooth", "int4", "int4_bf16", "fp4", "a8w4", "a16w4", "all"],
+         help="Kernel input dtype: fp8 / fp16 / int8 / int8smooth / int4 / int4_bf16 / fp4 / a8w4 / all (default: all). "
+         "int8smooth expands X to [tokens*topk, K] with per-(token,slot) scales. "
+         "int4 means W4A8: A int8, W packed int4. "
+         "int4_bf16 means W4A16: A bf16, W packed int4. "
+         "fp4 means A4W4: both activation and weight are FP4 (uses mixed_moe_gemm kernel). "
+         "a8w4 means FP8 activation + MX-FP4 weight (per-1x32 E8M0 block scales on both sides; gfx950+).",
+     )
+     parser.add_argument(
+         "-d",
+         "--dtype",
+         type=str,
+         default="fp32",
+         choices=["fp32", "fp16", "bf16"],
+         help="Input init dtype (currently data is quantized to FP8 per-token; init dtype mainly affects RNG range).",
+     )
+     parser.add_argument(
+         "-dim",
+         type=_str2tuple_dim,
+         default=(6144, 4096),
+         help="Model dimension: model_dim,inter_dim (e.g. -dim 6144,4096)",
+     )
+     parser.add_argument("-t", "--tokenNum", type=int, default=32, help="Number of tokens (e.g. -t 1024)")
+     parser.add_argument("-e", "--expert", type=int, default=8, help="Number of experts (e.g. -e 8)")
+     parser.add_argument("-k", "--topk", type=int, default=2, help="Top-k (e.g. -k 2)")
++    parser.add_argument(
++        "--activation", choices=["silu", "swigluoai"], default="silu",
++        help="Fused stage1 activation. Use swigluoai for MiniMax-M3.",
++    )
++    parser.add_argument("--swiglu-alpha", type=float, default=1.702)
++    parser.add_argument("--swiglu-limit", type=float, default=7.0)
+     parser.add_argument(
+         "-s",
+         "--doweight_stage1",
+         type=_str2bool,
+         nargs="?",
+         const=True,
+         default=False,
+         help="Whether to multiply routed weight in stage1 (t/f).",
+     )
+ 
+     # Stage1-specific kernel tiling knobs
+     parser.add_argument("--tile_m", type=int, default=32, help="Tile M / block_m (routing block size).")
+     parser.add_argument("--tile_n", type=int, default=128, help="Tile N (inter dim tile).")
+     parser.add_argument("--tile_k", type=int, default=256, help="Tile K (model dim tile).")
+     parser.add_argument("--tile_n2", type=int, default=None, help="Stage2 tile N (model dim tile). Default: 2*tile_n.")
+     parser.add_argument("--tile_k2", type=int, default=None, help="Stage2 tile K (inter dim tile). Default: tile_k.")
+ 
+     # Sorting / comparison knobs
+     parser.add_argument(
+         "--moe_sort_mode",
+         type=str,
+         default=None,
+         choices=["aiter", "torch"],
+         help="Routing buffer build mode (aiter moe_sorting vs torch fallback).",
+     )
+     parser.add_argument(
+         "--compare_aiter_ck",
+         type=_str2bool,
+         nargs="?",
+         const=True,
+         default=None,
+         help="Override COMPARE_AITER_CK (t/f). Default: env or HAS_AITER.",
+     )
+     parser.add_argument(
+         "--skip_ref",
+         type=_str2bool,
+         nargs="?",
+         const=True,
+         default=False,
+         help="Skip torch reference correctness checks (benchmark-only).",
+     )
+     parser.add_argument(
+         "--gemm2_mode",
+         type=str,
+         default="both",
+         choices=["both", "atomic", "reduce"],
+         help="Stage2 accumulation mode: 'atomic', 'reduce', or 'both' (default: both).",
+     )
+     parser.add_argument(
+         "--out_dtype",
+         type=str,
+         default="f16",
+         choices=["f16", "bf16", "f32"],
+         help="Stage2 output dtype: f16 (half2 atomics), bf16 (bf16 atomics), or f32 (scalar fp32 atomics).",
+     )
+     parser.add_argument(
+         "--use_valid_mask",
+         type=_str2bool,
+         nargs="?",
+         const=True,
+         default=False,
+         help="Use valid mask for optimization when reduce or not.",
+     )
+ 
+     # Benchmark knobs
+     parser.add_argument("--seed", type=int, default=0, help="torch.manual_seed(seed)")
+     parser.add_argument("--num_iters", type=int, default=2, help="Benchmark iters")
+     parser.add_argument("--num_warmup", type=int, default=1, help="Benchmark warmup iters")
+ 
+     # graph mode test
+     parser.add_argument(
+         "--test_graph",
+         "-tg",
+         action="store_true",
+         default=False,
+         help="test with graph mode.",
+     )
+ 
+     # w fp4 moe kernel
+     parser.add_argument(
+         "--wfp4",
+         action="store_true",
+         default=False,
+         help="Use weight fp4 gemm.",
+     )
+ 
+     # Groupwise scale for W4A16
+     parser.add_argument(
+         "--group_size",
+         type=int,
+         default=-1,
+         help="Group size for W4A16 groupwise scale (-1 = per-row, 32 = group_size=32).",
+     )
+ 
+     args = parser.parse_args()
+ 
+     model_dim, inter_dim = args.dim
+ 
+     tile_n2 = int(args.tile_n2) if args.tile_n2 is not None else int(args.tile_n) * 2
+     tile_k2 = int(args.tile_k2) if args.tile_k2 is not None else args.tile_k
+ 
+     # Determine which gemm2 modes to run.
+     if args.gemm2_mode == "both":
+         reduce_flags = [False, True]
+     elif args.gemm2_mode == "reduce":
+         reduce_flags = [True]
+     else:  # "atomic"
+         reduce_flags = [False]
+ 
+     def run_one(dt: str, use_reduce: bool):
+         out_s = str(args.out_dtype).strip().lower()
+         if bool(use_reduce) and out_s in ("f32", "fp32", "float"):
+             print("[skip] reduce mode does not support out_dtype='f32'")
+             return
+         if (not bool(use_reduce)) and bool(args.use_valid_mask):
+             print("[skip] valid_mask is only used in reduce mode (atomic ignores it)")
+             return
+         test_moe_gemm_2stage(
+             tokens=int(args.tokenNum),
+             model_dim=int(model_dim),
+             inter_dim=int(inter_dim),
+             experts=int(args.expert),
+             topk=int(args.topk),
+             tile_m=int(args.tile_m),
+             tile_n1=int(args.tile_n),
+             tile_k1=int(args.tile_k),
+             tile_n2=tile_n2,
+             tile_k2=tile_k2,
+             doweight_stage1=bool(args.doweight_stage1),
+             in_dtype=dt,
+             out_dtype=str(args.out_dtype),
+             group_size=int(args.group_size),
+             seed=int(args.seed),
+             num_iters=int(args.num_iters),
+             num_warmup=int(args.num_warmup),
+             moe_sort_mode=args.moe_sort_mode,
+             compare_aiter_ck=args.compare_aiter_ck,
+             skip_ref=bool(args.skip_ref),
+             w_fp4_kernel=args.wfp4,
+             use_reduce=use_reduce,
+             use_valid_mask=bool(args.use_valid_mask),
+             test_graph=bool(args.test_graph),
++            activation=args.activation,
++            swiglu_alpha=float(args.swiglu_alpha),
++            swiglu_limit=float(args.swiglu_limit),
+         )
+ 
+     # Run 2-stage (gemm1 -> quantize -> gemm2) aiter-style test/benchmark.
+     # Expand "all" to all supported dtypes.
+     in_dtypes = args.in_dtype.split(",")
+     if "all" in in_dtypes:
+         in_dtypes = ["a16w4", "fp4", "a8w4"]
+     for dt in in_dtypes:
+         if dt in ("fp4", "a8w4", "a16w4") and "gfx95" not in ARCH:
+             print(f"Skipped: {dt}: requires gfx950+, got {ARCH}")
+             continue
+         if dt == "int4_bf16" and not _A16WMIX_GFX:
+             print(f"Skipped: {dt}: requires gfx942 or gfx950+, got {ARCH}")
+             continue
+         # mxfp_moe (fp4/a8w4) stage2 mode is coupled to tile_m: atomic for tile_m<128,
+         # reduce (nonatomic) only at tile_m==128. a16w4 / int4_bf16 gemm2 is atomic-only.
+         if dt in ("fp4", "a8w4"):
+             dt_reduce_flags = [int(args.tile_m) == 128]
+         elif dt in ("a16w4", "int4_bf16"):
+             dt_reduce_flags = [False]
+         else:
+             dt_reduce_flags = reduce_flags
+         for use_reduce in dt_reduce_flags:
+             run_one(dt, use_reduce)
+diff --git a/tests/kernels/test_ref.py b/tests/kernels/test_ref.py
+index 39fa34a..ccb0efa 100644
+--- a/tests/kernels/test_ref.py
++++ b/tests/kernels/test_ref.py
+@@ -22,216 +22,226 @@ def _detect_scale_kind(x: torch.Tensor, scale: torch.Tensor | None) -> str:
+     The classifier is intentionally dtype-driven so callers can pass *either*
+     packed FP4 bytes or real torch.float4 tensors for MX-FP4, while still
+     distinguishing MX-FP8 (one fp8 byte per element) unambiguously.
+     """
+     if scale is None or scale.dtype != torch.uint8:
+         return "scalar"
+     # Both block-scale kinds use K_blocks == logical_K // 32.
+     if x.dtype in _FP4_DTYPES and x.shape[-1] * 2 == scale.shape[-1] * 32:
+         return "mxfp4"
+     if x.dtype == torch.float8_e4m3fn and x.shape[-1] == scale.shape[-1] * 32:
+         return "mxfp8"
+     return "scalar"
+ 
+ 
+ def _logical_k(x: torch.Tensor, kind: str) -> int:
+     """Return the logical K dim (unpacked) given the detected scale kind."""
+     k = int(x.shape[-1])
+     return k * 2 if kind == "mxfp4" else k
+ 
+ 
+ def _dequant_mxfp4_per_1x32(x_fp4: torch.Tensor, scale_e8m0: torch.Tensor) -> torch.Tensor:
+     """Dequantize packed MXFP4 with per-1x32 e8m0 block scales to fp32."""
+     from tests.kernels.utils import gemm_common_utils
+ 
+     x_u8 = x_fp4.view(torch.uint8)
+     logical_k = int(x_u8.shape[-1]) * 2
+     if logical_k % 32 != 0:
+         raise ValueError(f"FP4 logical K must be divisible by 32, got {logical_k}")
+ 
+     x_f32 = gemm_common_utils.mxfp4_to_f32(x_u8.reshape(-1, logical_k // 2))
+     scales_f32 = gemm_common_utils.e8m0_to_f32(scale_e8m0.view(torch.uint8).reshape(-1, logical_k // 32))
+     x_f32 = x_f32 * scales_f32.repeat_interleave(32, dim=1)
+     return x_f32.view(*x_u8.shape[:-1], logical_k)
+ 
+ 
+ def _dequant_mxfp8_per_1x32(x_fp8: torch.Tensor, scale_e8m0: torch.Tensor) -> torch.Tensor:
+     """Dequantize MX-FP8 (e4m3fn) activations with per-1x32 e8m0 block scales to fp32.
+ 
+     Mirrors the MFMA-time semantics of the A8W4 stage1/stage2 kernels: the kernel
+     reads the raw fp8 byte, casts to fp32, and multiplies by the 8-bit exponent
+     scale (E8M0 = 2^(byte-127)) for every 32-element K block.
+     """
+     from tests.kernels.utils import gemm_common_utils
+ 
+     logical_k = int(x_fp8.shape[-1])
+     if logical_k % 32 != 0:
+         raise ValueError(f"MX-FP8 logical K must be divisible by 32, got {logical_k}")
+ 
+     x_f32 = x_fp8.reshape(-1, logical_k).to(torch.float32)
+     scales_f32 = gemm_common_utils.e8m0_to_f32(scale_e8m0.view(torch.uint8).reshape(-1, logical_k // 32))
+     x_f32 = x_f32 * scales_f32.repeat_interleave(32, dim=1)
+     return x_f32.view(*x_fp8.shape[:-1], logical_k)
+ 
+ 
+ def _dequant(x: torch.Tensor, scale: torch.Tensor | None, kind: str) -> torch.Tensor:
+     """Unified fp32 dequantization driven by the detected ``kind``.
+ 
+     - "mxfp4" / "mxfp8" delegate to the per-1x32 block-scale helpers above.
+     - "scalar" handles both the no-quant (scale is None) and broadcast-scale
+       paths (per-token / per-row fp scale).
+     """
+     if kind == "mxfp4":
+         return _dequant_mxfp4_per_1x32(x, scale)
+     if kind == "mxfp8":
+         return _dequant_mxfp8_per_1x32(x, scale)
+     x_f32 = x.to(torch.float32)
+     return x_f32 if scale is None else x_f32 * scale
+ 
+ 
+ def torch_moe_gemm1(
+     x_q: torch.Tensor,
+     w1_q_flat: torch.Tensor,
+     scale_x: torch.Tensor | None,
+     scale_w1_flat: torch.Tensor | None,
+     topk_ids: torch.Tensor,
+     topk_weights: torch.Tensor,
+     inter_dim: int,
+     doweight_stage1: bool,
+     group_size: int = -1,
+     scale_w1_groups: torch.Tensor | None = None,
++    activation: str = "silu",
++    swiglu_alpha: float = 1.702,
++    swiglu_limit: float = 7.0,
+ ) -> torch.Tensor:
+     """Return [tokens, topk, inter_dim] fp32.
+ 
+     Args:
+         group_size: -1 for per-row scale (uses scale_w1_flat), >0 for group-wise scale.
+         scale_w1_groups: Group-wise scale tensor of shape [E, K//group_size, 2*inter_dim] (Opt 0 layout).
+                          Required when group_size > 0; ignored otherwise.
+     """
+     topk = topk_ids.shape[1]
+     # Independent per-1x32 block-scale detection for x and w, so that mixed
+     # precisions such as A8W4 (fp8 activation + mxfp4 weight) can use the correct
+     # dequant per side.  See ``_detect_scale_kind`` for the classification rules.
+     x_kind = _detect_scale_kind(x_q, scale_x)
+     w_kind = _detect_scale_kind(w1_q_flat, scale_w1_flat)
+ 
+     if x_q.dim() == 2:
+         tokens = int(x_q.shape[0])
+     elif x_q.dim() == 3:
+         tokens, topk_x, _ = x_q.shape
+         assert int(topk_x) == int(topk), f"x_q topk mismatch: x_q.shape={tuple(x_q.shape)}, topk={topk}"
+     else:
+         raise ValueError(f"Unsupported x_q shape: {tuple(x_q.shape)}")
+     model_dim = _logical_k(x_q, x_kind)
+     # Derive experts from weight shapes (topk_ids may not cover all experts when tokens are tiny).
+     if w1_q_flat.dim() == 2:
+         experts = int(w1_q_flat.shape[0] // (2 * inter_dim))
+     else:
+         experts = int(w1_q_flat.shape[0])
+ 
+     x = _dequant(x_q, scale_x, x_kind)
+ 
+     if group_size > 0 and scale_w1_groups is not None:
+         # Group-wise dequantization: w_dequant[e,n,k] = w_int[e,n,k] * scale[e, k//group_size, n]
+         # Scale layout: [E, num_groups, N] (Opt 0: cache-friendly)
+         w1 = w1_q_flat.to(torch.float32).view(experts, 2 * inter_dim, model_dim)
+         num_groups = model_dim // group_size
+         for g in range(num_groups):
+             k_s, k_e = g * group_size, (g + 1) * group_size
+             w1[:, :, k_s:k_e] *= scale_w1_groups[:, g, :].unsqueeze(-1)
+     else:
+         w1 = _dequant(w1_q_flat, scale_w1_flat, w_kind).view(experts, 2 * inter_dim, model_dim)
+ 
+     out = torch.zeros((tokens, topk, inter_dim), device="cuda", dtype=torch.float32)
+     for e in range(experts):
+         # routes assigned to expert e
+         mask = topk_ids == e
+         idx = mask.nonzero(as_tuple=False)  # [num, 2] (t, slot)
+         if idx.numel() == 0:
+             continue
+         t_idx = idx[:, 0]
+         s_idx = idx[:, 1]
+         x_in = x[t_idx, :] if x.dim() == 2 else x[t_idx, s_idx, :]
+         y2 = F.linear(x_in, w1[e, :, :])  # [num, 2*inter_dim]
+         gate = y2[:, :inter_dim]
+         up = y2[:, inter_dim:]
+-        y = F.silu(gate) * up
++        if activation == "silu":
++            y = F.silu(gate) * up
++        elif activation == "swigluoai":
++            gate = torch.minimum(gate, torch.tensor(swiglu_limit, device=gate.device))
++            up = torch.clamp(up, -swiglu_limit, swiglu_limit)
++            y = gate * torch.sigmoid(swiglu_alpha * gate) * (up + 1.0)
++        else:
++            raise ValueError(f"unsupported activation: {activation!r}")
+         if doweight_stage1:
+             y = y * topk_weights[t_idx, s_idx].unsqueeze(-1)
+         out[t_idx, s_idx, :] = y
+     return out
+ 
+ 
+ def torch_moe_gemm2(
+     a2_q: torch.Tensor,
+     w2_q: torch.Tensor,
+     scale_a2: torch.Tensor | None,
+     scale_w2: torch.Tensor | None,
+     topk_ids: torch.Tensor,
+     topk_weights: torch.Tensor,
+     model_dim: int,
+     doweight_stage2: bool,
+     group_size: int = -1,
+     scale_w2_groups: torch.Tensor | None = None,
+ ) -> torch.Tensor:
+     """Return [tokens, model_dim] fp32.
+ 
+     Semantics align with aiter `torch_moe_stage2`:
+     - Dequantize `a2_q` and `w2_q` with per-token/row scales.
+     - For each routed (token, slot) -> expert, compute y = a2 @ W2[expert]^T.
+     - Optionally multiply routed weight in stage2 (when stage1 did *not*).
+     - Reduce across topk by summing into [tokens, model_dim].
+ 
+     Args:
+         group_size: -1 for per-row scale (uses scale_w2), >0 for group-wise scale.
+         scale_w2_groups: Group-wise scale tensor of shape [E, inter_dim//group_size, model_dim] (Opt 0 layout).
+                          Required when group_size > 0; ignored otherwise.
+     """
+     assert a2_q.is_cuda and w2_q.is_cuda
+     tokens, topk = topk_ids.shape
+ 
+     # Independent per-1x32 block-scale detection for a2 and w2; see
+     # ``_detect_scale_kind`` for the classification rules.
+     a_kind = _detect_scale_kind(a2_q, scale_a2)
+     w_kind = _detect_scale_kind(w2_q, scale_w2)
+ 
+     inter_dim = _logical_k(a2_q, a_kind)
+     if a_kind in ("mxfp4", "mxfp8"):
+         if a2_q.dim() == 2:
+             a2_q = a2_q.view(tokens, topk, -1)
+             scale_a2 = scale_a2.view(tokens, topk, -1)
+         elif a2_q.dim() != 3:
+             raise ValueError(f"Unsupported {a_kind} a2 shape: {tuple(a2_q.shape)}")
+     else:
+         if a2_q.dim() != 3:
+             raise ValueError(f"Unsupported a2_q shape: {tuple(a2_q.shape)}")
+ 
+     # Derive experts from weight shapes (topk_ids may not cover all experts when tokens are tiny).
+     if w2_q.dim() == 3:
+         experts = int(w2_q.shape[0])
+     else:
+         experts = int(w2_q.shape[0] // model_dim)
+ 
+     a2 = _dequant(a2_q, scale_a2, a_kind)
+ 
+     if group_size > 0 and scale_w2_groups is not None:
+         # Group-wise dequantization: w_dequant[e,n,k] = w_int[e,n,k] * scale[e, k//group_size, n]
+         # Scale layout: [E, num_groups, N] (Opt 0: cache-friendly)
+         w2 = w2_q.to(torch.float32).view(experts, model_dim, inter_dim)
+         num_groups = inter_dim // group_size
+         for g in range(num_groups):
+             k_s, k_e = g * group_size, (g + 1) * group_size
+             w2[:, :, k_s:k_e] *= scale_w2_groups[:, g, :].unsqueeze(-1)
+     else:
+         w2 = _dequant(w2_q, scale_w2, w_kind).view(experts, model_dim, inter_dim)
+ 
+     out = torch.zeros((tokens, model_dim), device="cuda", dtype=torch.float32)
+     for e in range(experts):
+         mask = topk_ids == e
+         idx = mask.nonzero(as_tuple=False)  # [num, 2] (t, slot)
+         if idx.numel() == 0:
+             continue
+         t_idx = idx[:, 0]
+         s_idx = idx[:, 1]
+         y = F.linear(a2[t_idx, s_idx, :], w2[e, :, :])  # [num, model_dim]
+         if doweight_stage2:
+             y = y * topk_weights[t_idx, s_idx].unsqueeze(-1)

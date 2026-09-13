@@ -1,0 +1,21 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0 -- /tmp/amdpilot-repo-j-a003b400bea7/venv/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collecting ... [aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-a003b400bea7/cache/aiter/module_aiter_core.so
+collected 1 item
+
+tests/kernels/test_moe_gemm.py::test_minimax_m3_a4w4_swigluoai[1] Logits Diff: 0.000004, Max Diff: 0.105278, Mean Diff: 0.013082
+ ✓ Check passed
+Logits Diff: 0.000001, Max Diff: 0.062500, Mean Diff: 0.003555
+ ✓ Check passed
+Logits Diff: 0.000002, Max Diff: 0.105278, Mean Diff: 0.014701
+ ✓ Check passed
+PASSED
+
+============================== 1 passed in 7.67s ===============================
+pytest_exit=0

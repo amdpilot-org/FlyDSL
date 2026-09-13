@@ -1,0 +1,12 @@
+ERROR: not found: /job/repo/tests/kernels/test_moe_gemm.py::test_minimax_m3_a4w4_swigluoai
+(no match in any of [<Module test_moe_gemm.py>])
+
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collected 0 items
+
+============================ no tests ran in 3.10s =============================
+pytest_exit=4

@@ -1,0 +1,3 @@
+acf7e67b7d22847e345938ca54fcc137bd7b2a1f
+(*, a_quant, a_scale_sorted_shuffled, w1_u8, w1_scale_u8, sorted_expert_ids, cumsum_tensor, m_indices, inter_sorted_quant, inter_sorted_shuffled_scale, hidden_states, n_tokens, BM, use_nt, inline_quant, NE, D_HIDDEN, D_INTER, topk, BN=256, BK=256, interleave=False, xcd_swizzle=0, a_dtype='fp4', stream=None)
+has_activation False
