@@ -1,0 +1,21 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0 -- /tmp/amdpilot-repo-j-27a00da88ece/venv/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collecting ... [aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-27a00da88ece/cache/aiter/module_aiter_core.so
+collected 2 items
+
+tests/kernels/test_moe_gemm.py::test_minimax_m3_a4w4_model_shape[packed-swigluoai] MiniMax-M3 A4W4 dispatch=packed-bm32 activation=swigluoai tokens=1: cosine=0.99999815 max_abs=0.00141865
+MiniMax-M3 A4W4 dispatch=packed-bm32 activation=swigluoai tokens=2: cosine=0.99999785 max_abs=0.00155514
+MiniMax-M3 A4W4 dispatch=packed-bm32 activation=swigluoai tokens=4: cosine=0.99999702 max_abs=0.00158183
+MiniMax-M3 A4W4 dispatch=packed-bm32 activation=swigluoai tokens=16: cosine=0.99999678 max_abs=0.00196862
+MiniMax-M3 A4W4 dispatch=packed-bm32 activation=swigluoai tokens=32: cosine=0.99999648 max_abs=0.00245625
+MiniMax-M3 A4W4 dispatch=packed-bm32 activation=swigluoai tokens=256: cosine=0.99999654 max_abs=0.00260985
+PASSED
+tests/kernels/test_moe_gemm.py::test_mxfp_moe_variants[interleave_bm64-fp4] XFAILMax-M3 entry uses BM32 packed-A4 or BM16 inline quantization)
+
+======================== 1 passed, 1 xfailed in 14.52s =========================

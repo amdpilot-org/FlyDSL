@@ -1,0 +1,19 @@
+  Name:                    AMD EPYC 9965 192-Core Processor   
+  Marketing Name:          AMD EPYC 9965 192-Core Processor   
+  Vendor Name:             CPU                                
+  Name:                    AMD EPYC 9965 192-Core Processor   
+  Marketing Name:          AMD EPYC 9965 192-Core Processor   
+  Vendor Name:             CPU                                
+  Name:                    gfx950                             
+  Marketing Name:          AMD Instinct MI350X                
+HIP version: 7.2.26015-fc0010cf6a
+AMD clang version 22.0.0git (https://github.com/RadeonOpenCompute/llvm-project roc-7.2.0 26014 7b800a19466229b8479a78de19143dc33c3ab9b5)
+Target: x86_64-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /opt/rocm-7.2.0/lib/llvm/bin
+Configuration file: /opt/rocm-7.2.0/lib/llvm/bin/clang++.cfg
+python /tmp/amdpilot-repo-j-27a00da88ece/venv/bin/python
+flydsl_python /job/repo/python/flydsl/__init__.py
+flydsl_native None
+torch 2.9.1+rocm7.2.0.git7e1940d4 hip 7.2.26015-fc0010cf6a
+device AMD Instinct MI350X capability (9, 5)

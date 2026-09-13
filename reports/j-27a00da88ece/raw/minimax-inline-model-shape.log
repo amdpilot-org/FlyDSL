@@ -1,0 +1,73 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0 -- /tmp/amdpilot-repo-j-27a00da88ece/venv/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collecting ... [aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-27a00da88ece/cache/aiter/module_aiter_core.so
+collected 2 items
+
+tests/kernels/test_moe_gemm.py::test_minimax_m3_a4w4_model_shape[inline-silu] MiniMax-M3 A4W4 dispatch=inline-bm16 activation=silu tokens=1: cosine=0.99999833 max_abs=0.00044759
+MiniMax-M3 A4W4 dispatch=inline-bm16 activation=silu tokens=2: cosine=0.99967742 max_abs=0.00350269
+Logits Diff: 0.001433, Max Diff: 0.007613, Mean Diff: 0.000530
+ ✓ Check passed
+Logits Diff: 0.001400, Max Diff: 0.007577, Mean Diff: 0.000726
+ ✓ Check passed
+MiniMax-M3 A4W4 dispatch=inline-bm16 activation=silu tokens=4: cosine=0.99859989 max_abs=0.00757747
+Logits Diff: 0.001637, Max Diff: 0.006196, Mean Diff: 0.000748
+ ✓ Check passed
+Logits Diff: 0.001632, Max Diff: 0.007427, Mean Diff: 0.000968
+ ✓ Check passed
+MiniMax-M3 A4W4 dispatch=inline-bm16 activation=silu tokens=16: cosine=0.99836814 max_abs=0.00742669
+Logits Diff: 0.001461, Max Diff: 0.009583, Mean Diff: 0.000633
+ ✓ Check passed
+Logits Diff: 0.001449, Max Diff: 0.013171, Mean Diff: 0.000811
+ ✓ Check passed
+MiniMax-M3 A4W4 dispatch=inline-bm16 activation=silu tokens=32: cosine=0.99855065 max_abs=0.01317090
+Logits Diff: 0.001602, Max Diff: 0.008948, Mean Diff: 0.000698
+ ✓ Check passed
+Logits Diff: 0.001594, Max Diff: 0.009977, Mean Diff: 0.000886
+ ✓ Check passed
+MiniMax-M3 A4W4 dispatch=inline-bm16 activation=silu tokens=256: cosine=0.99840635 max_abs=0.00997717
+PASSED
+tests/kernels/test_moe_gemm.py::test_minimax_m3_a4w4_model_shape[inline-swigluoai] MiniMax-M3 A4W4 dispatch=inline-bm16 activation=swigluoai tokens=1: cosine=0.99999821 max_abs=0.00130528
+Logits Diff: 0.000469, Max Diff: 0.010476, Mean Diff: 0.001156
+ ✓ Check passed
+Logits Diff: 0.000616, Max Diff: 0.008972, Mean Diff: 0.000998
+ ✓ Check passed
+Logits Diff: 0.000355, Max Diff: 0.012975, Mean Diff: 0.001528
+ ✓ Check passed
+MiniMax-M3 A4W4 dispatch=inline-bm16 activation=swigluoai tokens=2: cosine=0.99964529 max_abs=0.01297479
+Logits Diff: 0.000983, Max Diff: 0.017340, Mean Diff: 0.001604
+ ✓ Check passed
+Logits Diff: 0.000981, Max Diff: 0.012421, Mean Diff: 0.001207
+ ✓ Check passed
+Logits Diff: 0.001062, Max Diff: 0.022443, Mean Diff: 0.002255
+ ✓ Check passed
+MiniMax-M3 A4W4 dispatch=inline-bm16 activation=swigluoai tokens=4: cosine=0.99893820 max_abs=0.02244250
+Logits Diff: 0.001265, Max Diff: 0.020092, Mean Diff: 0.002302
+ ✓ Check passed
+Logits Diff: 0.001291, Max Diff: 0.013641, Mean Diff: 0.001857
+ ✓ Check passed
+Logits Diff: 0.001303, Max Diff: 0.021966, Mean Diff: 0.003026
+ ✓ Check passed
+MiniMax-M3 A4W4 dispatch=inline-bm16 activation=swigluoai tokens=16: cosine=0.99869668 max_abs=0.02196587
+Logits Diff: 0.000974, Max Diff: 0.024010, Mean Diff: 0.001839
+ ✓ Check passed
+Logits Diff: 0.000946, Max Diff: 0.014862, Mean Diff: 0.001399
+ ✓ Check passed
+Logits Diff: 0.000966, Max Diff: 0.026113, Mean Diff: 0.002347
+ ✓ Check passed
+MiniMax-M3 A4W4 dispatch=inline-bm16 activation=swigluoai tokens=32: cosine=0.99903387 max_abs=0.02611257
+Logits Diff: 0.001127, Max Diff: 0.025142, Mean Diff: 0.002073
+ ✓ Check passed
+Logits Diff: 0.001173, Max Diff: 0.020874, Mean Diff: 0.001598
+ ✓ Check passed
+Logits Diff: 0.001144, Max Diff: 0.030772, Mean Diff: 0.002656
+ ✓ Check passed
+MiniMax-M3 A4W4 dispatch=inline-bm16 activation=swigluoai tokens=256: cosine=0.99885637 max_abs=0.03077206
+PASSED
+
+============================== 2 passed in 30.42s ==============================
