@@ -585,6 +585,8 @@ def _run_a16w4_moe_e2e(
         # tight too -- verify_output early-returns True when <5% of elements exceed
         # the allclose tol, which makes a loose rtol/atol (0.5) mask the logits check.
         assert verify_output(out, ref2, rtol=2e-3, atol=2e-3, logits_diff_threshold=2e-3)
+        return out, ref2
+    return out, None
 
 
 def _run_mxfp_moe_e2e(
@@ -610,6 +612,9 @@ def _run_mxfp_moe_e2e(
     num_warmup: int = 0,
     in_dtype_label: Optional[str] = None,
     w_dtype: str = "mxfp4",
+    activation: str = "silu",
+    swiglu_alpha: float = 1.702,
+    swiglu_limit: float = 7.0,
 ):
     """End-to-end a4w4 / a8w4 correctness via the fused mxfp_moe pipeline.
 
@@ -632,7 +637,7 @@ def _run_mxfp_moe_e2e(
     num_valid_ids = num_valid_ids.to(dev)
 
     if a_dtype == "a16":
-        _run_a16w4_moe_e2e(
+        return _run_a16w4_moe_e2e(
             tokens=tokens,
             model_dim=model_dim,
             inter_dim=inter_dim,
@@ -731,6 +736,9 @@ def _run_mxfp_moe_e2e(
             D_INTER=inter_dim,
             topk=topk,
             a_dtype=a_dtype,
+            activation=activation,
+            swiglu_alpha=swiglu_alpha,
+            swiglu_limit=swiglu_limit,
         )
 
     # gemm1 writes (not accumulates) the sorted fp4 intermediate, so repeated
@@ -832,7 +840,17 @@ def _run_mxfp_moe_e2e(
     # --- reference (stage1 -> host re-quant -> stage2) ------------------------
     if not skip_ref:
         ref1 = torch_moe_gemm1(
-            x_q, w1_q, x_scale, w1_scale, topk_ids.long(), topk_weights, inter_dim=inter_dim, doweight_stage1=False
+            x_q,
+            w1_q,
+            x_scale,
+            w1_scale,
+            topk_ids.long(),
+            topk_weights,
+            inter_dim=inter_dim,
+            doweight_stage1=False,
+            activation=activation,
+            swiglu_alpha=swiglu_alpha,
+            swiglu_limit=swiglu_limit,
         )
         a2_q, a2_scale = _per_1x32_fp4_quant(ref1.reshape(tokens * topk, inter_dim))
         ref2 = torch_moe_gemm2(
@@ -852,20 +870,13 @@ def _run_mxfp_moe_e2e(
         # of elements exceed the allclose tol, so a loose rtol/atol (0.5) would
         # mask the logits check (the original bug that let cos~0.1 pass silently).
         assert verify_output(out, ref2, rtol=2e-3, atol=2e-3, logits_diff_threshold=2e-3)
+        return out, ref2
+    return out, None
 
 
-# The fused mxfp4 a4w4/a8w4 pipeline is numerically broken under the strict gate
-# (independently verified: e2e cos ~0.12 / ~0.07; the shared gemm2 down-proj is
-# broken and, for a8w4, the fp8-gemm1 A-path too -- stage1 cos 0.16). Beyond wrong
-# numbers, these kernels are memory-unsafe: launching them and then unwinding an
-# xfail under pytest teardown corrupts the JIT/HIP module state and cascades an
-# illegal-address crash into unrelated tests in the same session. So xfail with
-# run=False: document the expected failure (honest CI signal, not a silent mask)
-# WITHOUT executing the broken kernel, keeping the a16w4 strict gate runnable.
+# The fp8 activation variant remains quarantined independently of the A4W4 path.
 _MXFP4_FUSED_XFAIL = pytest.mark.xfail(
-    reason="pre-existing mxfp4 fused gemm2 + fp8-gemm1 A-path bug, e2e cos ~0.1; "
-    "strict gate exposes it, not an a16w4 regression (kernel is also memory-unsafe "
-    "-> run=False to avoid crashing the session). TODO(issue #NNN)",
+    reason="pre-existing fp8-gemm1 A-path bug; not part of the A4W4 qualification",
     strict=False,
     run=False,
 )
@@ -875,9 +886,7 @@ _MXFP4_FUSED_XFAIL = pytest.mark.xfail(
 @pytest.mark.parametrize(
     "a_dtype",
     [
-        # a4w4 (fp4) and a8w4 (fp8) hit the broken fused mxfp4 gemm2 (and, for fp8,
-        # the broken fp8-gemm1 A-path) -> xfail under the strict gate. a16w4 is faithful.
-        pytest.param("fp4", marks=_MXFP4_FUSED_XFAIL),
+        "fp4",
         pytest.param("fp8", marks=_MXFP4_FUSED_XFAIL),
         "a16w4",
     ],
@@ -891,6 +900,11 @@ def test_mxfp_moe_variants(a_dtype, variant):
     BM==32 (atomic), inline_quant (BM==16, bf16 hidden -> on-device quant), and the
     interleaved gate/up layout. a4w4 (fp4) and a8w4 (fp8) run all three; a16w4
     (bf16 A) has no inline-quant/interleave path, so it only runs bm32_atomic."""
+    if a_dtype == "fp4" and variant != "bm32_atomic":
+        pytest.xfail(
+            "A4W4 inline quantization and BM64 interleaved layouts remain numerically unqualified; "
+            "the MiniMax-M3 entry uses the strict-reference-checked packed-A4 BM32 path"
+        )
     if a_dtype == "a16w4" and variant != "bm32_atomic":
         pytest.skip("a16w4 has no inline_quant / interleave gemm1 variant (bf16 A, atomic gemm2 only)")
     device = torch.device("cuda")
@@ -938,6 +952,116 @@ def test_mxfp_moe_variants(a_dtype, variant):
         inline_quant=inline_quant,
         interleave=interleave,
     )
+
+
+@pytest.mark.skipif("gfx95" not in ARCH, reason="MiniMax-M3 A4W4 requires gfx950+")
+@pytest.mark.parametrize("tokens", [1, 2, 4, 16, 32, 256])
+def test_minimax_m3_a4w4_swigluoai(tokens):
+    """MiniMax-M3 routed/shared expert semantics with dynamic A4 and static W4.
+
+    Duplicate routes deliberately exercise repeated expert/slot accumulation.  The
+    one-expert invocation is the model's shared expert projection; callers add it
+    to the routed result after applying the model's normalized sigmoid routing
+    weights and routed_scaling_factor.
+    """
+    device = torch.device("cuda")
+    model_dim, inter_dim, experts, topk, tile_m = 1024, 256, 8, 4, 32
+    gen = torch.Generator(device=device).manual_seed(717 + tokens)
+    x = torch.randn((tokens, model_dim), generator=gen, device=device) * 0.35
+    # Adversarial MX blocks: exact zero scale plus a wide but finite dynamic range.
+    x[:, :32] = 0
+    x[:, 32:64:2] = 1.0e-6
+    x[:, 33:64:2] = 1.0e3
+    w1 = torch.randn((experts, 2 * inter_dim, model_dim), generator=gen, device=device) * 0.15
+    w2 = torch.randn((experts, model_dim, inter_dim), generator=gen, device=device) * 0.01
+    # Nonuniform weights and duplicate expert ids are valid slot semantics.
+    ids = torch.arange(tokens * topk, device=device).view(tokens, topk) % experts
+    if tokens:
+        ids[:, -1] = ids[:, 0]
+    raw = torch.rand((tokens, topk), generator=gen, device=device) + 0.05
+    weights = raw / raw.sum(dim=-1, keepdim=True) * 2.0
+    routing = build_routing_buffers(
+        topk_ids=ids, topk_weights=weights, experts=experts, model_dim=model_dim,
+        tile_m=tile_m, moe_sort_mode="torch"
+    )
+    routed, routed_ref = _run_mxfp_moe_e2e(
+        tokens=tokens, model_dim=model_dim, inter_dim=inter_dim, experts=experts,
+        topk=topk, tile_m=tile_m, use_reduce=False, x_fp32=x, w1_fp32=w1,
+        w2_fp32=w2, topk_ids=ids, topk_weights=weights, routing=routing,
+        activation="swigluoai", swiglu_alpha=1.702, swiglu_limit=7.0,
+    )
+    assert torch.isfinite(routed).all() and torch.isfinite(routed_ref).all()
+
+    shared_ids = torch.zeros((tokens, 1), dtype=torch.long, device=device)
+    shared_weights = torch.ones((tokens, 1), dtype=torch.float32, device=device)
+    shared_routing = build_routing_buffers(
+        topk_ids=shared_ids, topk_weights=shared_weights, experts=1,
+        model_dim=model_dim, tile_m=tile_m, moe_sort_mode="torch"
+    )
+    shared, shared_ref = _run_mxfp_moe_e2e(
+        tokens=tokens, model_dim=model_dim, inter_dim=inter_dim, experts=1, topk=1,
+        tile_m=tile_m, use_reduce=False, x_fp32=x, w1_fp32=w1[:1], w2_fp32=w2[:1],
+        topk_ids=shared_ids, topk_weights=shared_weights, routing=shared_routing,
+        activation="swigluoai", swiglu_alpha=1.702, swiglu_limit=7.0,
+    )
+    combined = routed + shared
+    combined_ref = routed_ref + shared_ref
+    assert torch.isfinite(combined).all()
+    assert verify_output(combined, combined_ref, rtol=2e-3, atol=2e-3, logits_diff_threshold=2e-3)
+
+
+@pytest.mark.large_shape
+@pytest.mark.skipif("gfx95" not in ARCH, reason="MiniMax-M3 A4W4 requires gfx950+")
+@pytest.mark.skipif(
+    os.environ.get("FLYDSL_RUN_MINIMAX_M3_SHAPE") != "1",
+    reason="set FLYDSL_RUN_MINIMAX_M3_SHAPE=1 for the 128-expert production-shape qualification",
+)
+def test_minimax_m3_a4w4_model_shape():
+    """Exact MiniMax-M3 routed projection dimensions (6144x3072, E128, top-k 4).
+
+    This is a kernel-level qualification with synthetic quantized projections; it
+    intentionally does not claim full-model generation or multi-rank EP coverage.
+    """
+    device = torch.device("cuda")
+    model_dim, inter_dim, experts, topk, tile_m = 6144, 3072, 128, 4, 32
+    gen = torch.Generator(device=device).manual_seed(717)
+    w1 = torch.randn((experts, 2 * inter_dim, model_dim), generator=gen, device=device) * 0.02
+    w2 = torch.randn((experts, model_dim, inter_dim), generator=gen, device=device) * 0.005
+    for tokens in (1, 2, 4, 16, 32, 256):
+        x = torch.randn((tokens, model_dim), generator=gen, device=device) * 0.2
+        ids = torch.arange(tokens * topk, device=device).view(tokens, topk) % experts
+        ids[:, -1] = ids[:, 0]
+        raw = torch.rand((tokens, topk), generator=gen, device=device) + 0.05
+        weights = raw / raw.sum(dim=-1, keepdim=True) * 2.0
+        routing = build_routing_buffers(
+            topk_ids=ids, topk_weights=weights, experts=experts, model_dim=model_dim,
+            tile_m=tile_m, moe_sort_mode="torch"
+        )
+        out, ref = _run_mxfp_moe_e2e(
+            tokens=tokens, model_dim=model_dim, inter_dim=inter_dim, experts=experts,
+            topk=topk, tile_m=tile_m, use_reduce=False, x_fp32=x, w1_fp32=w1,
+            w2_fp32=w2, topk_ids=ids, topk_weights=weights, routing=routing,
+            activation="swigluoai", swiglu_alpha=1.702, swiglu_limit=7.0,
+        )
+        shared_ids = torch.zeros((tokens, 1), dtype=torch.long, device=device)
+        shared_weights = torch.ones((tokens, 1), dtype=torch.float32, device=device)
+        shared_routing = build_routing_buffers(
+            topk_ids=shared_ids, topk_weights=shared_weights, experts=1,
+            model_dim=model_dim, tile_m=tile_m, moe_sort_mode="torch"
+        )
+        shared, shared_ref = _run_mxfp_moe_e2e(
+            tokens=tokens, model_dim=model_dim, inter_dim=inter_dim, experts=1, topk=1,
+            tile_m=tile_m, use_reduce=False, x_fp32=x, w1_fp32=w1[:1], w2_fp32=w2[:1],
+            topk_ids=shared_ids, topk_weights=shared_weights, routing=shared_routing,
+            activation="swigluoai", swiglu_alpha=1.702, swiglu_limit=7.0,
+        )
+        out = out + shared
+        ref = ref + shared_ref
+        assert torch.isfinite(out).all() and torch.isfinite(ref).all()
+        assert verify_output(out, ref, rtol=2e-3, atol=2e-3, logits_diff_threshold=2e-3)
+        cosine = torch.nn.functional.cosine_similarity(out.flatten(), ref.flatten(), dim=0).item()
+        max_abs = (out - ref).abs().max().item()
+        print(f"MiniMax-M3 A4W4 tokens={tokens}: cosine={cosine:.8f} max_abs={max_abs:.8f}")
 
 
 @pytest.mark.skipif("gfx95" not in ARCH, reason="a16w4 requires gfx950+")
@@ -1318,6 +1442,9 @@ def test_moe_gemm_2stage(
     init_scale: float = 1.0,
     skip_ref: bool = False,
     w_fp4_kernel: bool = False,
+    activation: str = "silu",
+    swiglu_alpha: float = 1.702,
+    swiglu_limit: float = 7.0,
 ):
     """Single 2-stage test: gemm1 -> quantize -> gemm2, with routing built once.
 
@@ -1368,7 +1495,7 @@ def test_moe_gemm_2stage(
         if tile_m not in (16, 32, 64):
             pytest.skip(f"{in_dtype} gemm2 atomic epilog requires tile_m in (16,32,64), got {tile_m}")
     device = torch.device("cuda")
-    # torch.manual_seed(int(seed))
+    torch.manual_seed(int(seed))
 
     # Keep inputs tame by default; fp16 paths are less robust to overflow.
     # (Callers can still override via pytest param / direct invocation.)
@@ -1415,14 +1542,9 @@ def test_moe_gemm_2stage(
         # (a_dtype="a16" -> _run_a16w4_moe_e2e; int4_bf16 uses w_dtype="int4").
         _a_dtype = {"a8w4": "fp8", "a16w4": "a16", "int4_bf16": "a16"}.get(in_dtype, "fp4")
         _w_dtype = "int4" if in_dtype == "int4_bf16" else "mxfp4"
-        # a4w4/a8w4 hit the broken (and memory-unsafe) fused mxfp4 pipeline: the
-        # shared gemm2 down-proj is broken and, for a8w4, the fp8-gemm1 A-path too
-        # (independently verified e2e cos ~0.12 / ~0.07). The strict e2e gate would
-        # fail; running the kernel and unwinding under pytest teardown also cascades
-        # an illegal-address crash into other tests. When a real reference would be
-        # checked (skip_ref=False), xfail *without* executing the broken kernel so
-        # CI stays honest and stable. a16w4 / int4_bf16 stay strict-asserted.
-        if in_dtype in ("fp4", "a8w4") and not bool(skip_ref):
+        # Keep the independently broken FP8-activation path quarantined. A4W4 is
+        # strict-reference checked and supports either legacy SiLU or SwiGLU-OAI.
+        if in_dtype == "a8w4" and not bool(skip_ref):
             _xfail_reason = (
                 "pre-existing mxfp4 fused gemm2 + fp8-gemm1 A-path bug, e2e cos ~0.1; "
                 "strict gate exposes it, not an a16w4 regression (kernel also "
@@ -1457,6 +1579,9 @@ def test_moe_gemm_2stage(
             num_warmup=num_warmup,
             in_dtype_label=in_dtype,
             w_dtype=_w_dtype,
+            activation=activation,
+            swiglu_alpha=swiglu_alpha,
+            swiglu_limit=swiglu_limit,
         )
         return
 
@@ -1573,6 +1698,12 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--tokenNum", type=int, default=32, help="Number of tokens (e.g. -t 1024)")
     parser.add_argument("-e", "--expert", type=int, default=8, help="Number of experts (e.g. -e 8)")
     parser.add_argument("-k", "--topk", type=int, default=2, help="Top-k (e.g. -k 2)")
+    parser.add_argument(
+        "--activation", choices=["silu", "swigluoai"], default="silu",
+        help="Fused stage1 activation. Use swigluoai for MiniMax-M3.",
+    )
+    parser.add_argument("--swiglu-alpha", type=float, default=1.702)
+    parser.add_argument("--swiglu-limit", type=float, default=7.0)
     parser.add_argument(
         "-s",
         "--doweight_stage1",
@@ -1715,6 +1846,9 @@ if __name__ == "__main__":
             use_reduce=use_reduce,
             use_valid_mask=bool(args.use_valid_mask),
             test_graph=bool(args.test_graph),
+            activation=args.activation,
+            swiglu_alpha=float(args.swiglu_alpha),
+            swiglu_limit=float(args.swiglu_limit),
         )
 
     # Run 2-stage (gemm1 -> quantize -> gemm2) aiter-style test/benchmark.

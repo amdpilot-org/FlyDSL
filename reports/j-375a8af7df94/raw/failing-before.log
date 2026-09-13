@@ -1,0 +1,17 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0 -- /tmp/amdpilot-repo-j-375a8af7df94/venv/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /job/repo/tests
+configfile: pytest.ini
+plugins: hypothesis-6.150.2, anyio-4.14.2
+collecting ... [aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] [pid=2967 pname=MainProcess] start build [module_aiter_core] under /tmp/amdpilot-repo-j-375a8af7df94/cache/aiter/build/module_aiter_core
+[aiter] Current hipcc not support: -mllvm -amdgpu-coerce-illegal-types=1, skip it.
+[aiter] [pid=2967 pname=MainProcess] [32mfinish build [module_aiter_core], cost 13.9s [0m
+[aiter] import [module_aiter_core] under /tmp/amdpilot-repo-j-375a8af7df94/cache/aiter/module_aiter_core.so
+collected 1 item
+
+tests/kernels/test_moe_gemm.py::test_mxfp_moe_variants[bm32_atomic-fp4] PASSED
+
+============================== 1 passed in 21.98s ==============================

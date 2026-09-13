@@ -256,6 +256,27 @@ def _silu_mul_batch(gs, us):
     return [gs[i] * sig[i] * us[i] for i in range(len(gs))]
 
 
+def _swiglu_oai_mul_batch(gs, us, alpha, limit):
+    """MiniMax-M3/GPT-OSS SwiGLU-OAI activation.
+
+    ``min(g, limit) * sigmoid(alpha * min(g, limit)) *
+    (clamp(u, -limit, limit) + 1)``.  ``alpha`` and ``limit`` are compile-time
+    specialization values supplied by the model configuration.
+    """
+    alpha_f = fx.Float32(alpha)
+    limit_f = fx.Float32(limit)
+    neg_limit_f = fx.Float32(-limit)
+    one = fx.Float32(1.0)
+    out = []
+    for g, u in zip(gs, us):
+        g = g.minimumf(limit_f)
+        u = u.maximumf(neg_limit_f).minimumf(limit_f)
+        e = fx.Float32(rocdl.exp2(T.f32, _raw(g * alpha_f * fx.Float32(-LOG2E))))
+        sig = fx.Float32(rocdl.rcp(T.f32, _raw(one + e)))
+        out.append(g * sig * (u + one))
+    return out
+
+
 def _umax_i32(a, b):
     is_gt = fx.as_ir_value((a) > (b))
     return fx.Int32(arith.select(is_gt, _raw(a), _raw(b)))
